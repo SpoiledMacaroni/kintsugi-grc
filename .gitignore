@@ -13,6 +13,7 @@ finance_production_env/
 banking_production_env/
 *_production_env/
 test_run_env/
+synthetic_test_env/
 
 # Python & Virtual Environments
 __pycache__/

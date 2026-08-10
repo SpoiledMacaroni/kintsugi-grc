@@ -710,8 +710,8 @@ def main():
     )
     parser.add_argument(
         "--output-dir",
-        default=".",
-        help="Target root directory where synthetic environments will be created."
+        default="./synthetic_test_env",
+        help="Target root directory where synthetic environments will be created (default: ./synthetic_test_env)."
     )
     parser.add_argument(
         "--seed",
