@@ -32,12 +32,20 @@ import shutil
 import sys
 import uuid
 import zlib
+import subprocess
 from pathlib import Path
 import zipfile
 
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.primitives import padding
-from cryptography.hazmat.backends import default_backend
+try:
+    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+    from cryptography.hazmat.primitives import padding
+    from cryptography.hazmat.backends import default_backend
+except ModuleNotFoundError:
+    print("[Kintsugi-GRC] Missing required dependency 'cryptography'. Automatically installing via pip...")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "cryptography"])
+    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+    from cryptography.hazmat.primitives import padding
+    from cryptography.hazmat.backends import default_backend
 
 # -----------------------------------------------------------------------------
 # LOGGING SETUP
