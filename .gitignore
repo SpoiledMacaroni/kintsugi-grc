@@ -1,0 +1,28 @@
+# Cryptographic Keys, Key Manifests, & SSH Keys
+.keys/
+.synthetic_keys.json
+*.key
+*.pem
+*.pub
+id_rsa*
+
+# Synthetic Production Environments
+healthcare_production_env/
+merchant_production_env/
+finance_production_env/
+banking_production_env/
+*_production_env/
+test_run_env/
+
+# Python & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+*.egg-info/
+.coverage
+htmlcov/
