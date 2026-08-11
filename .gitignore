@@ -6,7 +6,7 @@
 *.pub
 id_rsa*
 
-# Synthetic Production Environments
+# Synthetic Production & Test Environments
 healthcare_production_env/
 merchant_production_env/
 finance_production_env/
@@ -14,6 +14,19 @@ banking_production_env/
 *_production_env/
 test_run_env/
 synthetic_test_env/
+test_env/
+
+# Generated Reports & Audit Logs
+*.log
+scan_report.json
+scan_report.pdf
+*.pdf
+
+# Generated FAISS Indices & Temporary Unit Test Artifacts
+imports/compliance_index.faiss
+imports/ACME_policy.txt
+imports/test_custom_policy.json
+*.faiss
 
 # Python & Virtual Environments
 __pycache__/
@@ -30,3 +43,7 @@ htmlcov/
 
 # Model Caches
 .model_cache/
+
+# OS Metadata & Junk Files
+.DS_Store
+Thumbs.db
