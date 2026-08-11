@@ -1,0 +1,2545 @@
+{
+  "target_directory": "/Users/dennislay/Downloads/kintsugi-grc/synthetic_test_env",
+  "total_files_scanned": 83,
+  "total_findings": 65,
+  "compliance_score": 0,
+  "severity_counts": {
+    "CRITICAL": 14,
+    "HIGH": 32,
+    "MEDIUM": 6,
+    "PASS": 13
+  },
+  "findings": [
+    {
+      "file_path": "merchant_production_env/etc/login.defs",
+      "rule_id": "INSECURE_PASSWORD_POLICY_MAX_DAYS",
+      "title": "Insecure Password Expiry Policy (PASS_MAX_DAYS > 90)",
+      "severity": "MEDIUM",
+      "description": "PASS_MAX_DAYS set to 99999 (exceeds 90-day compliance baseline).",
+      "details": {
+        "PASS_MAX_DAYS": 99999
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 8.3.6",
+          "title": "Password expiry & rotation policy enforcement",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 10.j",
+          "title": "Password Management Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "IA-5(1)",
+          "title": "Password-Based Authentication",
+          "status": "VIOLATION"
+        }
+      ]
+    },
+    {
+      "file_path": "merchant_production_env/etc/passwd",
+      "rule_id": "INSECURE_SYSTEM_ACCOUNT_HARDENING",
+      "title": "System Daemon Account Mapped to Active Shell",
+      "severity": "HIGH",
+      "description": "System accounts have active login shells: daemon:/bin/sh, bin:/bin/sh, sys:/bin/sh.",
+      "details": {
+        "active_shells": [
+          "daemon:/bin/sh",
+          "bin:/bin/sh",
+          "sys:/bin/sh"
+        ]
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 8.2.1",
+          "title": "Remove or disable unnecessary default accounts",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(1)",
+          "title": "Unique user identification & account hardening",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AC-2",
+          "title": "Account Management",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_ACCOUNT_HARDENING] Recommend immediate remediation for 'System Daemon Account Mapped to Active Shell'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "merchant_production_env/etc/ssl/openssl.cnf",
+      "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+      "title": "Insecure System OpenSSL TLS Policy (TLS 1.0 Allowed)",
+      "severity": "HIGH",
+      "description": "System OpenSSL policy permits deprecated TLS 1.0 protocol and SECLEVEL=0 weak ciphers.",
+      "details": {
+        "MinProtocol": "TLSv1.0",
+        "SECLEVEL": 0
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Transmission security - Strong TLS Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_TLS_POLICY] Recommend immediate remediation for 'Insecure System OpenSSL TLS Policy (TLS 1.0 Allowed)'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "merchant_production_env/etc/ssh/sshd_config",
+      "rule_id": "INSECURE_SSH_TRANSMISSION_PROTOCOL",
+      "title": "Insecure SSH Protocol & Weak Cryptographic Ciphers",
+      "severity": "HIGH",
+      "description": "SSH configuration enables insecure protocols/ciphers: Protocol 1, Weak Ciphers (Blowfish/3DES), Weak MACs (HMAC-MD5).",
+      "details": {
+        "issues": [
+          "Protocol 1",
+          "Weak Ciphers (Blowfish/3DES)",
+          "Weak MACs (HMAC-MD5)"
+        ]
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 2.2.4",
+          "title": "Insecure management protocols must be disabled",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.m",
+          "title": "Network Security & Protocol Hardening",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "CM-6",
+          "title": "Configuration Settings",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.PS-01",
+          "title": "Configuration management practices applied",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SSH_TRANSMISSION_PROTOCOL] Recommend immediate remediation for 'Insecure SSH Protocol & Weak Cryptographic Ciphers'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "merchant_production_env/etc/nginx/conf.d/ssl_policy.conf",
+      "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+      "title": "Insecure Web Server TLS Configuration",
+      "severity": "HIGH",
+      "description": "Nginx configuration enables deprecated TLS 1.0/1.1 protocols and weak RC4/3DES ciphers.",
+      "details": {
+        "protocols": "TLSv1, TLSv1.1",
+        "ciphers": "RC4, 3DES"
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Transmission security - Strong TLS Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_TLS_POLICY] Recommend immediate remediation for 'Insecure Web Server TLS Configuration'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "merchant_production_env/etc/registry/hklm_schannel_export.reg",
+      "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+      "title": "Insecure Windows Schannel TLS 1.0 Registry Policy",
+      "severity": "HIGH",
+      "description": "Windows Schannel registry configuration explicitly enables TLS 1.0 server protocol.",
+      "details": {
+        "schannel_protocol": "TLS 1.0"
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Transmission security - Strong TLS Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_TLS_POLICY] Recommend immediate remediation for 'Insecure Windows Schannel TLS 1.0 Registry Policy'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "merchant_production_env/etc/crypto-policies/state/current",
+      "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+      "title": "Insecure System Crypto-Policy Set to LEGACY Mode",
+      "severity": "HIGH",
+      "description": "System crypto-policy set to LEGACY, permitting obsolete TLS 1.0/1.1 protocols.",
+      "details": {
+        "policy": "LEGACY"
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Transmission security - Strong TLS Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_TLS_POLICY] Recommend immediate remediation for 'Insecure System Crypto-Policy Set to LEGACY Mode'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "banking_production_env/etc/login.defs",
+      "rule_id": "INSECURE_PASSWORD_POLICY_MAX_DAYS",
+      "title": "Insecure Password Expiry Policy (PASS_MAX_DAYS > 90)",
+      "severity": "MEDIUM",
+      "description": "PASS_MAX_DAYS set to 99999 (exceeds 90-day compliance baseline).",
+      "details": {
+        "PASS_MAX_DAYS": 99999
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 8.3.6",
+          "title": "Password expiry & rotation policy enforcement",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 10.j",
+          "title": "Password Management Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "IA-5(1)",
+          "title": "Password-Based Authentication",
+          "status": "VIOLATION"
+        }
+      ]
+    },
+    {
+      "file_path": "banking_production_env/etc/passwd",
+      "rule_id": "INSECURE_SYSTEM_ACCOUNT_HARDENING",
+      "title": "System Daemon Account Mapped to Active Shell",
+      "severity": "HIGH",
+      "description": "System accounts have active login shells: daemon:/bin/sh, bin:/bin/sh, sys:/bin/sh.",
+      "details": {
+        "active_shells": [
+          "daemon:/bin/sh",
+          "bin:/bin/sh",
+          "sys:/bin/sh"
+        ]
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 8.2.1",
+          "title": "Remove or disable unnecessary default accounts",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(1)",
+          "title": "Unique user identification & account hardening",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AC-2",
+          "title": "Account Management",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_ACCOUNT_HARDENING] Recommend immediate remediation for 'System Daemon Account Mapped to Active Shell'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "banking_production_env/etc/ssl/openssl.cnf",
+      "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+      "title": "Insecure System OpenSSL TLS Policy (TLS 1.0 Allowed)",
+      "severity": "HIGH",
+      "description": "System OpenSSL policy permits deprecated TLS 1.0 protocol and SECLEVEL=0 weak ciphers.",
+      "details": {
+        "MinProtocol": "TLSv1.0",
+        "SECLEVEL": 0
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Transmission security - Strong TLS Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_TLS_POLICY] Recommend immediate remediation for 'Insecure System OpenSSL TLS Policy (TLS 1.0 Allowed)'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "banking_production_env/etc/ssh/sshd_config",
+      "rule_id": "INSECURE_SSH_TRANSMISSION_PROTOCOL",
+      "title": "Insecure SSH Protocol & Weak Cryptographic Ciphers",
+      "severity": "HIGH",
+      "description": "SSH configuration enables insecure protocols/ciphers: Protocol 1, Weak Ciphers (Blowfish/3DES), Weak MACs (HMAC-MD5).",
+      "details": {
+        "issues": [
+          "Protocol 1",
+          "Weak Ciphers (Blowfish/3DES)",
+          "Weak MACs (HMAC-MD5)"
+        ]
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 2.2.4",
+          "title": "Insecure management protocols must be disabled",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.m",
+          "title": "Network Security & Protocol Hardening",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "CM-6",
+          "title": "Configuration Settings",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.PS-01",
+          "title": "Configuration management practices applied",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SSH_TRANSMISSION_PROTOCOL] Recommend immediate remediation for 'Insecure SSH Protocol & Weak Cryptographic Ciphers'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "banking_production_env/etc/nginx/conf.d/ssl_policy.conf",
+      "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+      "title": "Insecure Web Server TLS Configuration",
+      "severity": "HIGH",
+      "description": "Nginx configuration enables deprecated TLS 1.0/1.1 protocols and weak RC4/3DES ciphers.",
+      "details": {
+        "protocols": "TLSv1, TLSv1.1",
+        "ciphers": "RC4, 3DES"
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Transmission security - Strong TLS Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_TLS_POLICY] Recommend immediate remediation for 'Insecure Web Server TLS Configuration'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "banking_production_env/etc/registry/hklm_schannel_export.reg",
+      "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+      "title": "Insecure Windows Schannel TLS 1.0 Registry Policy",
+      "severity": "HIGH",
+      "description": "Windows Schannel registry configuration explicitly enables TLS 1.0 server protocol.",
+      "details": {
+        "schannel_protocol": "TLS 1.0"
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Transmission security - Strong TLS Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_TLS_POLICY] Recommend immediate remediation for 'Insecure Windows Schannel TLS 1.0 Registry Policy'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "banking_production_env/etc/crypto-policies/state/current",
+      "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+      "title": "Insecure System Crypto-Policy Set to LEGACY Mode",
+      "severity": "HIGH",
+      "description": "System crypto-policy set to LEGACY, permitting obsolete TLS 1.0/1.1 protocols.",
+      "details": {
+        "policy": "LEGACY"
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Transmission security - Strong TLS Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_TLS_POLICY] Recommend immediate remediation for 'Insecure System Crypto-Policy Set to LEGACY Mode'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "finance_production_env/etc/login.defs",
+      "rule_id": "INSECURE_PASSWORD_POLICY_MAX_DAYS",
+      "title": "Insecure Password Expiry Policy (PASS_MAX_DAYS > 90)",
+      "severity": "MEDIUM",
+      "description": "PASS_MAX_DAYS set to 99999 (exceeds 90-day compliance baseline).",
+      "details": {
+        "PASS_MAX_DAYS": 99999
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 8.3.6",
+          "title": "Password expiry & rotation policy enforcement",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 10.j",
+          "title": "Password Management Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "IA-5(1)",
+          "title": "Password-Based Authentication",
+          "status": "VIOLATION"
+        }
+      ]
+    },
+    {
+      "file_path": "finance_production_env/etc/passwd",
+      "rule_id": "INSECURE_SYSTEM_ACCOUNT_HARDENING",
+      "title": "System Daemon Account Mapped to Active Shell",
+      "severity": "HIGH",
+      "description": "System accounts have active login shells: daemon:/bin/sh, bin:/bin/sh, sys:/bin/sh.",
+      "details": {
+        "active_shells": [
+          "daemon:/bin/sh",
+          "bin:/bin/sh",
+          "sys:/bin/sh"
+        ]
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 8.2.1",
+          "title": "Remove or disable unnecessary default accounts",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(1)",
+          "title": "Unique user identification & account hardening",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AC-2",
+          "title": "Account Management",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_ACCOUNT_HARDENING] Recommend immediate remediation for 'System Daemon Account Mapped to Active Shell'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "finance_production_env/etc/ssl/openssl.cnf",
+      "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+      "title": "Insecure System OpenSSL TLS Policy (TLS 1.0 Allowed)",
+      "severity": "HIGH",
+      "description": "System OpenSSL policy permits deprecated TLS 1.0 protocol and SECLEVEL=0 weak ciphers.",
+      "details": {
+        "MinProtocol": "TLSv1.0",
+        "SECLEVEL": 0
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Transmission security - Strong TLS Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_TLS_POLICY] Recommend immediate remediation for 'Insecure System OpenSSL TLS Policy (TLS 1.0 Allowed)'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "finance_production_env/etc/ssh/sshd_config",
+      "rule_id": "INSECURE_SSH_TRANSMISSION_PROTOCOL",
+      "title": "Insecure SSH Protocol & Weak Cryptographic Ciphers",
+      "severity": "HIGH",
+      "description": "SSH configuration enables insecure protocols/ciphers: Protocol 1, Weak Ciphers (Blowfish/3DES), Weak MACs (HMAC-MD5).",
+      "details": {
+        "issues": [
+          "Protocol 1",
+          "Weak Ciphers (Blowfish/3DES)",
+          "Weak MACs (HMAC-MD5)"
+        ]
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 2.2.4",
+          "title": "Insecure management protocols must be disabled",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.m",
+          "title": "Network Security & Protocol Hardening",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "CM-6",
+          "title": "Configuration Settings",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.PS-01",
+          "title": "Configuration management practices applied",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SSH_TRANSMISSION_PROTOCOL] Recommend immediate remediation for 'Insecure SSH Protocol & Weak Cryptographic Ciphers'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "finance_production_env/etc/nginx/conf.d/ssl_policy.conf",
+      "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+      "title": "Insecure Web Server TLS Configuration",
+      "severity": "HIGH",
+      "description": "Nginx configuration enables deprecated TLS 1.0/1.1 protocols and weak RC4/3DES ciphers.",
+      "details": {
+        "protocols": "TLSv1, TLSv1.1",
+        "ciphers": "RC4, 3DES"
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Transmission security - Strong TLS Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_TLS_POLICY] Recommend immediate remediation for 'Insecure Web Server TLS Configuration'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "finance_production_env/etc/registry/hklm_schannel_export.reg",
+      "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+      "title": "Insecure Windows Schannel TLS 1.0 Registry Policy",
+      "severity": "HIGH",
+      "description": "Windows Schannel registry configuration explicitly enables TLS 1.0 server protocol.",
+      "details": {
+        "schannel_protocol": "TLS 1.0"
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Transmission security - Strong TLS Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_TLS_POLICY] Recommend immediate remediation for 'Insecure Windows Schannel TLS 1.0 Registry Policy'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "finance_production_env/etc/crypto-policies/state/current",
+      "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+      "title": "Insecure System Crypto-Policy Set to LEGACY Mode",
+      "severity": "HIGH",
+      "description": "System crypto-policy set to LEGACY, permitting obsolete TLS 1.0/1.1 protocols.",
+      "details": {
+        "policy": "LEGACY"
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Transmission security - Strong TLS Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_TLS_POLICY] Recommend immediate remediation for 'Insecure System Crypto-Policy Set to LEGACY Mode'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "healthcare_production_env/etc/login.defs",
+      "rule_id": "INSECURE_PASSWORD_POLICY_MAX_DAYS",
+      "title": "Insecure Password Expiry Policy (PASS_MAX_DAYS > 90)",
+      "severity": "MEDIUM",
+      "description": "PASS_MAX_DAYS set to 99999 (exceeds 90-day compliance baseline).",
+      "details": {
+        "PASS_MAX_DAYS": 99999
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 8.3.6",
+          "title": "Password expiry & rotation policy enforcement",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 10.j",
+          "title": "Password Management Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "IA-5(1)",
+          "title": "Password-Based Authentication",
+          "status": "VIOLATION"
+        }
+      ]
+    },
+    {
+      "file_path": "healthcare_production_env/etc/passwd",
+      "rule_id": "INSECURE_SYSTEM_ACCOUNT_HARDENING",
+      "title": "System Daemon Account Mapped to Active Shell",
+      "severity": "HIGH",
+      "description": "System accounts have active login shells: daemon:/bin/sh, bin:/bin/sh, sys:/bin/sh.",
+      "details": {
+        "active_shells": [
+          "daemon:/bin/sh",
+          "bin:/bin/sh",
+          "sys:/bin/sh"
+        ]
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 8.2.1",
+          "title": "Remove or disable unnecessary default accounts",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(1)",
+          "title": "Unique user identification & account hardening",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AC-2",
+          "title": "Account Management",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_ACCOUNT_HARDENING] Recommend immediate remediation for 'System Daemon Account Mapped to Active Shell'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "healthcare_production_env/etc/ssl/openssl.cnf",
+      "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+      "title": "Insecure System OpenSSL TLS Policy (TLS 1.0 Allowed)",
+      "severity": "HIGH",
+      "description": "System OpenSSL policy permits deprecated TLS 1.0 protocol and SECLEVEL=0 weak ciphers.",
+      "details": {
+        "MinProtocol": "TLSv1.0",
+        "SECLEVEL": 0
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Transmission security - Strong TLS Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_TLS_POLICY] Recommend immediate remediation for 'Insecure System OpenSSL TLS Policy (TLS 1.0 Allowed)'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "healthcare_production_env/etc/ssh/sshd_config",
+      "rule_id": "INSECURE_SSH_TRANSMISSION_PROTOCOL",
+      "title": "Insecure SSH Protocol & Weak Cryptographic Ciphers",
+      "severity": "HIGH",
+      "description": "SSH configuration enables insecure protocols/ciphers: Protocol 1, Weak Ciphers (Blowfish/3DES), Weak MACs (HMAC-MD5).",
+      "details": {
+        "issues": [
+          "Protocol 1",
+          "Weak Ciphers (Blowfish/3DES)",
+          "Weak MACs (HMAC-MD5)"
+        ]
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 2.2.4",
+          "title": "Insecure management protocols must be disabled",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.m",
+          "title": "Network Security & Protocol Hardening",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "CM-6",
+          "title": "Configuration Settings",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.PS-01",
+          "title": "Configuration management practices applied",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SSH_TRANSMISSION_PROTOCOL] Recommend immediate remediation for 'Insecure SSH Protocol & Weak Cryptographic Ciphers'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "healthcare_production_env/etc/nginx/conf.d/ssl_policy.conf",
+      "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+      "title": "Insecure Web Server TLS Configuration",
+      "severity": "HIGH",
+      "description": "Nginx configuration enables deprecated TLS 1.0/1.1 protocols and weak RC4/3DES ciphers.",
+      "details": {
+        "protocols": "TLSv1, TLSv1.1",
+        "ciphers": "RC4, 3DES"
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Transmission security - Strong TLS Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_TLS_POLICY] Recommend immediate remediation for 'Insecure Web Server TLS Configuration'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "healthcare_production_env/etc/registry/hklm_schannel_export.reg",
+      "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+      "title": "Insecure Windows Schannel TLS 1.0 Registry Policy",
+      "severity": "HIGH",
+      "description": "Windows Schannel registry configuration explicitly enables TLS 1.0 server protocol.",
+      "details": {
+        "schannel_protocol": "TLS 1.0"
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Transmission security - Strong TLS Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_TLS_POLICY] Recommend immediate remediation for 'Insecure Windows Schannel TLS 1.0 Registry Policy'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "healthcare_production_env/etc/crypto-policies/state/current",
+      "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+      "title": "Insecure System Crypto-Policy Set to LEGACY Mode",
+      "severity": "HIGH",
+      "description": "System crypto-policy set to LEGACY, permitting obsolete TLS 1.0/1.1 protocols.",
+      "details": {
+        "policy": "LEGACY"
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Transmission security - Strong TLS Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_SYSTEM_TLS_POLICY] Recommend immediate remediation for 'Insecure System Crypto-Policy Set to LEGACY Mode'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "rule_id": "INSECURE_AUDIT_LOG_PERMISSIONS",
+      "title": "Audit Log World-Writable Permission",
+      "severity": "HIGH",
+      "description": "Audit subsystem log 'audit.log' permissions '0o666' allow non-privileged tamper.",
+      "details": {
+        "mode": "0o666"
+      },
+      "file_path": "merchant_production_env/var/log/audit/audit.log",
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(b)",
+          "title": "Audit controls - Log Tamper Protection",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 10.2.1",
+          "title": "Audit log protection against unauthorized modification",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AU-9",
+          "title": "Protection of Audit Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_AUDIT_LOG_PERMISSIONS] Recommend immediate remediation for 'Audit Log World-Writable Permission'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "rule_id": "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE",
+      "title": "Permissive Access Control (0o777 World-Writable)",
+      "severity": "CRITICAL",
+      "description": "File permissions '0o777' allow global write access to sensitive payload.",
+      "details": {
+        "mode": "0o777",
+        "uid": "501"
+      },
+      "file_path": "merchant_production_env/point_of_sale/terminal_buffer_debug.log",
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 7.1",
+          "title": "Restrict access to system components to least privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(1)",
+          "title": "Access control - Minimum Necessary",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 01",
+          "title": "Access Control & Least Privilege Management",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AC-6",
+          "title": "Least Privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.AA-05",
+          "title": "Access permissions are managed according to least privilege",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE] Recommend immediate remediation for 'Permissive Access Control (0o777 World-Writable)'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "merchant_production_env/point_of_sale/terminal_buffer_debug.log",
+      "rule_id": "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN",
+      "title": "Cleartext Unencrypted Sensitive Data (Luhn PAN / SSN)",
+      "severity": "CRITICAL",
+      "description": "File contains unencrypted sensitive records (200 Luhn PANs, 0 SSNs).",
+      "details": {
+        "luhn_pan_count": 200,
+        "ssn_count": 0
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Technical Safeguards - Transmission security",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for UNENCRYPTED_SENSITIVE_DATA_PHI_PAN] Recommend immediate remediation for 'Cleartext Unencrypted Sensitive Data (Luhn PAN / SSN)'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "rule_id": "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE",
+      "title": "Permissive Access Control (0o777 World-Writable)",
+      "severity": "CRITICAL",
+      "description": "File permissions '0o777' allow global write access to sensitive payload.",
+      "details": {
+        "mode": "0o777",
+        "uid": "501"
+      },
+      "file_path": "merchant_production_env/point_of_sale/merchant_copay_ledger.csv",
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 7.1",
+          "title": "Restrict access to system components to least privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(1)",
+          "title": "Access control - Minimum Necessary",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 01",
+          "title": "Access Control & Least Privilege Management",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AC-6",
+          "title": "Least Privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.AA-05",
+          "title": "Access permissions are managed according to least privilege",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE] Recommend immediate remediation for 'Permissive Access Control (0o777 World-Writable)'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "merchant_production_env/point_of_sale/merchant_copay_ledger.csv",
+      "rule_id": "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN",
+      "title": "Cleartext Unencrypted Sensitive Data (Luhn PAN / SSN)",
+      "severity": "CRITICAL",
+      "description": "File contains unencrypted sensitive records (50 Luhn PANs, 50 SSNs).",
+      "details": {
+        "luhn_pan_count": 50,
+        "ssn_count": 50
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Technical Safeguards - Transmission security",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for UNENCRYPTED_SENSITIVE_DATA_PHI_PAN] Recommend immediate remediation for 'Cleartext Unencrypted Sensitive Data (Luhn PAN / SSN)'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "merchant_production_env/point_of_sale/daily_pos_settlement_20260810.db",
+      "rule_id": "ENCRYPTED_COMPLIANT_AES_256_CBC",
+      "title": "Encrypted Compliant File (AES-256-CBC)",
+      "severity": "PASS",
+      "description": "File uses compliant AES-256-CBC encryption with valid magic header (H=7.998).",
+      "details": {
+        "entropy": 7.998,
+        "magic_bytes": "8501"
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(2)(iv)",
+          "title": "Encryption and decryption",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
+          "status": "COMPLIANT"
+        }
+      ]
+    },
+    {
+      "file_path": "merchant_production_env/inventory_control/audit_log_archive.csv.zlib",
+      "rule_id": "UNENCRYPTED_RAW_ZLIB_STREAM",
+      "title": "Unencrypted Raw ZLib Compressed Stream",
+      "severity": "HIGH",
+      "description": "High entropy file (H=3.900) is an unencrypted raw zlib compressed stream, not AES encryption.",
+      "details": {
+        "entropy": 3.9
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Technical Safeguards - Transmission security",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for UNENCRYPTED_RAW_ZLIB_STREAM] Recommend immediate remediation for 'Unencrypted Raw ZLib Compressed Stream'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "merchant_production_env/inventory_control/unencrypted_patient_export.zip",
+      "rule_id": "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN",
+      "title": "Unencrypted ZIP Archive Containing Sensitive Records",
+      "severity": "CRITICAL",
+      "description": "ZIP archive contains unencrypted sensitive files: cleartext_patient_records.csv.",
+      "details": {
+        "contained_cleartext_files": [
+          "cleartext_patient_records.csv"
+        ]
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Technical Safeguards - Transmission security",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for UNENCRYPTED_SENSITIVE_DATA_PHI_PAN] Recommend immediate remediation for 'Unencrypted ZIP Archive Containing Sensitive Records'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "rule_id": "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE",
+      "title": "Permissive Access Control (0o777 World-Writable)",
+      "severity": "CRITICAL",
+      "description": "File permissions '0o777' allow global write access to sensitive payload.",
+      "details": {
+        "mode": "0o777",
+        "uid": "501"
+      },
+      "file_path": "banking_production_env/core_ledger/merchant_copay_ledger.csv",
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 7.1",
+          "title": "Restrict access to system components to least privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(1)",
+          "title": "Access control - Minimum Necessary",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 01",
+          "title": "Access Control & Least Privilege Management",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AC-6",
+          "title": "Least Privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.AA-05",
+          "title": "Access permissions are managed according to least privilege",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE] Recommend immediate remediation for 'Permissive Access Control (0o777 World-Writable)'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "banking_production_env/core_ledger/merchant_copay_ledger.csv",
+      "rule_id": "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN",
+      "title": "Cleartext Unencrypted Sensitive Data (Luhn PAN / SSN)",
+      "severity": "CRITICAL",
+      "description": "File contains unencrypted sensitive records (50 Luhn PANs, 50 SSNs).",
+      "details": {
+        "luhn_pan_count": 50,
+        "ssn_count": 50
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Technical Safeguards - Transmission security",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for UNENCRYPTED_SENSITIVE_DATA_PHI_PAN] Recommend immediate remediation for 'Cleartext Unencrypted Sensitive Data (Luhn PAN / SSN)'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "banking_production_env/wire_transfers/swift_wire_batch_20260810.dat",
+      "rule_id": "ENCRYPTED_COMPLIANT_AES_256_CBC",
+      "title": "Encrypted Compliant File (AES-256-CBC)",
+      "severity": "PASS",
+      "description": "File uses compliant AES-256-CBC encryption with valid magic header (H=7.999).",
+      "details": {
+        "entropy": 7.999,
+        "magic_bytes": "8501"
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(2)(iv)",
+          "title": "Encryption and decryption",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
+          "status": "COMPLIANT"
+        }
+      ]
+    },
+    {
+      "file_path": "banking_production_env/wire_transfers/ach_settlement_log.csv",
+      "rule_id": "INSECURE_AES_ECB_BLOCK_PATTERN_LEAK",
+      "title": "Insecure AES-ECB Block Pattern Leakage",
+      "severity": "HIGH",
+      "description": "File shows repeating 16-byte ciphertext block patterns characteristic of weak AES-ECB mode (unique blocks: 2/201).",
+      "details": {
+        "entropy": 4.04,
+        "unique_blocks": 2,
+        "total_blocks": 201
+      },
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Use strong approved cryptographic modes (avoid ECB)",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection (NIST SP 800-38A)",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_AES_ECB_BLOCK_PATTERN_LEAK] Recommend immediate remediation for 'Insecure AES-ECB Block Pattern Leakage'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "banking_production_env/system_backups/audit_log_archive.csv.zlib",
+      "rule_id": "UNENCRYPTED_RAW_ZLIB_STREAM",
+      "title": "Unencrypted Raw ZLib Compressed Stream",
+      "severity": "HIGH",
+      "description": "High entropy file (H=3.900) is an unencrypted raw zlib compressed stream, not AES encryption.",
+      "details": {
+        "entropy": 3.9
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Technical Safeguards - Transmission security",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for UNENCRYPTED_RAW_ZLIB_STREAM] Recommend immediate remediation for 'Unencrypted Raw ZLib Compressed Stream'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "banking_production_env/system_backups/unencrypted_patient_export.zip",
+      "rule_id": "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN",
+      "title": "Unencrypted ZIP Archive Containing Sensitive Records",
+      "severity": "CRITICAL",
+      "description": "ZIP archive contains unencrypted sensitive files: cleartext_patient_records.csv.",
+      "details": {
+        "contained_cleartext_files": [
+          "cleartext_patient_records.csv"
+        ]
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Technical Safeguards - Transmission security",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for UNENCRYPTED_SENSITIVE_DATA_PHI_PAN] Recommend immediate remediation for 'Unencrypted ZIP Archive Containing Sensitive Records'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "banking_production_env/system_backups/decompression_safety_check.zip",
+      "rule_id": "DECOMPRESSION_SAFETY_BOMB_TEST",
+      "title": "Decompression Safety Boundary Warning (Zip Bomb)",
+      "severity": "MEDIUM",
+      "description": "ZIP archive exhibits high compression ratio (1014.0:1). Decompression paused for safety.",
+      "details": {
+        "compressed_bytes": 10341,
+        "uncompressed_bytes": 10485760,
+        "ratio": 1014.0
+      },
+      "framework_mappings": [
+        {
+          "framework": "NIST CSF",
+          "control_id": "DE.AE-01",
+          "title": "Anomalous patterns & safety boundaries",
+          "status": "WARNING"
+        },
+        {
+          "framework": "KINTSUGI_SAFETY",
+          "control_id": "SAFETY-01",
+          "title": "Resource exhaustion & decompression bomb guardrail",
+          "status": "WARNING"
+        }
+      ]
+    },
+    {
+      "rule_id": "INSECURE_AUDIT_LOG_PERMISSIONS",
+      "title": "Audit Log World-Writable Permission",
+      "severity": "HIGH",
+      "description": "Audit subsystem log 'audit.log' permissions '0o666' allow non-privileged tamper.",
+      "details": {
+        "mode": "0o666"
+      },
+      "file_path": "banking_production_env/var/log/audit/audit.log",
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(b)",
+          "title": "Audit controls - Log Tamper Protection",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 10.2.1",
+          "title": "Audit log protection against unauthorized modification",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AU-9",
+          "title": "Protection of Audit Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_AUDIT_LOG_PERMISSIONS] Recommend immediate remediation for 'Audit Log World-Writable Permission'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "banking_production_env/treasury_ops/patient_consent_forms.asc",
+      "rule_id": "ENCRYPTED_COMPLIANT_AES_256_CBC",
+      "title": "ASCII Armored Encrypted Payload Block",
+      "severity": "PASS",
+      "description": "Successfully decoded ASCII Armored ciphertext block (decoded H=7.996).",
+      "details": {
+        "decoded_entropy": 7.996
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(2)(iv)",
+          "title": "Encryption and decryption",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
+          "status": "COMPLIANT"
+        }
+      ]
+    },
+    {
+      "file_path": "banking_production_env/treasury_ops/patient_access_token.bin",
+      "rule_id": "ENCRYPTED_COMPLIANT_AES_256_CBC",
+      "title": "Micro Encrypted Token Payload (32 Bytes)",
+      "severity": "PASS",
+      "description": "Micro 32-byte encrypted token payload (H=4.938).",
+      "details": {
+        "size": 32,
+        "entropy": 4.938
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(2)(iv)",
+          "title": "Encryption and decryption",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
+          "status": "COMPLIANT"
+        }
+      ]
+    },
+    {
+      "file_path": "banking_production_env/treasury_ops/patient_encounters_2026.csv",
+      "rule_id": "ENCRYPTED_COMPLIANT_AES_256_CBC",
+      "title": "Hybrid Plaintext Header + AES Encrypted Body",
+      "severity": "PASS",
+      "description": "File contains 512B metadata header with compliant AES encrypted body (body H=7.996).",
+      "details": {
+        "header_bytes": 512,
+        "body_entropy": 7.996
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(2)(iv)",
+          "title": "Encryption and decryption",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
+          "status": "COMPLIANT"
+        }
+      ]
+    },
+    {
+      "rule_id": "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE",
+      "title": "Permissive Access Control (0o777 World-Writable)",
+      "severity": "CRITICAL",
+      "description": "File permissions '0o777' allow global write access to sensitive payload.",
+      "details": {
+        "mode": "0o777",
+        "uid": "501"
+      },
+      "file_path": "finance_production_env/core_ledger/merchant_copay_ledger.csv",
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 7.1",
+          "title": "Restrict access to system components to least privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(1)",
+          "title": "Access control - Minimum Necessary",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 01",
+          "title": "Access Control & Least Privilege Management",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AC-6",
+          "title": "Least Privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.AA-05",
+          "title": "Access permissions are managed according to least privilege",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE] Recommend immediate remediation for 'Permissive Access Control (0o777 World-Writable)'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "finance_production_env/core_ledger/merchant_copay_ledger.csv",
+      "rule_id": "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN",
+      "title": "Cleartext Unencrypted Sensitive Data (Luhn PAN / SSN)",
+      "severity": "CRITICAL",
+      "description": "File contains unencrypted sensitive records (50 Luhn PANs, 50 SSNs).",
+      "details": {
+        "luhn_pan_count": 50,
+        "ssn_count": 50
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Technical Safeguards - Transmission security",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for UNENCRYPTED_SENSITIVE_DATA_PHI_PAN] Recommend immediate remediation for 'Cleartext Unencrypted Sensitive Data (Luhn PAN / SSN)'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "finance_production_env/wire_transfers/swift_wire_batch_20260810.dat",
+      "rule_id": "ENCRYPTED_COMPLIANT_AES_256_CBC",
+      "title": "Encrypted Compliant File (AES-256-CBC)",
+      "severity": "PASS",
+      "description": "File uses compliant AES-256-CBC encryption with valid magic header (H=7.998).",
+      "details": {
+        "entropy": 7.998,
+        "magic_bytes": "8501"
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(2)(iv)",
+          "title": "Encryption and decryption",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
+          "status": "COMPLIANT"
+        }
+      ]
+    },
+    {
+      "file_path": "finance_production_env/system_backups/audit_log_archive.csv.zlib",
+      "rule_id": "UNENCRYPTED_RAW_ZLIB_STREAM",
+      "title": "Unencrypted Raw ZLib Compressed Stream",
+      "severity": "HIGH",
+      "description": "High entropy file (H=3.900) is an unencrypted raw zlib compressed stream, not AES encryption.",
+      "details": {
+        "entropy": 3.9
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Technical Safeguards - Transmission security",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for UNENCRYPTED_RAW_ZLIB_STREAM] Recommend immediate remediation for 'Unencrypted Raw ZLib Compressed Stream'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "finance_production_env/system_backups/unencrypted_patient_export.zip",
+      "rule_id": "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN",
+      "title": "Unencrypted ZIP Archive Containing Sensitive Records",
+      "severity": "CRITICAL",
+      "description": "ZIP archive contains unencrypted sensitive files: cleartext_patient_records.csv.",
+      "details": {
+        "contained_cleartext_files": [
+          "cleartext_patient_records.csv"
+        ]
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Technical Safeguards - Transmission security",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for UNENCRYPTED_SENSITIVE_DATA_PHI_PAN] Recommend immediate remediation for 'Unencrypted ZIP Archive Containing Sensitive Records'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "finance_production_env/system_backups/decompression_safety_check.zip",
+      "rule_id": "DECOMPRESSION_SAFETY_BOMB_TEST",
+      "title": "Decompression Safety Boundary Warning (Zip Bomb)",
+      "severity": "MEDIUM",
+      "description": "ZIP archive exhibits high compression ratio (1014.0:1). Decompression paused for safety.",
+      "details": {
+        "compressed_bytes": 10341,
+        "uncompressed_bytes": 10485760,
+        "ratio": 1014.0
+      },
+      "framework_mappings": [
+        {
+          "framework": "NIST CSF",
+          "control_id": "DE.AE-01",
+          "title": "Anomalous patterns & safety boundaries",
+          "status": "WARNING"
+        },
+        {
+          "framework": "KINTSUGI_SAFETY",
+          "control_id": "SAFETY-01",
+          "title": "Resource exhaustion & decompression bomb guardrail",
+          "status": "WARNING"
+        }
+      ]
+    },
+    {
+      "rule_id": "INSECURE_AUDIT_LOG_PERMISSIONS",
+      "title": "Audit Log World-Writable Permission",
+      "severity": "HIGH",
+      "description": "Audit subsystem log 'audit.log' permissions '0o666' allow non-privileged tamper.",
+      "details": {
+        "mode": "0o666"
+      },
+      "file_path": "finance_production_env/var/log/audit/audit.log",
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(b)",
+          "title": "Audit controls - Log Tamper Protection",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 10.2.1",
+          "title": "Audit log protection against unauthorized modification",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AU-9",
+          "title": "Protection of Audit Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_AUDIT_LOG_PERMISSIONS] Recommend immediate remediation for 'Audit Log World-Writable Permission'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "finance_production_env/treasury_ops/patient_consent_forms.asc",
+      "rule_id": "ENCRYPTED_COMPLIANT_AES_256_CBC",
+      "title": "ASCII Armored Encrypted Payload Block",
+      "severity": "PASS",
+      "description": "Successfully decoded ASCII Armored ciphertext block (decoded H=7.996).",
+      "details": {
+        "decoded_entropy": 7.996
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(2)(iv)",
+          "title": "Encryption and decryption",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
+          "status": "COMPLIANT"
+        }
+      ]
+    },
+    {
+      "file_path": "finance_production_env/treasury_ops/patient_access_token.bin",
+      "rule_id": "ENCRYPTED_COMPLIANT_AES_256_CBC",
+      "title": "Micro Encrypted Token Payload (32 Bytes)",
+      "severity": "PASS",
+      "description": "Micro 32-byte encrypted token payload (H=5.000).",
+      "details": {
+        "size": 32,
+        "entropy": 5.0
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(2)(iv)",
+          "title": "Encryption and decryption",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
+          "status": "COMPLIANT"
+        }
+      ]
+    },
+    {
+      "file_path": "finance_production_env/treasury_ops/patient_encounters_2026.csv",
+      "rule_id": "ENCRYPTED_COMPLIANT_AES_256_CBC",
+      "title": "Hybrid Plaintext Header + AES Encrypted Body",
+      "severity": "PASS",
+      "description": "File contains 512B metadata header with compliant AES encrypted body (body H=7.997).",
+      "details": {
+        "header_bytes": 512,
+        "body_entropy": 7.997
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(2)(iv)",
+          "title": "Encryption and decryption",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
+          "status": "COMPLIANT"
+        }
+      ]
+    },
+    {
+      "rule_id": "INSECURE_AUDIT_LOG_PERMISSIONS",
+      "title": "Audit Log World-Writable Permission",
+      "severity": "HIGH",
+      "description": "Audit subsystem log 'audit.log' permissions '0o666' allow non-privileged tamper.",
+      "details": {
+        "mode": "0o666"
+      },
+      "file_path": "healthcare_production_env/var/log/audit/audit.log",
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(b)",
+          "title": "Audit controls - Log Tamper Protection",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 10.2.1",
+          "title": "Audit log protection against unauthorized modification",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AU-9",
+          "title": "Protection of Audit Information",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for INSECURE_AUDIT_LOG_PERMISSIONS] Recommend immediate remediation for 'Audit Log World-Writable Permission'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "rule_id": "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE",
+      "title": "Permissive Access Control (0o777 World-Writable)",
+      "severity": "CRITICAL",
+      "description": "File permissions '0o777' allow global write access to sensitive payload.",
+      "details": {
+        "mode": "0o777",
+        "uid": "501"
+      },
+      "file_path": "healthcare_production_env/billing_department/merchant_copay_ledger.csv",
+      "framework_mappings": [
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 7.1",
+          "title": "Restrict access to system components to least privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(1)",
+          "title": "Access control - Minimum Necessary",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 01",
+          "title": "Access Control & Least Privilege Management",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AC-6",
+          "title": "Least Privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.AA-05",
+          "title": "Access permissions are managed according to least privilege",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE] Recommend immediate remediation for 'Permissive Access Control (0o777 World-Writable)'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "healthcare_production_env/billing_department/merchant_copay_ledger.csv",
+      "rule_id": "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN",
+      "title": "Cleartext Unencrypted Sensitive Data (Luhn PAN / SSN)",
+      "severity": "CRITICAL",
+      "description": "File contains unencrypted sensitive records (50 Luhn PANs, 50 SSNs).",
+      "details": {
+        "luhn_pan_count": 50,
+        "ssn_count": 50
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Technical Safeguards - Transmission security",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for UNENCRYPTED_SENSITIVE_DATA_PHI_PAN] Recommend immediate remediation for 'Cleartext Unencrypted Sensitive Data (Luhn PAN / SSN)'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "healthcare_production_env/billing_department/claims_export_2026_q2.csv",
+      "rule_id": "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN",
+      "title": "Cleartext Unencrypted Sensitive Data (Luhn PAN / SSN)",
+      "severity": "CRITICAL",
+      "description": "File contains unencrypted sensitive records (100 Luhn PANs, 100 SSNs).",
+      "details": {
+        "luhn_pan_count": 100,
+        "ssn_count": 100
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(e)(1)",
+          "title": "Technical Safeguards - Transmission security",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
+        }
+      ],
+      "rag_ai_remediation": "[RAG Remediation Stub for UNENCRYPTED_SENSITIVE_DATA_PHI_PAN] Recommend immediate remediation for 'Cleartext Unencrypted Sensitive Data (Luhn PAN / SSN)'. Apply least-privilege permissions, enforce strong AES-256-CBC encryption, and disable deprecated TLS 1.0 protocols."
+    },
+    {
+      "file_path": "healthcare_production_env/patient_records/patient_consent_forms.asc",
+      "rule_id": "ENCRYPTED_COMPLIANT_AES_256_CBC",
+      "title": "ASCII Armored Encrypted Payload Block",
+      "severity": "PASS",
+      "description": "Successfully decoded ASCII Armored ciphertext block (decoded H=7.996).",
+      "details": {
+        "decoded_entropy": 7.996
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(2)(iv)",
+          "title": "Encryption and decryption",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
+          "status": "COMPLIANT"
+        }
+      ]
+    },
+    {
+      "file_path": "healthcare_production_env/patient_records/patient_access_token.bin",
+      "rule_id": "ENCRYPTED_COMPLIANT_AES_256_CBC",
+      "title": "Micro Encrypted Token Payload (32 Bytes)",
+      "severity": "PASS",
+      "description": "Micro 32-byte encrypted token payload (H=4.812).",
+      "details": {
+        "size": 32,
+        "entropy": 4.812
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(2)(iv)",
+          "title": "Encryption and decryption",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
+          "status": "COMPLIANT"
+        }
+      ]
+    },
+    {
+      "file_path": "healthcare_production_env/patient_records/patient_encounters_2026.csv",
+      "rule_id": "ENCRYPTED_COMPLIANT_AES_256_CBC",
+      "title": "Hybrid Plaintext Header + AES Encrypted Body",
+      "severity": "PASS",
+      "description": "File contains 512B metadata header with compliant AES encrypted body (body H=7.996).",
+      "details": {
+        "header_bytes": 512,
+        "body_entropy": 7.996
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(2)(iv)",
+          "title": "Encryption and decryption",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
+          "status": "COMPLIANT"
+        }
+      ]
+    },
+    {
+      "file_path": "healthcare_production_env/patient_records/ehr_db_master.gpg",
+      "rule_id": "ENCRYPTED_COMPLIANT_AES_256_CBC",
+      "title": "Encrypted Compliant File (AES-256-CBC)",
+      "severity": "PASS",
+      "description": "File uses compliant AES-256-CBC encryption with valid magic header (H=7.999).",
+      "details": {
+        "entropy": 7.999,
+        "magic_bytes": "8501"
+      },
+      "framework_mappings": [
+        {
+          "framework": "HIPAA",
+          "control_id": "164.312(a)(2)(iv)",
+          "title": "Encryption and decryption",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
+          "status": "COMPLIANT"
+        }
+      ]
+    }
+  ]
+}

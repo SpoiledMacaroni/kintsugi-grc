@@ -1,0 +1,149 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+6 0 obj
+<< /Length 5508 >>
+stream
+0.08 0.18 0.36 rg
+20 720 572 50 re f
+1 1 1 rg
+BT /F2 18 Tf 35 740 Td (KINTSUGI-GRC AUDIT COMPLIANCE REPORT) Tj ET
+BT /F1 10 Tf 35 728 Td (Generated: 2026-08-11 15:44:44 UTC) Tj ET
+0 0 0 rg
+BT /F2 12 Tf 35 690 Td (EXECUTIVE COMPLIANCE SUMMARY) Tj ET
+0.8 0.8 0.8 RG 1 w 35 682 m 577 682 l S
+BT /F1 10 Tf 35 665 Td (Target Environment : /Users/dennislay/Downloads/kintsugi-grc/synthetic_test_env) Tj ET
+BT /F1 10 Tf 35 650 Td (Total Files Scanned : 83) Tj ET
+BT /F2 11 Tf 35 635 Td (Overall Risk Score   : 0% / 100%) Tj ET
+0.95 0.95 0.97 rg 35 575 542 45 re f 0.7 0.7 0.7 RG 1 w 35 575 542 45 re S
+0.8 0.1 0.1 rg
+BT /F2 10 Tf 50 595 Td (CRITICAL: 14) Tj ET
+0.8 0.4 0.0 rg
+BT /F2 10 Tf 160 595 Td (HIGH: 32) Tj ET
+0.7 0.6 0.0 rg
+BT /F2 10 Tf 270 595 Td (MEDIUM: 6) Tj ET
+0.1 0.6 0.2 rg
+BT /F2 10 Tf 380 595 Td (PASS: 13) Tj ET
+0 0 0 rg
+BT /F2 12 Tf 35 550 Td (TOP DETECTED FINDINGS & FRAMEWORK CONTROL MAPPINGS) Tj ET
+0.8 0.8 0.8 RG 1 w 35 542 m 577 542 l S
+0.7 0.6 0.0 rg
+BT /F2 9 Tf 35 520 Td ([1] [MEDIUM]) Tj ET
+0 0 0 rg
+BT /F2 9 Tf 110 520 Td (Insecure Password Expiry Policy \(PASS_MAX_DAYS > 90\)) Tj ET
+BT /F1 8 Tf 45 506 Td (File: merchant_production_env/etc/login.defs | Rule: INSECURE_PASSWORD_POLICY_MAX_DAYS) Tj ET
+0.1 0.3 0.6 rg
+BT /F1 8 Tf 45 494 Td (Controls: PCI DSS:Requirement 8.3.6, HITRUST CSF:Domain 10.j, NIST 800-53:IA-5\(1\)) Tj ET
+0 0 0 rg
+0.8 0.4 0.0 rg
+BT /F2 9 Tf 35 478 Td ([2] [HIGH]) Tj ET
+0 0 0 rg
+BT /F2 9 Tf 110 478 Td (System Daemon Account Mapped to Active Shell) Tj ET
+BT /F1 8 Tf 45 464 Td (File: merchant_production_env/etc/passwd | Rule: INSECURE_SYSTEM_ACCOUNT_HARDENING) Tj ET
+0.1 0.3 0.6 rg
+BT /F1 8 Tf 45 452 Td (Controls: PCI DSS:Requirement 8.2.1, HIPAA:164.312\(a\)\(1\), NIST 800-53:AC-2) Tj ET
+0 0 0 rg
+0.8 0.4 0.0 rg
+BT /F2 9 Tf 35 436 Td ([3] [HIGH]) Tj ET
+0 0 0 rg
+BT /F2 9 Tf 110 436 Td (Insecure System OpenSSL TLS Policy \(TLS 1.0 Allowed\)) Tj ET
+BT /F1 8 Tf 45 422 Td (File: merchant_production_env/etc/ssl/openssl.cnf | Rule: INSECURE_SYSTEM_TLS_POLICY) Tj ET
+0.1 0.3 0.6 rg
+BT /F1 8 Tf 45 410 Td (Controls: PCI DSS:Requirement 4.2.1, HIPAA:164.312\(e\)\(1\), HITRUST CSF:Domain 09.v) Tj ET
+0 0 0 rg
+0.8 0.4 0.0 rg
+BT /F2 9 Tf 35 394 Td ([4] [HIGH]) Tj ET
+0 0 0 rg
+BT /F2 9 Tf 110 394 Td (Insecure SSH Protocol & Weak Cryptographic Ciphers) Tj ET
+BT /F1 8 Tf 45 380 Td (File: merchant_production_env/etc/ssh/sshd_config | Rule: INSECURE_SSH_TRANSMISSION_PROTOCOL) Tj ET
+0.1 0.3 0.6 rg
+BT /F1 8 Tf 45 368 Td (Controls: PCI DSS:Requirement 2.2.4, HITRUST CSF:Domain 09.m, NIST 800-53:CM-6) Tj ET
+0 0 0 rg
+0.8 0.4 0.0 rg
+BT /F2 9 Tf 35 352 Td ([5] [HIGH]) Tj ET
+0 0 0 rg
+BT /F2 9 Tf 110 352 Td (Insecure Web Server TLS Configuration) Tj ET
+BT /F1 8 Tf 45 338 Td (File: merchant_production_env/etc/nginx/conf.d/ssl_policy.conf | Rule: INSECURE_SYSTEM_TLS_POLICY) Tj ET
+0.1 0.3 0.6 rg
+BT /F1 8 Tf 45 326 Td (Controls: PCI DSS:Requirement 4.2.1, HIPAA:164.312\(e\)\(1\), HITRUST CSF:Domain 09.v) Tj ET
+0 0 0 rg
+0.8 0.4 0.0 rg
+BT /F2 9 Tf 35 310 Td ([6] [HIGH]) Tj ET
+0 0 0 rg
+BT /F2 9 Tf 110 310 Td (Insecure Windows Schannel TLS 1.0 Registry Policy) Tj ET
+BT /F1 8 Tf 45 296 Td (File: merchant_production_env/etc/registry/hklm_schannel_export.reg | Rule: INSECURE_SYSTEM_TLS_POLICY) Tj ET
+0.1 0.3 0.6 rg
+BT /F1 8 Tf 45 284 Td (Controls: PCI DSS:Requirement 4.2.1, HIPAA:164.312\(e\)\(1\), HITRUST CSF:Domain 09.v) Tj ET
+0 0 0 rg
+0.8 0.4 0.0 rg
+BT /F2 9 Tf 35 268 Td ([7] [HIGH]) Tj ET
+0 0 0 rg
+BT /F2 9 Tf 110 268 Td (Insecure System Crypto-Policy Set to LEGACY Mode) Tj ET
+BT /F1 8 Tf 45 254 Td (File: merchant_production_env/etc/crypto-policies/state/current | Rule: INSECURE_SYSTEM_TLS_POLICY) Tj ET
+0.1 0.3 0.6 rg
+BT /F1 8 Tf 45 242 Td (Controls: PCI DSS:Requirement 4.2.1, HIPAA:164.312\(e\)\(1\), HITRUST CSF:Domain 09.v) Tj ET
+0 0 0 rg
+0.7 0.6 0.0 rg
+BT /F2 9 Tf 35 226 Td ([8] [MEDIUM]) Tj ET
+0 0 0 rg
+BT /F2 9 Tf 110 226 Td (Insecure Password Expiry Policy \(PASS_MAX_DAYS > 90\)) Tj ET
+BT /F1 8 Tf 45 212 Td (File: banking_production_env/etc/login.defs | Rule: INSECURE_PASSWORD_POLICY_MAX_DAYS) Tj ET
+0.1 0.3 0.6 rg
+BT /F1 8 Tf 45 200 Td (Controls: PCI DSS:Requirement 8.3.6, HITRUST CSF:Domain 10.j, NIST 800-53:IA-5\(1\)) Tj ET
+0 0 0 rg
+0.8 0.4 0.0 rg
+BT /F2 9 Tf 35 184 Td ([9] [HIGH]) Tj ET
+0 0 0 rg
+BT /F2 9 Tf 110 184 Td (System Daemon Account Mapped to Active Shell) Tj ET
+BT /F1 8 Tf 45 170 Td (File: banking_production_env/etc/passwd | Rule: INSECURE_SYSTEM_ACCOUNT_HARDENING) Tj ET
+0.1 0.3 0.6 rg
+BT /F1 8 Tf 45 158 Td (Controls: PCI DSS:Requirement 8.2.1, HIPAA:164.312\(a\)\(1\), NIST 800-53:AC-2) Tj ET
+0 0 0 rg
+0.8 0.4 0.0 rg
+BT /F2 9 Tf 35 142 Td ([10] [HIGH]) Tj ET
+0 0 0 rg
+BT /F2 9 Tf 110 142 Td (Insecure System OpenSSL TLS Policy \(TLS 1.0 Allowed\)) Tj ET
+BT /F1 8 Tf 45 128 Td (File: banking_production_env/etc/ssl/openssl.cnf | Rule: INSECURE_SYSTEM_TLS_POLICY) Tj ET
+0.1 0.3 0.6 rg
+BT /F1 8 Tf 45 116 Td (Controls: PCI DSS:Requirement 4.2.1, HIPAA:164.312\(e\)\(1\), HITRUST CSF:Domain 09.v) Tj ET
+0 0 0 rg
+0.8 0.4 0.0 rg
+BT /F2 9 Tf 35 100 Td ([11] [HIGH]) Tj ET
+0 0 0 rg
+BT /F2 9 Tf 110 100 Td (Insecure SSH Protocol & Weak Cryptographic Ciphers) Tj ET
+BT /F1 8 Tf 45 86 Td (File: banking_production_env/etc/ssh/sshd_config | Rule: INSECURE_SSH_TRANSMISSION_PROTOCOL) Tj ET
+0.1 0.3 0.6 rg
+BT /F1 8 Tf 45 74 Td (Controls: PCI DSS:Requirement 2.2.4, HITRUST CSF:Domain 09.m, NIST 800-53:CM-6) Tj ET
+0 0 0 rg
+0.5 0.5 0.5 rg
+BT /F1 8 Tf 35 25 Td (Kintsugi-GRC Automated Compliance Scanner - Confidential Audit Document) Tj ET
+endstream
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000015 00000 n 
+0000000068 00000 n 
+0000000125 00000 n 
+0000000257 00000 n 
+0000000331 00000 n 
+0000000436 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+5962
+%%EOF
