@@ -169,145 +169,217 @@ class ConfigAuditor:
     def __init__(self, target_root: Path):
         self.target_root = target_root
 
+    def audit_single_file_config(self, file_path: Path, rel_path: str) -> List[Dict[str, Any]]:
+        """Audits an individual configuration file against security baseline rules."""
+        findings = []
+        file_name = file_path.name
+
+        # 1. SSH Server Config (/etc/ssh/sshd_config)
+        if file_name == "sshd_config":
+            try:
+                content = file_path.read_text(encoding="utf-8", errors="ignore")
+                issues = []
+                if re.search(r"^\s*Protocol\s+1", content, re.MULTILINE):
+                    issues.append("Protocol 1")
+                if re.search(r"Ciphers\s+.*(?:blowfish|3des|aes128-cbc)", content, re.IGNORECASE):
+                    issues.append("Weak Ciphers (Blowfish/3DES)")
+                if re.search(r"MACs\s+.*hmac-md5", content, re.IGNORECASE):
+                    issues.append("Weak MACs (HMAC-MD5)")
+                
+                if issues:
+                    findings.append({
+                        "file_path": rel_path,
+                        "rule_id": "INSECURE_SSH_TRANSMISSION_PROTOCOL",
+                        "title": "Insecure SSH Protocol & Weak Cryptographic Ciphers",
+                        "severity": "HIGH",
+                        "description": f"SSH configuration enables insecure protocols/ciphers: {', '.join(issues)}.",
+                        "details": {"issues": issues}
+                    })
+                else:
+                    findings.append({
+                        "file_path": rel_path,
+                        "rule_id": "INSECURE_SSH_TRANSMISSION_PROTOCOL",
+                        "title": "Compliant SSH Transmission Protocol & Ciphers",
+                        "severity": "PASS",
+                        "description": "SSH configuration enforces Protocol 2 and compliant cryptographic ciphers.",
+                        "details": {"protocol": "2"}
+                    })
+            except Exception as e:
+                logger.debug(f"Error auditing {rel_path}: {e}")
+
+        # 2. Login Definitions (/etc/login.defs)
+        elif file_name == "login.defs":
+            try:
+                content = file_path.read_text(encoding="utf-8", errors="ignore")
+                match = re.search(r"^\s*PASS_MAX_DAYS\s+(\d+)", content, re.MULTILINE)
+                if match:
+                    days = int(match.group(1))
+                    if days > 90:
+                        findings.append({
+                            "file_path": rel_path,
+                            "rule_id": "INSECURE_PASSWORD_POLICY_MAX_DAYS",
+                            "title": "Insecure Password Expiry Policy (PASS_MAX_DAYS > 90)",
+                            "severity": "MEDIUM",
+                            "description": f"PASS_MAX_DAYS set to {days} (exceeds 90-day compliance baseline).",
+                            "details": {"PASS_MAX_DAYS": days}
+                        })
+                    else:
+                        findings.append({
+                            "file_path": rel_path,
+                            "rule_id": "INSECURE_PASSWORD_POLICY_MAX_DAYS",
+                            "title": "Compliant Password Expiry Policy (PASS_MAX_DAYS <= 90)",
+                            "severity": "PASS",
+                            "description": f"PASS_MAX_DAYS set to {days} (within 90-day compliance baseline).",
+                            "details": {"PASS_MAX_DAYS": days}
+                        })
+            except Exception as e:
+                logger.debug(f"Error auditing {rel_path}: {e}")
+
+        # 3. User Passwd Hardening (/etc/passwd)
+        elif file_name == "passwd" and "etc" in rel_path:
+            try:
+                content = file_path.read_text(encoding="utf-8", errors="ignore")
+                active_daemon_shells = []
+                for line in content.splitlines():
+                    parts = line.split(":")
+                    if len(parts) >= 7:
+                        username, shell = parts[0], parts[6]
+                        if username in ["daemon", "bin", "sys"] and shell not in ["/sbin/nologin", "/bin/false"]:
+                            active_daemon_shells.append(f"{username}:{shell}")
+                
+                if active_daemon_shells:
+                    findings.append({
+                        "file_path": rel_path,
+                        "rule_id": "INSECURE_SYSTEM_ACCOUNT_HARDENING",
+                        "title": "System Daemon Account Mapped to Active Shell",
+                        "severity": "HIGH",
+                        "description": f"System accounts have active login shells: {', '.join(active_daemon_shells)}.",
+                        "details": {"active_shells": active_daemon_shells}
+                    })
+                else:
+                    findings.append({
+                        "file_path": rel_path,
+                        "rule_id": "INSECURE_SYSTEM_ACCOUNT_HARDENING",
+                        "title": "Compliant System Account Hardening",
+                        "severity": "PASS",
+                        "description": "System accounts configured with non-interactive login shells (/sbin/nologin).",
+                        "details": {"active_shells": 0}
+                    })
+            except Exception as e:
+                logger.debug(f"Error auditing {rel_path}: {e}")
+
+        # 4. OpenSSL TLS Policy (/etc/ssl/openssl.cnf)
+        elif file_name == "openssl.cnf":
+            try:
+                content = file_path.read_text(encoding="utf-8", errors="ignore")
+                if "MinProtocol = TLSv1.0" in content or "SECLEVEL=0" in content:
+                    findings.append({
+                        "file_path": rel_path,
+                        "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+                        "title": "Insecure System OpenSSL TLS Policy (TLS 1.0 Allowed)",
+                        "severity": "HIGH",
+                        "description": "System OpenSSL policy permits deprecated TLS 1.0 protocol and SECLEVEL=0 weak ciphers.",
+                        "details": {"MinProtocol": "TLSv1.0", "SECLEVEL": 0}
+                    })
+                else:
+                    findings.append({
+                        "file_path": rel_path,
+                        "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+                        "title": "Compliant System OpenSSL TLS Policy (TLS 1.2+)",
+                        "severity": "PASS",
+                        "description": "System OpenSSL policy enforces TLS 1.2+ minimum protocol.",
+                        "details": {"MinProtocol": "TLSv1.2", "SECLEVEL": 2}
+                    })
+            except Exception as e:
+                logger.debug(f"Error auditing {rel_path}: {e}")
+
+        # 5. Linux Crypto-Policies (/etc/crypto-policies/state/current)
+        elif file_name == "current" and "crypto-policies" in rel_path:
+            try:
+                content = file_path.read_text(encoding="utf-8", errors="ignore").strip()
+                if content == "LEGACY":
+                    findings.append({
+                        "file_path": rel_path,
+                        "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+                        "title": "Insecure System Crypto-Policy Set to LEGACY Mode",
+                        "severity": "HIGH",
+                        "description": "System crypto-policy set to LEGACY, permitting obsolete TLS 1.0/1.1 protocols.",
+                        "details": {"policy": "LEGACY"}
+                    })
+                else:
+                    findings.append({
+                        "file_path": rel_path,
+                        "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+                        "title": "Compliant System Crypto-Policy (DEFAULT/FUTURE Mode)",
+                        "severity": "PASS",
+                        "description": f"System crypto-policy set to compliant mode ({content}).",
+                        "details": {"policy": content}
+                    })
+            except Exception as e:
+                logger.debug(f"Error auditing {rel_path}: {e}")
+
+        # 6. Web Server TLS Policy Config (/etc/nginx/conf.d/ssl_policy.conf)
+        elif file_name == "ssl_policy.conf":
+            try:
+                content = file_path.read_text(encoding="utf-8", errors="ignore")
+                if "TLSv1 " in content or "RC4" in content or "3DES" in content:
+                    findings.append({
+                        "file_path": rel_path,
+                        "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+                        "title": "Insecure Web Server TLS Configuration",
+                        "severity": "HIGH",
+                        "description": "Nginx configuration enables deprecated TLS 1.0/1.1 protocols and weak RC4/3DES ciphers.",
+                        "details": {"protocols": "TLSv1, TLSv1.1", "ciphers": "RC4, 3DES"}
+                    })
+                else:
+                    findings.append({
+                        "file_path": rel_path,
+                        "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+                        "title": "Compliant Web Server TLS Configuration (TLS 1.2+)",
+                        "severity": "PASS",
+                        "description": "Nginx configuration enforces TLS 1.2/1.3 with modern ciphers.",
+                        "details": {"protocols": "TLSv1.2, TLSv1.3"}
+                    })
+            except Exception as e:
+                logger.debug(f"Error auditing {rel_path}: {e}")
+
+        # 7. Windows Schannel Registry Export Mock (hklm_schannel_export.reg)
+        elif file_name == "hklm_schannel_export.reg":
+            try:
+                content = file_path.read_text(encoding="utf-8", errors="ignore")
+                if "TLS 1.0" in content and "Enabled\"=dword:00000001" in content:
+                    findings.append({
+                        "file_path": rel_path,
+                        "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+                        "title": "Insecure Windows Schannel TLS 1.0 Registry Policy",
+                        "severity": "HIGH",
+                        "description": "Windows Schannel registry configuration explicitly enables TLS 1.0 server protocol.",
+                        "details": {"schannel_protocol": "TLS 1.0"}
+                    })
+                else:
+                    findings.append({
+                        "file_path": rel_path,
+                        "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
+                        "title": "Compliant Windows Schannel TLS Policy (TLS 1.0 Disabled)",
+                        "severity": "PASS",
+                        "description": "Windows Schannel registry configuration disables TLS 1.0.",
+                        "details": {"schannel_protocol": "TLS 1.2"}
+                    })
+            except Exception as e:
+                logger.debug(f"Error auditing {rel_path}: {e}")
+
+        return findings
+
     def audit_target_configs(self) -> List[Dict[str, Any]]:
         """Walks target root and audits system configuration files inside target_dir/etc/."""
         findings = []
-        
         for root, _, files in os.walk(self.target_root):
             root_path = Path(root)
             for file_name in files:
                 file_path = root_path / file_name
                 rel_path = file_path.relative_to(self.target_root).as_posix()
-
-                # 1. SSH Server Config (/etc/ssh/sshd_config)
-                if file_name == "sshd_config":
-                    try:
-                        content = file_path.read_text(encoding="utf-8", errors="ignore")
-                        issues = []
-                        if re.search(r"^\s*Protocol\s+1", content, re.MULTILINE):
-                            issues.append("Protocol 1")
-                        if re.search(r"Ciphers\s+.*(?:blowfish|3des|aes128-cbc)", content, re.IGNORECASE):
-                            issues.append("Weak Ciphers (Blowfish/3DES)")
-                        if re.search(r"MACs\s+.*hmac-md5", content, re.IGNORECASE):
-                            issues.append("Weak MACs (HMAC-MD5)")
-                        
-                        if issues:
-                            findings.append({
-                                "file_path": rel_path,
-                                "rule_id": "INSECURE_SSH_TRANSMISSION_PROTOCOL",
-                                "title": "Insecure SSH Protocol & Weak Cryptographic Ciphers",
-                                "severity": "HIGH",
-                                "description": f"SSH configuration enables insecure protocols/ciphers: {', '.join(issues)}.",
-                                "details": {"issues": issues}
-                            })
-                    except Exception as e:
-                        logger.debug(f"Error auditing {rel_path}: {e}")
-
-                # 2. Login Definitions (/etc/login.defs)
-                elif file_name == "login.defs":
-                    try:
-                        content = file_path.read_text(encoding="utf-8", errors="ignore")
-                        match = re.search(r"^\s*PASS_MAX_DAYS\s+(\d+)", content, re.MULTILINE)
-                        if match and int(match.group(1)) > 90:
-                            findings.append({
-                                "file_path": rel_path,
-                                "rule_id": "INSECURE_PASSWORD_POLICY_MAX_DAYS",
-                                "title": "Insecure Password Expiry Policy (PASS_MAX_DAYS > 90)",
-                                "severity": "MEDIUM",
-                                "description": f"PASS_MAX_DAYS set to {match.group(1)} (exceeds 90-day compliance baseline).",
-                                "details": {"PASS_MAX_DAYS": int(match.group(1))}
-                            })
-                    except Exception as e:
-                        logger.debug(f"Error auditing {rel_path}: {e}")
-
-                # 3. User Passwd Hardening (/etc/passwd)
-                elif file_name == "passwd" and "etc" in rel_path:
-                    try:
-                        content = file_path.read_text(encoding="utf-8", errors="ignore")
-                        active_daemon_shells = []
-                        for line in content.splitlines():
-                            parts = line.split(":")
-                            if len(parts) >= 7:
-                                username, shell = parts[0], parts[6]
-                                if username in ["daemon", "bin", "sys"] and shell not in ["/sbin/nologin", "/bin/false"]:
-                                    active_daemon_shells.append(f"{username}:{shell}")
-                        
-                        if active_daemon_shells:
-                            findings.append({
-                                "file_path": rel_path,
-                                "rule_id": "INSECURE_SYSTEM_ACCOUNT_HARDENING",
-                                "title": "System Daemon Account Mapped to Active Shell",
-                                "severity": "HIGH",
-                                "description": f"System accounts have active login shells: {', '.join(active_daemon_shells)}.",
-                                "details": {"active_shells": active_daemon_shells}
-                            })
-                    except Exception as e:
-                        logger.debug(f"Error auditing {rel_path}: {e}")
-
-                # 4. OpenSSL TLS Policy (/etc/ssl/openssl.cnf)
-                elif file_name == "openssl.cnf":
-                    try:
-                        content = file_path.read_text(encoding="utf-8", errors="ignore")
-                        if "MinProtocol = TLSv1.0" in content or "SECLEVEL=0" in content:
-                            findings.append({
-                                "file_path": rel_path,
-                                "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
-                                "title": "Insecure System OpenSSL TLS Policy (TLS 1.0 Allowed)",
-                                "severity": "HIGH",
-                                "description": "System OpenSSL policy permits deprecated TLS 1.0 protocol and SECLEVEL=0 weak ciphers.",
-                                "details": {"MinProtocol": "TLSv1.0", "SECLEVEL": 0}
-                            })
-                    except Exception as e:
-                        logger.debug(f"Error auditing {rel_path}: {e}")
-
-                # 5. Linux Crypto-Policies (/etc/crypto-policies/state/current)
-                elif file_name == "current" and "crypto-policies" in rel_path:
-                    try:
-                        content = file_path.read_text(encoding="utf-8", errors="ignore").strip()
-                        if content == "LEGACY":
-                            findings.append({
-                                "file_path": rel_path,
-                                "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
-                                "title": "Insecure System Crypto-Policy Set to LEGACY Mode",
-                                "severity": "HIGH",
-                                "description": "System crypto-policy set to LEGACY, permitting obsolete TLS 1.0/1.1 protocols.",
-                                "details": {"policy": "LEGACY"}
-                            })
-                    except Exception as e:
-                        logger.debug(f"Error auditing {rel_path}: {e}")
-
-                # 6. Web Server TLS Policy Config (/etc/nginx/conf.d/ssl_policy.conf)
-                elif file_name == "ssl_policy.conf":
-                    try:
-                        content = file_path.read_text(encoding="utf-8", errors="ignore")
-                        if "TLSv1 " in content or "RC4" in content or "3DES" in content:
-                            findings.append({
-                                "file_path": rel_path,
-                                "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
-                                "title": "Insecure Web Server TLS Configuration",
-                                "severity": "HIGH",
-                                "description": "Nginx configuration enables deprecated TLS 1.0/1.1 protocols and weak RC4/3DES ciphers.",
-                                "details": {"protocols": "TLSv1, TLSv1.1", "ciphers": "RC4, 3DES"}
-                            })
-                    except Exception as e:
-                        logger.debug(f"Error auditing {rel_path}: {e}")
-
-                # 7. Windows Schannel Registry Export Mock (hklm_schannel_export.reg)
-                elif file_name == "hklm_schannel_export.reg":
-                    try:
-                        content = file_path.read_text(encoding="utf-8", errors="ignore")
-                        if "TLS 1.0" in content and "Enabled\"=dword:00000001" in content:
-                            findings.append({
-                                "file_path": rel_path,
-                                "rule_id": "INSECURE_SYSTEM_TLS_POLICY",
-                                "title": "Insecure Windows Schannel TLS 1.0 Registry Policy",
-                                "severity": "HIGH",
-                                "description": "Windows Schannel registry configuration explicitly enables TLS 1.0 server protocol.",
-                                "details": {"schannel_protocol": "TLS 1.0"}
-                            })
-                    except Exception as e:
-                        logger.debug(f"Error auditing {rel_path}: {e}")
-
+                file_findings = self.audit_single_file_config(file_path, rel_path)
+                findings.extend(file_findings)
         return findings
 
 # -----------------------------------------------------------------------------
@@ -362,7 +434,10 @@ class ScannerEngine:
                 self.scanned_files_count += 1
                 self.scan_file(file_path, rel_path)
 
-        # Calculate Compliance Score (Weighted Health Index)
+        return self.get_summary()
+
+    def get_summary(self) -> Dict[str, Any]:
+        """Returns the current aggregated scan summary and health score."""
         pass_count = sum(1 for f in self.findings if f.get("severity") == "PASS")
         critical_count = sum(1 for f in self.findings if f.get("severity") == "CRITICAL")
         high_count = sum(1 for f in self.findings if f.get("severity") == "HIGH")
@@ -375,7 +450,7 @@ class ScannerEngine:
         else:
             compliance_score = 100
 
-        summary = {
+        return {
             "target_directory": self.target_dir.as_posix(),
             "industry_focus": self.industry,
             "total_files_scanned": self.scanned_files_count,
@@ -389,7 +464,37 @@ class ScannerEngine:
             },
             "findings": self.findings
         }
-        return summary
+
+    def update_single_file(self, abs_file_path: Path, event_type: str) -> Dict[str, Any]:
+        """Dynamically updates findings for a single file created, modified, or deleted."""
+        target_resolved = self.target_dir.resolve()
+        abs_resolved = abs_file_path.resolve()
+        try:
+            rel_path = abs_resolved.relative_to(target_resolved).as_posix()
+        except ValueError:
+            try:
+                rel_path = abs_file_path.relative_to(self.target_dir).as_posix()
+            except ValueError:
+                rel_path = abs_file_path.name
+
+        t_clean = rel_path.lstrip("/")
+
+        def matches_path(f_path: str) -> bool:
+            f_clean = f_path.lstrip("/")
+            return f_clean == t_clean or f_clean.endswith("/" + t_clean) or t_clean.endswith("/" + f_clean) or (
+                Path(f_clean).name == Path(t_clean).name and Path(f_clean).parent.name == Path(t_clean).parent.name
+            )
+
+        # Remove existing findings matching this file path
+        self.findings = [f for f in self.findings if not matches_path(f.get("file_path", ""))]
+
+        if event_type in ["CREATED", "MODIFIED"] and abs_file_path.exists():
+            self.scan_file(abs_file_path, rel_path)
+            self.audit_logger.log_event("DYNAMIC_RESCAN", f"Dynamically re-scanned {rel_path} ({event_type})")
+        elif event_type == "DELETED":
+            self.audit_logger.log_event("DYNAMIC_DELETE", f"Cleared findings for deleted file {rel_path}")
+
+        return self.get_summary()
 
     def scan_file(self, file_path: Path, rel_path: str):
         """Scans an individual file against cryptographic, entropy, sensitive data, and IAM rules."""
@@ -398,6 +503,15 @@ class ScannerEngine:
             file_bytes_size = stat.st_size
             mode_octal = oct(stat.st_mode & 0o777)
             self.audit_logger.log_read_access(file_path, file_bytes_size, mode_octal)
+
+            # Config Audit for system configuration files
+            config_findings = self.config_auditor.audit_single_file_config(file_path, rel_path)
+            if config_findings:
+                for f in config_findings:
+                    f["framework_mappings"] = self.control_reg.map_rule_to_frameworks(f["rule_id"], industry=self.industry)
+                    self.findings.append(f)
+                    self.audit_logger.log_evaluation(file_path, f["rule_id"], f["severity"], f["details"])
+                return
 
             # IAM Permission Audit
             iam_findings = self.iam_auditor.audit_file_permissions(file_path)
@@ -533,8 +647,8 @@ class ScannerEngine:
                     self.audit_logger.log_evaluation(file_path, f["rule_id"], "CRITICAL", {"pans": len(pans), "ssns": len(ssns)})
                     return
 
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error(f"Error scanning file {file_path}: {e}", exc_info=True)
 
             # Rule 7: Micro Payload (32-byte token)
             if FileAnalyzer.check_micro_payload(raw_data):
@@ -571,6 +685,21 @@ class ScannerEngine:
                     self.findings.append(f)
                     self.audit_logger.log_evaluation(file_path, f["rule_id"], "HIGH", {"unique_blocks": unique_blocks})
                     return
+
+            # Baseline Pass if no active violations found for file
+            file_findings = [f for f in self.findings if f.get("file_path") == rel_path]
+            if len(file_findings) == 0:
+                f = {
+                    "file_path": rel_path,
+                    "rule_id": "COMPLIANT_SECURITY_BASELINE",
+                    "title": "Compliant File Security Baseline",
+                    "severity": "PASS",
+                    "description": f"File permissions '{mode_octal}' and payload conform to security baseline.",
+                    "details": {"mode": mode_octal},
+                    "framework_mappings": self.control_reg.map_rule_to_frameworks("COMPLIANT_SECURITY_BASELINE", industry=self.industry)
+                }
+                self.findings.append(f)
+                self.audit_logger.log_evaluation(file_path, f["rule_id"], "PASS", {"mode": mode_octal})
 
         except Exception as e:
             logger.debug(f"Error scanning file {rel_path}: {e}")

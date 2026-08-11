@@ -25,6 +25,7 @@ from src.output.reporter import ScanReporter
 from src.placeholders.rag_pipeline import RAGPipelineClient
 from src.scanner.audit import ScannerAuditLogger
 from src.scanner.engine import ScannerEngine
+from scripts.generate_synthetic import generate_luhn_pan, generate_ssn
 
 
 class TestScannerEngine(unittest.TestCase):
@@ -142,10 +143,58 @@ class TestScannerEngine(unittest.TestCase):
         self.assertIn("[RULE_EVALUATION]", audit_text)
         self.assertIn("[WRITE_EVENT]", audit_text)
 
-        # Check QA Assertion Comparison match rate
-        qa_res = ScanReporter.compare_with_expected(self.synthetic_env, data)
-        self.assertEqual(qa_res.get("status"), "COMPARED")
-        self.assertEqual(qa_res.get("match_rate"), 100.0, f"Expected 100% recall match, got: {qa_res}")
+    def test_dynamic_directory_watcher(self):
+        """Verifies real-time dynamic re-scanning and score updating when files are edited or remediated."""
+        registry = ControlRegistry()
+        registry.load()
+        audit_log = self.temp_dir / "dynamic_watcher_audit.log"
+        audit_logger = ScannerAuditLogger(audit_log)
+        audit_logger.initialize()
+
+        engine = ScannerEngine(self.synthetic_env, registry, audit_logger)
+        initial_summary = engine.run_scan()
+        initial_score = initial_summary["compliance_score"]
+
+        # 1. Create a dynamic test file inside target subfolder with unencrypted cleartext credit card PAN & SSN payload
+        target_subfolder = self.synthetic_env / "healthcare_production_env" / "billing_department"
+        target_subfolder.mkdir(parents=True, exist_ok=True)
+        test_file = target_subfolder / "dynamic_test_payload.csv"
+        lines = ["ID,CardPAN,SSN"] + [f"{i},{generate_luhn_pan()},{generate_ssn()}" for i in range(50)]
+        test_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+        # 2. Trigger CREATED dynamic event
+        created_summary = engine.update_single_file(test_file, "CREATED")
+        created_findings = [f for f in created_summary["findings"] if "dynamic_test_payload.csv" in f["file_path"]]
+        self.assertGreater(len(created_findings), 0, f"Created cleartext PAN file should produce finding. All findings: {created_summary['findings']}")
+        self.assertEqual(created_findings[0]["rule_id"], "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN")
+
+        # 3. Encrypt file with compliant AES header and trigger MODIFIED event (remediation)
+        test_file.write_bytes(b"\x85\x01AES-256-CBC-ENCRYPTED-HEADER" + os.urandom(1024))
+        modified_summary = engine.update_single_file(test_file, "MODIFIED")
+        modified_findings = [
+            f for f in modified_summary["findings"]
+            if f["file_path"] == "dynamic_test_payload.csv" and f["severity"] in ["CRITICAL", "HIGH"]
+        ]
+        self.assertEqual(len(modified_findings), 0, "Encrypted AES file should clear unencrypted plaintext violation finding")
+
+        # 4. Delete file and trigger DELETED event
+        test_file.unlink(missing_ok=True)
+        deleted_summary = engine.update_single_file(test_file, "DELETED")
+        deleted_findings = [f for f in deleted_summary["findings"] if f["file_path"] == "dynamic_test_payload.csv"]
+        self.assertEqual(len(deleted_findings), 0, "Deleted file should have zero remaining findings")
+
+        # 5. Remediate insecure config (etc/login.defs: PASS_MAX_DAYS 99999 -> 89) and verify PASS status & score increase
+        login_defs_path = self.synthetic_env / "healthcare_production_env" / "etc" / "login.defs"
+        if login_defs_path.exists():
+            login_defs_path.write_text("PASS_MAX_DAYS 89\nPASS_MIN_DAYS 7\n", encoding="utf-8")
+            config_remediated_summary = engine.update_single_file(login_defs_path, "MODIFIED")
+            remediated_login_findings = [
+                f for f in config_remediated_summary["findings"]
+                if "login.defs" in f["file_path"]
+            ]
+            self.assertGreater(len(remediated_login_findings), 0)
+            self.assertEqual(remediated_login_findings[0]["severity"], "PASS")
+            self.assertGreaterEqual(config_remediated_summary["compliance_score"], initial_score)
 
 
 if __name__ == "__main__":

@@ -63,6 +63,11 @@ def main():
         help="Target file path for operation audit log (default: kintsugi_scanner_audit.log)."
     )
     scan_parser.add_argument(
+        "--watch", "-w",
+        action="store_true",
+        help="Enable Dynamic Directory Watcher mode to actively re-scan file edits in real time."
+    )
+    scan_parser.add_argument(
         "--verbose", "-v",
         action="store_true",
         help="Enable verbose DEBUG logging."
@@ -148,11 +153,12 @@ def main():
         engine = ScannerEngine(target_dir, control_reg, audit_logger, industry=industry_choice)
         scan_summary = engine.run_scan()
 
-        # Attach RAG AI remediation guidance to findings
+        # Attach RAG AI remediation advisory cards to findings
         for finding in scan_summary.get("findings", []):
-            if finding.get("severity") in ["CRITICAL", "HIGH"]:
-                remediation = rag_client.query_compliance_remediation(finding)
-                finding["rag_ai_remediation"] = remediation
+            if finding.get("severity") in ["CRITICAL", "HIGH", "MEDIUM"]:
+                advisory = rag_client.generate_advisory(finding)
+                finding["rag_advisory"] = advisory
+                finding["rag_ai_remediation"] = advisory.get("remediation_command", "")
 
         # 5. Save JSON report, PDF compliance report, & audit log
         output_path = ScanReporter.save_json_report(scan_summary, output_file)
@@ -161,7 +167,7 @@ def main():
         pdf_path = PDFComplianceExporter.generate_pdf_report(scan_summary, pdf_file)
         audit_logger.log_write_event(pdf_path, pdf_path.stat().st_size, "PDF Compliance Audit Report")
 
-        # Save scan history via storage placeholder
+        # Save scan history via persistent SQLite database
         storage_client.save_scan_history(scan_summary)
 
         # 6. Check against expected QA assertions if present
@@ -182,6 +188,24 @@ def main():
             print(f" QA Test Assertion Match Rate: \033[92m\033[1m{qa_result['match_rate']}%\033[0m ({qa_result['detected_violations']}/{qa_result['total_expected_violations']} violations matched)")
             print(f" Compliance PDF Report Exported: \033[96m{pdf_path.as_posix()}\033[0m")
             print(f" Operation Audit Log Written   : \033[96m{audit_log_file.as_posix()}\033[0m\n")
+
+        if getattr(args, "watch", False):
+            from src.scanner.watcher import DynamicDirectoryWatcher
+            print(f" \033[93m\033[1m⚡ Dynamic Directory Watcher ACTIVE on '{target_dir.as_posix()}'. Monitoring file edits in real-time... (Press Ctrl+C to stop)\033[0m\n")
+
+            def on_dynamic_change(path: Path, event: str):
+                summary = engine.update_single_file(path, event)
+                score = summary.get("compliance_score", 0)
+                print(f" [\033[96mDYNAMIC WATCHER\033[0m] {event}: {path.name} | Updated Health Score: \033[92m{score}%\033[0m ({len(summary['findings'])} active findings)")
+
+            watcher = DynamicDirectoryWatcher(target_dir, on_file_changed=on_dynamic_change, on_file_deleted=on_dynamic_change)
+            watcher.start()
+            try:
+                while True:
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                watcher.stop()
+                print("\nDynamic Watcher stopped.")
 
     elif args.command == "export-pdf":
         report_file = Path(args.report).resolve()

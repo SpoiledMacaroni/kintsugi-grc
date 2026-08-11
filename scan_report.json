@@ -1,6 +1,6 @@
 {
   "target_directory": "/Users/dennislay/Downloads/kintsugi-grc/synthetic_test_env",
-  "industry_focus": "Healthcare",
+  "industry_focus": "All Industries",
   "total_files_scanned": 83,
   "total_findings": 65,
   "compliance_score": 37,
@@ -26,8 +26,41 @@
           "control_id": "164.312(a)(2)(i)",
           "title": "Access Control - Automatic logoff & password expiry policy",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 8.3.6",
+          "title": "Password expiry & rotation policy enforcement",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 10.j",
+          "title": "Password Management Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "IA-5(1)",
+          "title": "Password-Based Authentication",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.AA-01",
+          "title": "Identities and credentials managed",
+          "status": "VIOLATION"
         }
-      ]
+      ],
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / HIPAA-164-312-A2-IV / PCI-DSS-V4-REQ-8-3-6 / NIST-800-53-IA-5",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(2)(iv)) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "Password expiration parameter PASS_MAX_DAYS exceeds 90-day compliance baseline.",
+        "remediation_command": "sed -i 's/PASS_MAX_DAYS.*/PASS_MAX_DAYS 90/' merchant_production_env/etc/login.defs",
+        "rationale": "Mandate maximum 90-day password rotation in /etc/login.defs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(2)(iv)]: Encryption and Decryption. Implement a mechanism to encrypt and decrypt electronic protected health information.\nAction: Encrypt stored records. Plaintext medical details or patient identifiers must be run through a symmetric GPG encryption pipeline.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "sed -i 's/PASS_MAX_DAYS.*/PASS_MAX_DAYS 90/' merchant_production_env/etc/login.defs"
     },
     {
       "file_path": "merchant_production_env/etc/passwd",
@@ -48,9 +81,41 @@
           "control_id": "164.312(a)(1)",
           "title": "Unique user identification & default account hardening",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 8.2.1",
+          "title": "Remove or disable unnecessary default accounts",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 01",
+          "title": "Account Hardening Safeguards",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AC-2",
+          "title": "Account Management",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.AA-02",
+          "title": "Identities authenticated",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Remediate 'System Daemon Account Mapped to Active Shell' on merchant_production_env/etc/passwd by aligning permissions and cryptographic algorithms with GRC controls."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-7-2-1 / PCI-DSS-V4-REQ-8-2-1 / HIPAA-164-312-A1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | PCI-DSS v4.0.1 (Requirement 7.2.1) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "Default system accounts (daemon, bin, sys) have active login shells enabled.",
+        "remediation_command": "usermod -s /sbin/nologin system_user",
+        "rationale": "Lock non-human system accounts to prevent interactive login abuse.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.\n---\n[PCI-DSS v4.0.1 Requirement 7.2.1]: Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.\nAction: Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "usermod -s /sbin/nologin system_user"
     },
     {
       "file_path": "merchant_production_env/etc/ssl/openssl.cnf",
@@ -68,9 +133,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Transmission security - Strong TLS Policy enforcement",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Protections for data in transit",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Reconfigure merchant_production_env/etc/ssl/openssl.cnf to enforce MinProtocol = TLSv1.2 or TLSv1.3 and set SECLEVEL=2. Disable legacy TLS 1.0, TLS 1.1, and SSL 3.0 protocols per PCI-DSS Requirement 4.2.1."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-4-2-1 / HIPAA-164-312-E1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System crypto-policy permits legacy TLS 1.0 / TLS 1.1 or deprecated RC4/3DES ciphers.",
+        "remediation_command": "update-crypto-policies --set DEFAULT:FEDORA32",
+        "rationale": "Enforce TLS 1.2 or TLS 1.3 protocol baseline across web servers and OpenSSL configs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "update-crypto-policies --set DEFAULT:FEDORA32"
     },
     {
       "file_path": "merchant_production_env/etc/ssh/sshd_config",
@@ -91,9 +188,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Technical Safeguards - Insecure management transmission protocols",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 2.2.4",
+          "title": "Insecure management protocols must be disabled",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.m",
+          "title": "Network Security & Protocol Hardening",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "CM-6",
+          "title": "Configuration Settings",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.PS-01",
+          "title": "Configuration management practices applied",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Update merchant_production_env/etc/ssh/sshd_config to enforce SSH Protocol 2. Disable obsolete Blowfish/3DES ciphers and HMAC-MD5 MAC algorithms per PCI-DSS Requirement 2.2.4."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / HIPAA-164-312-A2-IV / PCI-DSS-V4-REQ-2-2-4 / NIST-800-53-CM-6",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(2)(iv)) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "SSH server configuration allows legacy Protocol 1 or weak ciphers (Blowfish/3DES).",
+        "remediation_command": "sed -i 's/Protocol 1/Protocol 2/' merchant_production_env/etc/ssh/sshd_config && systemctl restart sshd",
+        "rationale": "Enforce SSH Protocol 2 and mandate strong AES/CTR cipher suites.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(2)(iv)]: Encryption and Decryption. Implement a mechanism to encrypt and decrypt electronic protected health information.\nAction: Encrypt stored records. Plaintext medical details or patient identifiers must be run through a symmetric GPG encryption pipeline.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "sed -i 's/Protocol 1/Protocol 2/' merchant_production_env/etc/ssh/sshd_config && systemctl restart sshd"
     },
     {
       "file_path": "merchant_production_env/etc/nginx/conf.d/ssl_policy.conf",
@@ -111,9 +240,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Transmission security - Strong TLS Policy enforcement",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Protections for data in transit",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Reconfigure merchant_production_env/etc/nginx/conf.d/ssl_policy.conf to enforce MinProtocol = TLSv1.2 or TLSv1.3 and set SECLEVEL=2. Disable legacy TLS 1.0, TLS 1.1, and SSL 3.0 protocols per PCI-DSS Requirement 4.2.1."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-4-2-1 / HIPAA-164-312-E1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System crypto-policy permits legacy TLS 1.0 / TLS 1.1 or deprecated RC4/3DES ciphers.",
+        "remediation_command": "update-crypto-policies --set DEFAULT:FEDORA32",
+        "rationale": "Enforce TLS 1.2 or TLS 1.3 protocol baseline across web servers and OpenSSL configs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "update-crypto-policies --set DEFAULT:FEDORA32"
     },
     {
       "file_path": "merchant_production_env/etc/registry/hklm_schannel_export.reg",
@@ -130,9 +291,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Transmission security - Strong TLS Policy enforcement",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Protections for data in transit",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Reconfigure merchant_production_env/etc/registry/hklm_schannel_export.reg to enforce MinProtocol = TLSv1.2 or TLSv1.3 and set SECLEVEL=2. Disable legacy TLS 1.0, TLS 1.1, and SSL 3.0 protocols per PCI-DSS Requirement 4.2.1."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-4-2-1 / HIPAA-164-312-E1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System crypto-policy permits legacy TLS 1.0 / TLS 1.1 or deprecated RC4/3DES ciphers.",
+        "remediation_command": "update-crypto-policies --set DEFAULT:FEDORA32",
+        "rationale": "Enforce TLS 1.2 or TLS 1.3 protocol baseline across web servers and OpenSSL configs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "update-crypto-policies --set DEFAULT:FEDORA32"
     },
     {
       "file_path": "merchant_production_env/etc/crypto-policies/state/current",
@@ -149,9 +342,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Transmission security - Strong TLS Policy enforcement",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Protections for data in transit",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Reconfigure merchant_production_env/etc/crypto-policies/state/current to enforce MinProtocol = TLSv1.2 or TLSv1.3 and set SECLEVEL=2. Disable legacy TLS 1.0, TLS 1.1, and SSL 3.0 protocols per PCI-DSS Requirement 4.2.1."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-4-2-1 / HIPAA-164-312-E1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System crypto-policy permits legacy TLS 1.0 / TLS 1.1 or deprecated RC4/3DES ciphers.",
+        "remediation_command": "update-crypto-policies --set DEFAULT:FEDORA32",
+        "rationale": "Enforce TLS 1.2 or TLS 1.3 protocol baseline across web servers and OpenSSL configs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "update-crypto-policies --set DEFAULT:FEDORA32"
     },
     {
       "file_path": "banking_production_env/etc/login.defs",
@@ -168,8 +393,41 @@
           "control_id": "164.312(a)(2)(i)",
           "title": "Access Control - Automatic logoff & password expiry policy",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 8.3.6",
+          "title": "Password expiry & rotation policy enforcement",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 10.j",
+          "title": "Password Management Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "IA-5(1)",
+          "title": "Password-Based Authentication",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.AA-01",
+          "title": "Identities and credentials managed",
+          "status": "VIOLATION"
         }
-      ]
+      ],
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / HIPAA-164-312-A2-IV / PCI-DSS-V4-REQ-8-3-6 / NIST-800-53-IA-5",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(2)(iv)) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "Password expiration parameter PASS_MAX_DAYS exceeds 90-day compliance baseline.",
+        "remediation_command": "sed -i 's/PASS_MAX_DAYS.*/PASS_MAX_DAYS 90/' banking_production_env/etc/login.defs",
+        "rationale": "Mandate maximum 90-day password rotation in /etc/login.defs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(2)(iv)]: Encryption and Decryption. Implement a mechanism to encrypt and decrypt electronic protected health information.\nAction: Encrypt stored records. Plaintext medical details or patient identifiers must be run through a symmetric GPG encryption pipeline.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "sed -i 's/PASS_MAX_DAYS.*/PASS_MAX_DAYS 90/' banking_production_env/etc/login.defs"
     },
     {
       "file_path": "banking_production_env/etc/passwd",
@@ -190,9 +448,41 @@
           "control_id": "164.312(a)(1)",
           "title": "Unique user identification & default account hardening",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 8.2.1",
+          "title": "Remove or disable unnecessary default accounts",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 01",
+          "title": "Account Hardening Safeguards",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AC-2",
+          "title": "Account Management",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.AA-02",
+          "title": "Identities authenticated",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Remediate 'System Daemon Account Mapped to Active Shell' on banking_production_env/etc/passwd by aligning permissions and cryptographic algorithms with GRC controls."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-7-2-1 / PCI-DSS-V4-REQ-8-2-1 / HIPAA-164-312-A1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | PCI-DSS v4.0.1 (Requirement 7.2.1) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "Default system accounts (daemon, bin, sys) have active login shells enabled.",
+        "remediation_command": "usermod -s /sbin/nologin system_user",
+        "rationale": "Lock non-human system accounts to prevent interactive login abuse.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.\n---\n[PCI-DSS v4.0.1 Requirement 7.2.1]: Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.\nAction: Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "usermod -s /sbin/nologin system_user"
     },
     {
       "file_path": "banking_production_env/etc/ssl/openssl.cnf",
@@ -210,9 +500,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Transmission security - Strong TLS Policy enforcement",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Protections for data in transit",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Reconfigure banking_production_env/etc/ssl/openssl.cnf to enforce MinProtocol = TLSv1.2 or TLSv1.3 and set SECLEVEL=2. Disable legacy TLS 1.0, TLS 1.1, and SSL 3.0 protocols per PCI-DSS Requirement 4.2.1."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-4-2-1 / HIPAA-164-312-E1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System crypto-policy permits legacy TLS 1.0 / TLS 1.1 or deprecated RC4/3DES ciphers.",
+        "remediation_command": "update-crypto-policies --set DEFAULT:FEDORA32",
+        "rationale": "Enforce TLS 1.2 or TLS 1.3 protocol baseline across web servers and OpenSSL configs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "update-crypto-policies --set DEFAULT:FEDORA32"
     },
     {
       "file_path": "banking_production_env/etc/ssh/sshd_config",
@@ -233,9 +555,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Technical Safeguards - Insecure management transmission protocols",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 2.2.4",
+          "title": "Insecure management protocols must be disabled",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.m",
+          "title": "Network Security & Protocol Hardening",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "CM-6",
+          "title": "Configuration Settings",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.PS-01",
+          "title": "Configuration management practices applied",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Update banking_production_env/etc/ssh/sshd_config to enforce SSH Protocol 2. Disable obsolete Blowfish/3DES ciphers and HMAC-MD5 MAC algorithms per PCI-DSS Requirement 2.2.4."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / HIPAA-164-312-A2-IV / PCI-DSS-V4-REQ-2-2-4 / NIST-800-53-CM-6",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(2)(iv)) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "SSH server configuration allows legacy Protocol 1 or weak ciphers (Blowfish/3DES).",
+        "remediation_command": "sed -i 's/Protocol 1/Protocol 2/' banking_production_env/etc/ssh/sshd_config && systemctl restart sshd",
+        "rationale": "Enforce SSH Protocol 2 and mandate strong AES/CTR cipher suites.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(2)(iv)]: Encryption and Decryption. Implement a mechanism to encrypt and decrypt electronic protected health information.\nAction: Encrypt stored records. Plaintext medical details or patient identifiers must be run through a symmetric GPG encryption pipeline.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "sed -i 's/Protocol 1/Protocol 2/' banking_production_env/etc/ssh/sshd_config && systemctl restart sshd"
     },
     {
       "file_path": "banking_production_env/etc/nginx/conf.d/ssl_policy.conf",
@@ -253,9 +607,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Transmission security - Strong TLS Policy enforcement",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Protections for data in transit",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Reconfigure banking_production_env/etc/nginx/conf.d/ssl_policy.conf to enforce MinProtocol = TLSv1.2 or TLSv1.3 and set SECLEVEL=2. Disable legacy TLS 1.0, TLS 1.1, and SSL 3.0 protocols per PCI-DSS Requirement 4.2.1."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-4-2-1 / HIPAA-164-312-E1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System crypto-policy permits legacy TLS 1.0 / TLS 1.1 or deprecated RC4/3DES ciphers.",
+        "remediation_command": "update-crypto-policies --set DEFAULT:FEDORA32",
+        "rationale": "Enforce TLS 1.2 or TLS 1.3 protocol baseline across web servers and OpenSSL configs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "update-crypto-policies --set DEFAULT:FEDORA32"
     },
     {
       "file_path": "banking_production_env/etc/registry/hklm_schannel_export.reg",
@@ -272,9 +658,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Transmission security - Strong TLS Policy enforcement",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Protections for data in transit",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Reconfigure banking_production_env/etc/registry/hklm_schannel_export.reg to enforce MinProtocol = TLSv1.2 or TLSv1.3 and set SECLEVEL=2. Disable legacy TLS 1.0, TLS 1.1, and SSL 3.0 protocols per PCI-DSS Requirement 4.2.1."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-4-2-1 / HIPAA-164-312-E1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System crypto-policy permits legacy TLS 1.0 / TLS 1.1 or deprecated RC4/3DES ciphers.",
+        "remediation_command": "update-crypto-policies --set DEFAULT:FEDORA32",
+        "rationale": "Enforce TLS 1.2 or TLS 1.3 protocol baseline across web servers and OpenSSL configs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "update-crypto-policies --set DEFAULT:FEDORA32"
     },
     {
       "file_path": "banking_production_env/etc/crypto-policies/state/current",
@@ -291,9 +709,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Transmission security - Strong TLS Policy enforcement",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Protections for data in transit",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Reconfigure banking_production_env/etc/crypto-policies/state/current to enforce MinProtocol = TLSv1.2 or TLSv1.3 and set SECLEVEL=2. Disable legacy TLS 1.0, TLS 1.1, and SSL 3.0 protocols per PCI-DSS Requirement 4.2.1."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-4-2-1 / HIPAA-164-312-E1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System crypto-policy permits legacy TLS 1.0 / TLS 1.1 or deprecated RC4/3DES ciphers.",
+        "remediation_command": "update-crypto-policies --set DEFAULT:FEDORA32",
+        "rationale": "Enforce TLS 1.2 or TLS 1.3 protocol baseline across web servers and OpenSSL configs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "update-crypto-policies --set DEFAULT:FEDORA32"
     },
     {
       "file_path": "finance_production_env/etc/login.defs",
@@ -310,8 +760,41 @@
           "control_id": "164.312(a)(2)(i)",
           "title": "Access Control - Automatic logoff & password expiry policy",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 8.3.6",
+          "title": "Password expiry & rotation policy enforcement",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 10.j",
+          "title": "Password Management Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "IA-5(1)",
+          "title": "Password-Based Authentication",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.AA-01",
+          "title": "Identities and credentials managed",
+          "status": "VIOLATION"
         }
-      ]
+      ],
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / HIPAA-164-312-A2-IV / PCI-DSS-V4-REQ-8-3-6 / NIST-800-53-IA-5",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(2)(iv)) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "Password expiration parameter PASS_MAX_DAYS exceeds 90-day compliance baseline.",
+        "remediation_command": "sed -i 's/PASS_MAX_DAYS.*/PASS_MAX_DAYS 90/' finance_production_env/etc/login.defs",
+        "rationale": "Mandate maximum 90-day password rotation in /etc/login.defs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(2)(iv)]: Encryption and Decryption. Implement a mechanism to encrypt and decrypt electronic protected health information.\nAction: Encrypt stored records. Plaintext medical details or patient identifiers must be run through a symmetric GPG encryption pipeline.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "sed -i 's/PASS_MAX_DAYS.*/PASS_MAX_DAYS 90/' finance_production_env/etc/login.defs"
     },
     {
       "file_path": "finance_production_env/etc/passwd",
@@ -332,9 +815,41 @@
           "control_id": "164.312(a)(1)",
           "title": "Unique user identification & default account hardening",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 8.2.1",
+          "title": "Remove or disable unnecessary default accounts",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 01",
+          "title": "Account Hardening Safeguards",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AC-2",
+          "title": "Account Management",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.AA-02",
+          "title": "Identities authenticated",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Remediate 'System Daemon Account Mapped to Active Shell' on finance_production_env/etc/passwd by aligning permissions and cryptographic algorithms with GRC controls."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-7-2-1 / PCI-DSS-V4-REQ-8-2-1 / HIPAA-164-312-A1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | PCI-DSS v4.0.1 (Requirement 7.2.1) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "Default system accounts (daemon, bin, sys) have active login shells enabled.",
+        "remediation_command": "usermod -s /sbin/nologin system_user",
+        "rationale": "Lock non-human system accounts to prevent interactive login abuse.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.\n---\n[PCI-DSS v4.0.1 Requirement 7.2.1]: Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.\nAction: Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "usermod -s /sbin/nologin system_user"
     },
     {
       "file_path": "finance_production_env/etc/ssl/openssl.cnf",
@@ -352,9 +867,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Transmission security - Strong TLS Policy enforcement",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Protections for data in transit",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Reconfigure finance_production_env/etc/ssl/openssl.cnf to enforce MinProtocol = TLSv1.2 or TLSv1.3 and set SECLEVEL=2. Disable legacy TLS 1.0, TLS 1.1, and SSL 3.0 protocols per PCI-DSS Requirement 4.2.1."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-4-2-1 / HIPAA-164-312-E1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System crypto-policy permits legacy TLS 1.0 / TLS 1.1 or deprecated RC4/3DES ciphers.",
+        "remediation_command": "update-crypto-policies --set DEFAULT:FEDORA32",
+        "rationale": "Enforce TLS 1.2 or TLS 1.3 protocol baseline across web servers and OpenSSL configs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "update-crypto-policies --set DEFAULT:FEDORA32"
     },
     {
       "file_path": "finance_production_env/etc/ssh/sshd_config",
@@ -375,9 +922,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Technical Safeguards - Insecure management transmission protocols",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 2.2.4",
+          "title": "Insecure management protocols must be disabled",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.m",
+          "title": "Network Security & Protocol Hardening",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "CM-6",
+          "title": "Configuration Settings",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.PS-01",
+          "title": "Configuration management practices applied",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Update finance_production_env/etc/ssh/sshd_config to enforce SSH Protocol 2. Disable obsolete Blowfish/3DES ciphers and HMAC-MD5 MAC algorithms per PCI-DSS Requirement 2.2.4."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / HIPAA-164-312-A2-IV / PCI-DSS-V4-REQ-2-2-4 / NIST-800-53-CM-6",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(2)(iv)) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "SSH server configuration allows legacy Protocol 1 or weak ciphers (Blowfish/3DES).",
+        "remediation_command": "sed -i 's/Protocol 1/Protocol 2/' finance_production_env/etc/ssh/sshd_config && systemctl restart sshd",
+        "rationale": "Enforce SSH Protocol 2 and mandate strong AES/CTR cipher suites.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(2)(iv)]: Encryption and Decryption. Implement a mechanism to encrypt and decrypt electronic protected health information.\nAction: Encrypt stored records. Plaintext medical details or patient identifiers must be run through a symmetric GPG encryption pipeline.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "sed -i 's/Protocol 1/Protocol 2/' finance_production_env/etc/ssh/sshd_config && systemctl restart sshd"
     },
     {
       "file_path": "finance_production_env/etc/nginx/conf.d/ssl_policy.conf",
@@ -395,9 +974,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Transmission security - Strong TLS Policy enforcement",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Protections for data in transit",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Reconfigure finance_production_env/etc/nginx/conf.d/ssl_policy.conf to enforce MinProtocol = TLSv1.2 or TLSv1.3 and set SECLEVEL=2. Disable legacy TLS 1.0, TLS 1.1, and SSL 3.0 protocols per PCI-DSS Requirement 4.2.1."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-4-2-1 / HIPAA-164-312-E1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System crypto-policy permits legacy TLS 1.0 / TLS 1.1 or deprecated RC4/3DES ciphers.",
+        "remediation_command": "update-crypto-policies --set DEFAULT:FEDORA32",
+        "rationale": "Enforce TLS 1.2 or TLS 1.3 protocol baseline across web servers and OpenSSL configs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "update-crypto-policies --set DEFAULT:FEDORA32"
     },
     {
       "file_path": "finance_production_env/etc/registry/hklm_schannel_export.reg",
@@ -414,9 +1025,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Transmission security - Strong TLS Policy enforcement",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Protections for data in transit",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Reconfigure finance_production_env/etc/registry/hklm_schannel_export.reg to enforce MinProtocol = TLSv1.2 or TLSv1.3 and set SECLEVEL=2. Disable legacy TLS 1.0, TLS 1.1, and SSL 3.0 protocols per PCI-DSS Requirement 4.2.1."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-4-2-1 / HIPAA-164-312-E1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System crypto-policy permits legacy TLS 1.0 / TLS 1.1 or deprecated RC4/3DES ciphers.",
+        "remediation_command": "update-crypto-policies --set DEFAULT:FEDORA32",
+        "rationale": "Enforce TLS 1.2 or TLS 1.3 protocol baseline across web servers and OpenSSL configs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "update-crypto-policies --set DEFAULT:FEDORA32"
     },
     {
       "file_path": "finance_production_env/etc/crypto-policies/state/current",
@@ -433,9 +1076,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Transmission security - Strong TLS Policy enforcement",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Protections for data in transit",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Reconfigure finance_production_env/etc/crypto-policies/state/current to enforce MinProtocol = TLSv1.2 or TLSv1.3 and set SECLEVEL=2. Disable legacy TLS 1.0, TLS 1.1, and SSL 3.0 protocols per PCI-DSS Requirement 4.2.1."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-4-2-1 / HIPAA-164-312-E1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System crypto-policy permits legacy TLS 1.0 / TLS 1.1 or deprecated RC4/3DES ciphers.",
+        "remediation_command": "update-crypto-policies --set DEFAULT:FEDORA32",
+        "rationale": "Enforce TLS 1.2 or TLS 1.3 protocol baseline across web servers and OpenSSL configs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "update-crypto-policies --set DEFAULT:FEDORA32"
     },
     {
       "file_path": "healthcare_production_env/etc/login.defs",
@@ -452,8 +1127,41 @@
           "control_id": "164.312(a)(2)(i)",
           "title": "Access Control - Automatic logoff & password expiry policy",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 8.3.6",
+          "title": "Password expiry & rotation policy enforcement",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 10.j",
+          "title": "Password Management Policy",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "IA-5(1)",
+          "title": "Password-Based Authentication",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.AA-01",
+          "title": "Identities and credentials managed",
+          "status": "VIOLATION"
         }
-      ]
+      ],
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / HIPAA-164-312-A2-IV / PCI-DSS-V4-REQ-8-3-6 / NIST-800-53-IA-5",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(2)(iv)) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "Password expiration parameter PASS_MAX_DAYS exceeds 90-day compliance baseline.",
+        "remediation_command": "sed -i 's/PASS_MAX_DAYS.*/PASS_MAX_DAYS 90/' healthcare_production_env/etc/login.defs",
+        "rationale": "Mandate maximum 90-day password rotation in /etc/login.defs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(2)(iv)]: Encryption and Decryption. Implement a mechanism to encrypt and decrypt electronic protected health information.\nAction: Encrypt stored records. Plaintext medical details or patient identifiers must be run through a symmetric GPG encryption pipeline.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "sed -i 's/PASS_MAX_DAYS.*/PASS_MAX_DAYS 90/' healthcare_production_env/etc/login.defs"
     },
     {
       "file_path": "healthcare_production_env/etc/passwd",
@@ -474,9 +1182,41 @@
           "control_id": "164.312(a)(1)",
           "title": "Unique user identification & default account hardening",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 8.2.1",
+          "title": "Remove or disable unnecessary default accounts",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 01",
+          "title": "Account Hardening Safeguards",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AC-2",
+          "title": "Account Management",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.AA-02",
+          "title": "Identities authenticated",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Remediate 'System Daemon Account Mapped to Active Shell' on healthcare_production_env/etc/passwd by aligning permissions and cryptographic algorithms with GRC controls."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-7-2-1 / PCI-DSS-V4-REQ-8-2-1 / HIPAA-164-312-A1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | PCI-DSS v4.0.1 (Requirement 7.2.1) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "Default system accounts (daemon, bin, sys) have active login shells enabled.",
+        "remediation_command": "usermod -s /sbin/nologin system_user",
+        "rationale": "Lock non-human system accounts to prevent interactive login abuse.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.\n---\n[PCI-DSS v4.0.1 Requirement 7.2.1]: Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.\nAction: Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "usermod -s /sbin/nologin system_user"
     },
     {
       "file_path": "healthcare_production_env/etc/ssl/openssl.cnf",
@@ -494,9 +1234,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Transmission security - Strong TLS Policy enforcement",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Protections for data in transit",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Reconfigure healthcare_production_env/etc/ssl/openssl.cnf to enforce MinProtocol = TLSv1.2 or TLSv1.3 and set SECLEVEL=2. Disable legacy TLS 1.0, TLS 1.1, and SSL 3.0 protocols per PCI-DSS Requirement 4.2.1."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-4-2-1 / HIPAA-164-312-E1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System crypto-policy permits legacy TLS 1.0 / TLS 1.1 or deprecated RC4/3DES ciphers.",
+        "remediation_command": "update-crypto-policies --set DEFAULT:FEDORA32",
+        "rationale": "Enforce TLS 1.2 or TLS 1.3 protocol baseline across web servers and OpenSSL configs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "update-crypto-policies --set DEFAULT:FEDORA32"
     },
     {
       "file_path": "healthcare_production_env/etc/ssh/sshd_config",
@@ -517,9 +1289,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Technical Safeguards - Insecure management transmission protocols",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 2.2.4",
+          "title": "Insecure management protocols must be disabled",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.m",
+          "title": "Network Security & Protocol Hardening",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "CM-6",
+          "title": "Configuration Settings",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.PS-01",
+          "title": "Configuration management practices applied",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Update healthcare_production_env/etc/ssh/sshd_config to enforce SSH Protocol 2. Disable obsolete Blowfish/3DES ciphers and HMAC-MD5 MAC algorithms per PCI-DSS Requirement 2.2.4."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / HIPAA-164-312-A2-IV / PCI-DSS-V4-REQ-2-2-4 / NIST-800-53-CM-6",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(2)(iv)) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "SSH server configuration allows legacy Protocol 1 or weak ciphers (Blowfish/3DES).",
+        "remediation_command": "sed -i 's/Protocol 1/Protocol 2/' healthcare_production_env/etc/ssh/sshd_config && systemctl restart sshd",
+        "rationale": "Enforce SSH Protocol 2 and mandate strong AES/CTR cipher suites.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(2)(iv)]: Encryption and Decryption. Implement a mechanism to encrypt and decrypt electronic protected health information.\nAction: Encrypt stored records. Plaintext medical details or patient identifiers must be run through a symmetric GPG encryption pipeline.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "sed -i 's/Protocol 1/Protocol 2/' healthcare_production_env/etc/ssh/sshd_config && systemctl restart sshd"
     },
     {
       "file_path": "healthcare_production_env/etc/nginx/conf.d/ssl_policy.conf",
@@ -537,9 +1341,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Transmission security - Strong TLS Policy enforcement",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Protections for data in transit",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Reconfigure healthcare_production_env/etc/nginx/conf.d/ssl_policy.conf to enforce MinProtocol = TLSv1.2 or TLSv1.3 and set SECLEVEL=2. Disable legacy TLS 1.0, TLS 1.1, and SSL 3.0 protocols per PCI-DSS Requirement 4.2.1."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-4-2-1 / HIPAA-164-312-E1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System crypto-policy permits legacy TLS 1.0 / TLS 1.1 or deprecated RC4/3DES ciphers.",
+        "remediation_command": "update-crypto-policies --set DEFAULT:FEDORA32",
+        "rationale": "Enforce TLS 1.2 or TLS 1.3 protocol baseline across web servers and OpenSSL configs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "update-crypto-policies --set DEFAULT:FEDORA32"
     },
     {
       "file_path": "healthcare_production_env/etc/registry/hklm_schannel_export.reg",
@@ -556,9 +1392,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Transmission security - Strong TLS Policy enforcement",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Protections for data in transit",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Reconfigure healthcare_production_env/etc/registry/hklm_schannel_export.reg to enforce MinProtocol = TLSv1.2 or TLSv1.3 and set SECLEVEL=2. Disable legacy TLS 1.0, TLS 1.1, and SSL 3.0 protocols per PCI-DSS Requirement 4.2.1."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-4-2-1 / HIPAA-164-312-E1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System crypto-policy permits legacy TLS 1.0 / TLS 1.1 or deprecated RC4/3DES ciphers.",
+        "remediation_command": "update-crypto-policies --set DEFAULT:FEDORA32",
+        "rationale": "Enforce TLS 1.2 or TLS 1.3 protocol baseline across web servers and OpenSSL configs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "update-crypto-policies --set DEFAULT:FEDORA32"
     },
     {
       "file_path": "healthcare_production_env/etc/crypto-policies/state/current",
@@ -575,9 +1443,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Transmission security - Strong TLS Policy enforcement",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2.1",
+          "title": "Strong cryptography for transmission of cardholder data",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.v",
+          "title": "Secure TLS Communication Protocols",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8(1)",
+          "title": "Cryptographic Protection of Transmitted Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Protections for data in transit",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Reconfigure healthcare_production_env/etc/crypto-policies/state/current to enforce MinProtocol = TLSv1.2 or TLSv1.3 and set SECLEVEL=2. Disable legacy TLS 1.0, TLS 1.1, and SSL 3.0 protocols per PCI-DSS Requirement 4.2.1."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-4-2-1 / HIPAA-164-312-E1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System crypto-policy permits legacy TLS 1.0 / TLS 1.1 or deprecated RC4/3DES ciphers.",
+        "remediation_command": "update-crypto-policies --set DEFAULT:FEDORA32",
+        "rationale": "Enforce TLS 1.2 or TLS 1.3 protocol baseline across web servers and OpenSSL configs.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "update-crypto-policies --set DEFAULT:FEDORA32"
     },
     {
       "rule_id": "INSECURE_AUDIT_LOG_PERMISSIONS",
@@ -594,9 +1494,41 @@
           "control_id": "164.312(b)",
           "title": "Audit controls - Log Tamper Protection & Integrity",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 10.2.1",
+          "title": "Audit log protection against unauthorized modification",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.g",
+          "title": "Audit Logging & Integrity Protection",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AU-9",
+          "title": "Protection of Audit Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.PT-01",
+          "title": "Audit logs are protected",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Remediate 'Audit Log World-Writable Permission' on merchant_production_env/var/log/audit/audit.log by aligning permissions and cryptographic algorithms with GRC controls."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-7-2-1 / HIPAA-164-312-A1 / HIPAA-164-312-B / PCI-DSS-V4-REQ-10-2-1",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | PCI-DSS v4.0.1 (Requirement 7.2.1) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "Audit log permissions (0o666) allow unauthorized modification by non-privileged accounts.",
+        "remediation_command": "chmod 600 merchant_production_env/var/log/audit/audit.log",
+        "rationale": "Restrict audit log permissions to prevent log tampering and maintain integrity.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 7.2.1]: Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.\nAction: Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "chmod 600 merchant_production_env/var/log/audit/audit.log"
     },
     {
       "rule_id": "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE",
@@ -614,9 +1546,41 @@
           "control_id": "164.312(a)(1)",
           "title": "Access control - Minimum Necessary & Least Privilege",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 7.1",
+          "title": "Restrict access to system components to least privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 01",
+          "title": "Access Control & Least Privilege Management",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AC-6",
+          "title": "Least Privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.AA-05",
+          "title": "Access permissions managed according to least privilege",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Remediate merchant_production_env/point_of_sale/terminal_buffer_debug.log immediately by restricting POSIX permissions from 0o777 to 0o600 or 0o640. Ensure ownership is assigned exclusively to authorized Active Directory role UIDs per PCI-DSS 7.1."
+      "rag_advisory": {
+        "clause_id": "HIPAA-164-312-A1 / CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-7-2-1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 7.2.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "File permissions '0o777' allow world-writable access to sensitive payloads, violating Least Privilege.",
+        "remediation_command": "chmod 640 merchant_production_env/point_of_sale/terminal_buffer_debug.log",
+        "rationale": "Restrict file permissions using owner/group boundaries per HIPAA \u00a7164.312(a)(1) and PCI-DSS Requirement 7.2.1.\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 7.2.1]: Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.\nAction: Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "chmod 640 merchant_production_env/point_of_sale/terminal_buffer_debug.log"
     },
     {
       "file_path": "merchant_production_env/point_of_sale/terminal_buffer_debug.log",
@@ -634,9 +1598,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Technical Safeguards - Transmission security & unencrypted data",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Encrypt merchant_production_env/point_of_sale/terminal_buffer_debug.log using AES-256-CBC with OpenSSL magic header packet format before storing. Purge cleartext credit card PANs and SSNs from public directories per HIPAA \u00a7164.312(e)(1)."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-7-2-1 / HIPAA-164-312-A2-IV",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | PCI-DSS v4.0.1 (Requirement 7.2.1) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "File contains unencrypted cleartext sensitive records (Luhn PAN credit cards or SSNs).",
+        "remediation_command": "gpg --symmetric --cipher-algo AES256 merchant_production_env/point_of_sale/terminal_buffer_debug.log",
+        "rationale": "Encrypt stored sensitive records using AES-256 with OpenSSL magic header header formatting.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.\n---\n[PCI-DSS v4.0.1 Requirement 7.2.1]: Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.\nAction: Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "gpg --symmetric --cipher-algo AES256 merchant_production_env/point_of_sale/terminal_buffer_debug.log"
     },
     {
       "rule_id": "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE",
@@ -654,9 +1650,41 @@
           "control_id": "164.312(a)(1)",
           "title": "Access control - Minimum Necessary & Least Privilege",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 7.1",
+          "title": "Restrict access to system components to least privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 01",
+          "title": "Access Control & Least Privilege Management",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AC-6",
+          "title": "Least Privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.AA-05",
+          "title": "Access permissions managed according to least privilege",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Remediate merchant_production_env/point_of_sale/merchant_copay_ledger.csv immediately by restricting POSIX permissions from 0o777 to 0o600 or 0o640. Ensure ownership is assigned exclusively to authorized Active Directory role UIDs per PCI-DSS 7.1."
+      "rag_advisory": {
+        "clause_id": "HIPAA-164-312-A1 / CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-7-2-1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 7.2.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "File permissions '0o777' allow world-writable access to sensitive payloads, violating Least Privilege.",
+        "remediation_command": "chmod 640 merchant_production_env/point_of_sale/merchant_copay_ledger.csv",
+        "rationale": "Restrict file permissions using owner/group boundaries per HIPAA \u00a7164.312(a)(1) and PCI-DSS Requirement 7.2.1.\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 7.2.1]: Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.\nAction: Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "chmod 640 merchant_production_env/point_of_sale/merchant_copay_ledger.csv"
     },
     {
       "file_path": "merchant_production_env/point_of_sale/merchant_copay_ledger.csv",
@@ -674,9 +1702,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Technical Safeguards - Transmission security & unencrypted data",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Encrypt merchant_production_env/point_of_sale/merchant_copay_ledger.csv using AES-256-CBC with OpenSSL magic header packet format before storing. Purge cleartext credit card PANs and SSNs from public directories per HIPAA \u00a7164.312(e)(1)."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-7-2-1 / HIPAA-164-312-A2-IV",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | PCI-DSS v4.0.1 (Requirement 7.2.1) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "File contains unencrypted cleartext sensitive records (Luhn PAN credit cards or SSNs).",
+        "remediation_command": "gpg --symmetric --cipher-algo AES256 merchant_production_env/point_of_sale/merchant_copay_ledger.csv",
+        "rationale": "Encrypt stored sensitive records using AES-256 with OpenSSL magic header header formatting.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.\n---\n[PCI-DSS v4.0.1 Requirement 7.2.1]: Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.\nAction: Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "gpg --symmetric --cipher-algo AES256 merchant_production_env/point_of_sale/merchant_copay_ledger.csv"
     },
     {
       "file_path": "merchant_production_env/point_of_sale/daily_pos_settlement_20260810.db",
@@ -693,6 +1753,30 @@
           "framework": "HIPAA",
           "control_id": "164.312(a)(2)(iv)",
           "title": "Encryption and decryption safeguards",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
           "status": "COMPLIANT"
         }
       ]
@@ -712,9 +1796,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Technical Safeguards - Transmission security & unencrypted data",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Remediate 'Unencrypted Raw ZLib Compressed Stream' on merchant_production_env/inventory_control/audit_log_archive.csv.zlib by aligning permissions and cryptographic algorithms with GRC controls."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / HIPAA-164-312-A2-IV / PCI-DSS-V4-REQ-7-2-1",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(2)(iv)) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System file contains world-writable permissions (0o777), violating access controls.",
+        "remediation_command": "chmod 640 merchant_production_env/inventory_control/audit_log_archive.csv.zlib",
+        "rationale": "Restrict file permissions using owner/group boundaries.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(2)(iv)]: Encryption and Decryption. Implement a mechanism to encrypt and decrypt electronic protected health information.\nAction: Encrypt stored records. Plaintext medical details or patient identifiers must be run through a symmetric GPG encryption pipeline.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "chmod 640 merchant_production_env/inventory_control/audit_log_archive.csv.zlib"
     },
     {
       "file_path": "merchant_production_env/inventory_control/unencrypted_patient_export.zip",
@@ -733,9 +1849,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Technical Safeguards - Transmission security & unencrypted data",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Encrypt merchant_production_env/inventory_control/unencrypted_patient_export.zip using AES-256-CBC with OpenSSL magic header packet format before storing. Purge cleartext credit card PANs and SSNs from public directories per HIPAA \u00a7164.312(e)(1)."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-3-5-1 / HIPAA-164-312-A2-IV",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(2)(iv)) | PCI-DSS v4.0.1 (Requirement 3.5.1) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "File contains unencrypted cleartext sensitive records (Luhn PAN credit cards or SSNs).",
+        "remediation_command": "gpg --symmetric --cipher-algo AES256 merchant_production_env/inventory_control/unencrypted_patient_export.zip",
+        "rationale": "Encrypt stored sensitive records using AES-256 with OpenSSL magic header header formatting.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(2)(iv)]: Encryption and Decryption. Implement a mechanism to encrypt and decrypt electronic protected health information.\nAction: Encrypt stored records. Plaintext medical details or patient identifiers must be run through a symmetric GPG encryption pipeline.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "gpg --symmetric --cipher-algo AES256 merchant_production_env/inventory_control/unencrypted_patient_export.zip"
     },
     {
       "rule_id": "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE",
@@ -753,9 +1901,41 @@
           "control_id": "164.312(a)(1)",
           "title": "Access control - Minimum Necessary & Least Privilege",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 7.1",
+          "title": "Restrict access to system components to least privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 01",
+          "title": "Access Control & Least Privilege Management",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AC-6",
+          "title": "Least Privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.AA-05",
+          "title": "Access permissions managed according to least privilege",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Remediate banking_production_env/core_ledger/merchant_copay_ledger.csv immediately by restricting POSIX permissions from 0o777 to 0o600 or 0o640. Ensure ownership is assigned exclusively to authorized Active Directory role UIDs per PCI-DSS 7.1."
+      "rag_advisory": {
+        "clause_id": "HIPAA-164-312-A1 / CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-7-2-1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 7.2.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "File permissions '0o777' allow world-writable access to sensitive payloads, violating Least Privilege.",
+        "remediation_command": "chmod 640 banking_production_env/core_ledger/merchant_copay_ledger.csv",
+        "rationale": "Restrict file permissions using owner/group boundaries per HIPAA \u00a7164.312(a)(1) and PCI-DSS Requirement 7.2.1.\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 7.2.1]: Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.\nAction: Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "chmod 640 banking_production_env/core_ledger/merchant_copay_ledger.csv"
     },
     {
       "file_path": "banking_production_env/core_ledger/merchant_copay_ledger.csv",
@@ -773,9 +1953,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Technical Safeguards - Transmission security & unencrypted data",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Encrypt banking_production_env/core_ledger/merchant_copay_ledger.csv using AES-256-CBC with OpenSSL magic header packet format before storing. Purge cleartext credit card PANs and SSNs from public directories per HIPAA \u00a7164.312(e)(1)."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-7-2-1 / HIPAA-164-312-A2-IV",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | PCI-DSS v4.0.1 (Requirement 7.2.1) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "File contains unencrypted cleartext sensitive records (Luhn PAN credit cards or SSNs).",
+        "remediation_command": "gpg --symmetric --cipher-algo AES256 banking_production_env/core_ledger/merchant_copay_ledger.csv",
+        "rationale": "Encrypt stored sensitive records using AES-256 with OpenSSL magic header header formatting.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.\n---\n[PCI-DSS v4.0.1 Requirement 7.2.1]: Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.\nAction: Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "gpg --symmetric --cipher-algo AES256 banking_production_env/core_ledger/merchant_copay_ledger.csv"
     },
     {
       "file_path": "banking_production_env/wire_transfers/swift_wire_batch_20260810.dat",
@@ -792,6 +2004,30 @@
           "framework": "HIPAA",
           "control_id": "164.312(a)(2)(iv)",
           "title": "Encryption and decryption safeguards",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
           "status": "COMPLIANT"
         }
       ]
@@ -813,9 +2049,41 @@
           "control_id": "164.312(a)(2)(iv)",
           "title": "Encryption Safeguards - Avoid insecure cipher modes (ECB)",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Use strong approved cryptographic modes (avoid ECB)",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.a",
+          "title": "Strong Cryptographic Key & Cipher Selection",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection (NIST SP 800-38A)",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest cryptographic integrity",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Remediate 'Insecure AES-ECB Block Pattern Leakage' on banking_production_env/wire_transfers/ach_settlement_log.csv by aligning permissions and cryptographic algorithms with GRC controls."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-3-5-1 / HIPAA-164-312-A1 / PCI-DSS-V4-REQ-7-2-1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System file contains world-writable permissions (0o777), violating access controls.",
+        "remediation_command": "chmod 640 banking_production_env/wire_transfers/ach_settlement_log.csv",
+        "rationale": "Restrict file permissions using owner/group boundaries.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "chmod 640 banking_production_env/wire_transfers/ach_settlement_log.csv"
     },
     {
       "file_path": "banking_production_env/system_backups/audit_log_archive.csv.zlib",
@@ -832,9 +2100,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Technical Safeguards - Transmission security & unencrypted data",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Remediate 'Unencrypted Raw ZLib Compressed Stream' on banking_production_env/system_backups/audit_log_archive.csv.zlib by aligning permissions and cryptographic algorithms with GRC controls."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / HIPAA-164-312-A2-IV / PCI-DSS-V4-REQ-7-2-1",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(2)(iv)) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System file contains world-writable permissions (0o777), violating access controls.",
+        "remediation_command": "chmod 640 banking_production_env/system_backups/audit_log_archive.csv.zlib",
+        "rationale": "Restrict file permissions using owner/group boundaries.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(2)(iv)]: Encryption and Decryption. Implement a mechanism to encrypt and decrypt electronic protected health information.\nAction: Encrypt stored records. Plaintext medical details or patient identifiers must be run through a symmetric GPG encryption pipeline.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "chmod 640 banking_production_env/system_backups/audit_log_archive.csv.zlib"
     },
     {
       "file_path": "banking_production_env/system_backups/unencrypted_patient_export.zip",
@@ -853,9 +2153,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Technical Safeguards - Transmission security & unencrypted data",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Encrypt banking_production_env/system_backups/unencrypted_patient_export.zip using AES-256-CBC with OpenSSL magic header packet format before storing. Purge cleartext credit card PANs and SSNs from public directories per HIPAA \u00a7164.312(e)(1)."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-3-5-1 / HIPAA-164-312-A2-IV",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(2)(iv)) | PCI-DSS v4.0.1 (Requirement 3.5.1) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "File contains unencrypted cleartext sensitive records (Luhn PAN credit cards or SSNs).",
+        "remediation_command": "gpg --symmetric --cipher-algo AES256 banking_production_env/system_backups/unencrypted_patient_export.zip",
+        "rationale": "Encrypt stored sensitive records using AES-256 with OpenSSL magic header header formatting.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(2)(iv)]: Encryption and Decryption. Implement a mechanism to encrypt and decrypt electronic protected health information.\nAction: Encrypt stored records. Plaintext medical details or patient identifiers must be run through a symmetric GPG encryption pipeline.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "gpg --symmetric --cipher-algo AES256 banking_production_env/system_backups/unencrypted_patient_export.zip"
     },
     {
       "file_path": "banking_production_env/system_backups/decompression_safety_check.zip",
@@ -874,8 +2206,41 @@
           "control_id": "164.312(c)(1)",
           "title": "Data Integrity & Denial of Service Safeguards",
           "status": "WARNING"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 10.6",
+          "title": "Review logs and anomalous safety events",
+          "status": "WARNING"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SI-4",
+          "title": "System Monitoring & Boundary Safety",
+          "status": "WARNING"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "DE.AE-01",
+          "title": "Anomalous patterns & safety boundaries",
+          "status": "WARNING"
+        },
+        {
+          "framework": "KINTSUGI_SAFETY",
+          "control_id": "SAFETY-01",
+          "title": "Resource exhaustion & decompression bomb guardrail",
+          "status": "WARNING"
         }
-      ]
+      ],
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / HIPAA-164-312-A2-IV / PCI-DSS-V4-REQ-7-2-1",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(2)(iv)) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System file contains world-writable permissions (0o777), violating access controls.",
+        "remediation_command": "chmod 640 banking_production_env/system_backups/decompression_safety_check.zip",
+        "rationale": "Restrict file permissions using owner/group boundaries.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(2)(iv)]: Encryption and Decryption. Implement a mechanism to encrypt and decrypt electronic protected health information.\nAction: Encrypt stored records. Plaintext medical details or patient identifiers must be run through a symmetric GPG encryption pipeline.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "chmod 640 banking_production_env/system_backups/decompression_safety_check.zip"
     },
     {
       "rule_id": "INSECURE_AUDIT_LOG_PERMISSIONS",
@@ -892,9 +2257,41 @@
           "control_id": "164.312(b)",
           "title": "Audit controls - Log Tamper Protection & Integrity",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 10.2.1",
+          "title": "Audit log protection against unauthorized modification",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.g",
+          "title": "Audit Logging & Integrity Protection",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AU-9",
+          "title": "Protection of Audit Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.PT-01",
+          "title": "Audit logs are protected",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Remediate 'Audit Log World-Writable Permission' on banking_production_env/var/log/audit/audit.log by aligning permissions and cryptographic algorithms with GRC controls."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-7-2-1 / HIPAA-164-312-A1 / HIPAA-164-312-B / PCI-DSS-V4-REQ-10-2-1",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | PCI-DSS v4.0.1 (Requirement 7.2.1) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "Audit log permissions (0o666) allow unauthorized modification by non-privileged accounts.",
+        "remediation_command": "chmod 600 banking_production_env/var/log/audit/audit.log",
+        "rationale": "Restrict audit log permissions to prevent log tampering and maintain integrity.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 7.2.1]: Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.\nAction: Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "chmod 600 banking_production_env/var/log/audit/audit.log"
     },
     {
       "file_path": "banking_production_env/treasury_ops/patient_consent_forms.asc",
@@ -910,6 +2307,30 @@
           "framework": "HIPAA",
           "control_id": "164.312(a)(2)(iv)",
           "title": "Encryption and decryption safeguards",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
           "status": "COMPLIANT"
         }
       ]
@@ -930,6 +2351,30 @@
           "control_id": "164.312(a)(2)(iv)",
           "title": "Encryption and decryption safeguards",
           "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
+          "status": "COMPLIANT"
         }
       ]
     },
@@ -948,6 +2393,30 @@
           "framework": "HIPAA",
           "control_id": "164.312(a)(2)(iv)",
           "title": "Encryption and decryption safeguards",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
           "status": "COMPLIANT"
         }
       ]
@@ -968,9 +2437,41 @@
           "control_id": "164.312(a)(1)",
           "title": "Access control - Minimum Necessary & Least Privilege",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 7.1",
+          "title": "Restrict access to system components to least privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 01",
+          "title": "Access Control & Least Privilege Management",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AC-6",
+          "title": "Least Privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.AA-05",
+          "title": "Access permissions managed according to least privilege",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Remediate finance_production_env/core_ledger/merchant_copay_ledger.csv immediately by restricting POSIX permissions from 0o777 to 0o600 or 0o640. Ensure ownership is assigned exclusively to authorized Active Directory role UIDs per PCI-DSS 7.1."
+      "rag_advisory": {
+        "clause_id": "HIPAA-164-312-A1 / CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-7-2-1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 7.2.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "File permissions '0o777' allow world-writable access to sensitive payloads, violating Least Privilege.",
+        "remediation_command": "chmod 640 finance_production_env/core_ledger/merchant_copay_ledger.csv",
+        "rationale": "Restrict file permissions using owner/group boundaries per HIPAA \u00a7164.312(a)(1) and PCI-DSS Requirement 7.2.1.\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 7.2.1]: Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.\nAction: Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "chmod 640 finance_production_env/core_ledger/merchant_copay_ledger.csv"
     },
     {
       "file_path": "finance_production_env/core_ledger/merchant_copay_ledger.csv",
@@ -988,9 +2489,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Technical Safeguards - Transmission security & unencrypted data",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Encrypt finance_production_env/core_ledger/merchant_copay_ledger.csv using AES-256-CBC with OpenSSL magic header packet format before storing. Purge cleartext credit card PANs and SSNs from public directories per HIPAA \u00a7164.312(e)(1)."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-7-2-1 / HIPAA-164-312-A2-IV",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | PCI-DSS v4.0.1 (Requirement 7.2.1) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "File contains unencrypted cleartext sensitive records (Luhn PAN credit cards or SSNs).",
+        "remediation_command": "gpg --symmetric --cipher-algo AES256 finance_production_env/core_ledger/merchant_copay_ledger.csv",
+        "rationale": "Encrypt stored sensitive records using AES-256 with OpenSSL magic header header formatting.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.\n---\n[PCI-DSS v4.0.1 Requirement 7.2.1]: Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.\nAction: Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "gpg --symmetric --cipher-algo AES256 finance_production_env/core_ledger/merchant_copay_ledger.csv"
     },
     {
       "file_path": "finance_production_env/wire_transfers/swift_wire_batch_20260810.dat",
@@ -1007,6 +2540,30 @@
           "framework": "HIPAA",
           "control_id": "164.312(a)(2)(iv)",
           "title": "Encryption and decryption safeguards",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
           "status": "COMPLIANT"
         }
       ]
@@ -1026,9 +2583,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Technical Safeguards - Transmission security & unencrypted data",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Remediate 'Unencrypted Raw ZLib Compressed Stream' on finance_production_env/system_backups/audit_log_archive.csv.zlib by aligning permissions and cryptographic algorithms with GRC controls."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / HIPAA-164-312-A2-IV / PCI-DSS-V4-REQ-7-2-1",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(2)(iv)) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System file contains world-writable permissions (0o777), violating access controls.",
+        "remediation_command": "chmod 640 finance_production_env/system_backups/audit_log_archive.csv.zlib",
+        "rationale": "Restrict file permissions using owner/group boundaries.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(2)(iv)]: Encryption and Decryption. Implement a mechanism to encrypt and decrypt electronic protected health information.\nAction: Encrypt stored records. Plaintext medical details or patient identifiers must be run through a symmetric GPG encryption pipeline.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "chmod 640 finance_production_env/system_backups/audit_log_archive.csv.zlib"
     },
     {
       "file_path": "finance_production_env/system_backups/unencrypted_patient_export.zip",
@@ -1047,9 +2636,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Technical Safeguards - Transmission security & unencrypted data",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Encrypt finance_production_env/system_backups/unencrypted_patient_export.zip using AES-256-CBC with OpenSSL magic header packet format before storing. Purge cleartext credit card PANs and SSNs from public directories per HIPAA \u00a7164.312(e)(1)."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-3-5-1 / HIPAA-164-312-A2-IV",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(2)(iv)) | PCI-DSS v4.0.1 (Requirement 3.5.1) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "File contains unencrypted cleartext sensitive records (Luhn PAN credit cards or SSNs).",
+        "remediation_command": "gpg --symmetric --cipher-algo AES256 finance_production_env/system_backups/unencrypted_patient_export.zip",
+        "rationale": "Encrypt stored sensitive records using AES-256 with OpenSSL magic header header formatting.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(2)(iv)]: Encryption and Decryption. Implement a mechanism to encrypt and decrypt electronic protected health information.\nAction: Encrypt stored records. Plaintext medical details or patient identifiers must be run through a symmetric GPG encryption pipeline.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "gpg --symmetric --cipher-algo AES256 finance_production_env/system_backups/unencrypted_patient_export.zip"
     },
     {
       "file_path": "finance_production_env/system_backups/decompression_safety_check.zip",
@@ -1068,8 +2689,41 @@
           "control_id": "164.312(c)(1)",
           "title": "Data Integrity & Denial of Service Safeguards",
           "status": "WARNING"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 10.6",
+          "title": "Review logs and anomalous safety events",
+          "status": "WARNING"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SI-4",
+          "title": "System Monitoring & Boundary Safety",
+          "status": "WARNING"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "DE.AE-01",
+          "title": "Anomalous patterns & safety boundaries",
+          "status": "WARNING"
+        },
+        {
+          "framework": "KINTSUGI_SAFETY",
+          "control_id": "SAFETY-01",
+          "title": "Resource exhaustion & decompression bomb guardrail",
+          "status": "WARNING"
         }
-      ]
+      ],
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / HIPAA-164-312-A1 / HIPAA-164-312-A2-IV / PCI-DSS-V4-REQ-7-2-1",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(2)(iv)) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "System file contains world-writable permissions (0o777), violating access controls.",
+        "remediation_command": "chmod 640 finance_production_env/system_backups/decompression_safety_check.zip",
+        "rationale": "Restrict file permissions using owner/group boundaries.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(2)(iv)]: Encryption and Decryption. Implement a mechanism to encrypt and decrypt electronic protected health information.\nAction: Encrypt stored records. Plaintext medical details or patient identifiers must be run through a symmetric GPG encryption pipeline.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "chmod 640 finance_production_env/system_backups/decompression_safety_check.zip"
     },
     {
       "rule_id": "INSECURE_AUDIT_LOG_PERMISSIONS",
@@ -1086,9 +2740,41 @@
           "control_id": "164.312(b)",
           "title": "Audit controls - Log Tamper Protection & Integrity",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 10.2.1",
+          "title": "Audit log protection against unauthorized modification",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.g",
+          "title": "Audit Logging & Integrity Protection",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AU-9",
+          "title": "Protection of Audit Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.PT-01",
+          "title": "Audit logs are protected",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Remediate 'Audit Log World-Writable Permission' on finance_production_env/var/log/audit/audit.log by aligning permissions and cryptographic algorithms with GRC controls."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-7-2-1 / HIPAA-164-312-A1 / HIPAA-164-312-B / PCI-DSS-V4-REQ-10-2-1",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | PCI-DSS v4.0.1 (Requirement 7.2.1) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "Audit log permissions (0o666) allow unauthorized modification by non-privileged accounts.",
+        "remediation_command": "chmod 600 finance_production_env/var/log/audit/audit.log",
+        "rationale": "Restrict audit log permissions to prevent log tampering and maintain integrity.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 7.2.1]: Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.\nAction: Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "chmod 600 finance_production_env/var/log/audit/audit.log"
     },
     {
       "file_path": "finance_production_env/treasury_ops/patient_consent_forms.asc",
@@ -1104,6 +2790,30 @@
           "framework": "HIPAA",
           "control_id": "164.312(a)(2)(iv)",
           "title": "Encryption and decryption safeguards",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
           "status": "COMPLIANT"
         }
       ]
@@ -1124,6 +2834,30 @@
           "control_id": "164.312(a)(2)(iv)",
           "title": "Encryption and decryption safeguards",
           "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
+          "status": "COMPLIANT"
         }
       ]
     },
@@ -1143,6 +2877,30 @@
           "control_id": "164.312(a)(2)(iv)",
           "title": "Encryption and decryption safeguards",
           "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
+          "status": "COMPLIANT"
         }
       ]
     },
@@ -1161,9 +2919,41 @@
           "control_id": "164.312(b)",
           "title": "Audit controls - Log Tamper Protection & Integrity",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 10.2.1",
+          "title": "Audit log protection against unauthorized modification",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09.g",
+          "title": "Audit Logging & Integrity Protection",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AU-9",
+          "title": "Protection of Audit Information",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.PT-01",
+          "title": "Audit logs are protected",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Remediate 'Audit Log World-Writable Permission' on healthcare_production_env/var/log/audit/audit.log by aligning permissions and cryptographic algorithms with GRC controls."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-7-2-1 / HIPAA-164-312-A1 / HIPAA-164-312-B / PCI-DSS-V4-REQ-10-2-1",
+        "standard": "HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | PCI-DSS v4.0.1 (Requirement 7.2.1) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "Audit log permissions (0o666) allow unauthorized modification by non-privileged accounts.",
+        "remediation_command": "chmod 600 healthcare_production_env/var/log/audit/audit.log",
+        "rationale": "Restrict audit log permissions to prevent log tampering and maintain integrity.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 7.2.1]: Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.\nAction: Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.\n---\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "chmod 600 healthcare_production_env/var/log/audit/audit.log"
     },
     {
       "rule_id": "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE",
@@ -1181,9 +2971,41 @@
           "control_id": "164.312(a)(1)",
           "title": "Access control - Minimum Necessary & Least Privilege",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 7.1",
+          "title": "Restrict access to system components to least privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 01",
+          "title": "Access Control & Least Privilege Management",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "AC-6",
+          "title": "Least Privilege",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.AA-05",
+          "title": "Access permissions managed according to least privilege",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Remediate healthcare_production_env/billing_department/merchant_copay_ledger.csv immediately by restricting POSIX permissions from 0o777 to 0o600 or 0o640. Ensure ownership is assigned exclusively to authorized Active Directory role UIDs per PCI-DSS 7.1."
+      "rag_advisory": {
+        "clause_id": "HIPAA-164-312-A1 / CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-7-2-1",
+        "standard": "PCI-DSS v4.0.1 (Requirement 7.2.1) | HIPAA Security Rule (Technical Safeguards \u00a7164.312(a)(1)) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "File permissions '0o777' allow world-writable access to sensitive payloads, violating Least Privilege.",
+        "remediation_command": "chmod 640 healthcare_production_env/billing_department/merchant_copay_ledger.csv",
+        "rationale": "Restrict file permissions using owner/group boundaries per HIPAA \u00a7164.312(a)(1) and PCI-DSS Requirement 7.2.1.\n[HIPAA Security Rule Technical Safeguards \u00a7164.312(a)(1)]: Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.\nAction: Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.\n---\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 7.2.1]: Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.\nAction: Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "chmod 640 healthcare_production_env/billing_department/merchant_copay_ledger.csv"
     },
     {
       "file_path": "healthcare_production_env/billing_department/merchant_copay_ledger.csv",
@@ -1201,9 +3023,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Technical Safeguards - Transmission security & unencrypted data",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Encrypt healthcare_production_env/billing_department/merchant_copay_ledger.csv using AES-256-CBC with OpenSSL magic header packet format before storing. Purge cleartext credit card PANs and SSNs from public directories per HIPAA \u00a7164.312(e)(1)."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-7-2-1 / HIPAA-164-312-A2-IV",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | PCI-DSS v4.0.1 (Requirement 7.2.1) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "File contains unencrypted cleartext sensitive records (Luhn PAN credit cards or SSNs).",
+        "remediation_command": "gpg --symmetric --cipher-algo AES256 healthcare_production_env/billing_department/merchant_copay_ledger.csv",
+        "rationale": "Encrypt stored sensitive records using AES-256 with OpenSSL magic header header formatting.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.\n---\n[PCI-DSS v4.0.1 Requirement 7.2.1]: Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.\nAction: Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "gpg --symmetric --cipher-algo AES256 healthcare_production_env/billing_department/merchant_copay_ledger.csv"
     },
     {
       "file_path": "healthcare_production_env/billing_department/claims_export_2026_q2.csv",
@@ -1221,9 +3075,41 @@
           "control_id": "164.312(e)(1)",
           "title": "Technical Safeguards - Transmission security & unencrypted data",
           "status": "VIOLATION"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 4.2",
+          "title": "PAN transmitted electronically must be encrypted",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Data Protection & Encryption Requirements",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-8",
+          "title": "Transmission Confidentiality and Integrity",
+          "status": "VIOLATION"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-02",
+          "title": "Data-in-transit is protected",
+          "status": "VIOLATION"
         }
       ],
-      "rag_ai_remediation": "Encrypt healthcare_production_env/billing_department/claims_export_2026_q2.csv using AES-256-CBC with OpenSSL magic header packet format before storing. Purge cleartext credit card PANs and SSNs from public directories per HIPAA \u00a7164.312(e)(1)."
+      "rag_advisory": {
+        "clause_id": "CUSTOM-POLICY-CHUNK-0 / PCI-DSS-V4-REQ-3-5-1 / PCI-DSS-V4-REQ-7-2-1 / HIPAA-164-312-A2-IV",
+        "standard": "PCI-DSS v4.0.1 (Requirement 3.5.1) | PCI-DSS v4.0.1 (Requirement 7.2.1) | Custom Company Policy (Section Chunk 1)",
+        "risk_statement": "File contains unencrypted cleartext sensitive records (Luhn PAN credit cards or SSNs).",
+        "remediation_command": "gpg --symmetric --cipher-algo AES256 healthcare_production_env/billing_department/claims_export_2026_q2.csv",
+        "rationale": "Encrypt stored sensitive records using AES-256 with OpenSSL magic header header formatting.\n[Custom Company Policy Section Chunk 1]: HIPAA Technical Safeguards (\u00a7164.312) Corporate Policy\nAll PHI must be encrypted at rest.\nAction: Align local configurations to match security standards outlined in company policy.\n---\n[PCI-DSS v4.0.1 Requirement 3.5.1]: Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.\nAction: Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.\n---\n[PCI-DSS v4.0.1 Requirement 7.2.1]: Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.\nAction: Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.",
+        "execution_mode": "DETERMINISTIC_SINGLE_MODEL_RAG"
+      },
+      "rag_ai_remediation": "gpg --symmetric --cipher-algo AES256 healthcare_production_env/billing_department/claims_export_2026_q2.csv"
     },
     {
       "file_path": "healthcare_production_env/patient_records/patient_consent_forms.asc",
@@ -1239,6 +3125,30 @@
           "framework": "HIPAA",
           "control_id": "164.312(a)(2)(iv)",
           "title": "Encryption and decryption safeguards",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
           "status": "COMPLIANT"
         }
       ]
@@ -1259,6 +3169,30 @@
           "control_id": "164.312(a)(2)(iv)",
           "title": "Encryption and decryption safeguards",
           "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
+          "status": "COMPLIANT"
         }
       ]
     },
@@ -1278,6 +3212,30 @@
           "control_id": "164.312(a)(2)(iv)",
           "title": "Encryption and decryption safeguards",
           "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
+          "status": "COMPLIANT"
         }
       ]
     },
@@ -1296,6 +3254,30 @@
           "framework": "HIPAA",
           "control_id": "164.312(a)(2)(iv)",
           "title": "Encryption and decryption safeguards",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "PCI DSS",
+          "control_id": "Requirement 3.5",
+          "title": "Document and implement procedures to protect stored PAN",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "HITRUST CSF",
+          "control_id": "Domain 09",
+          "title": "Transmission Protection & Data Encryption at Rest",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST 800-53",
+          "control_id": "SC-13",
+          "title": "Cryptographic Protection",
+          "status": "COMPLIANT"
+        },
+        {
+          "framework": "NIST CSF",
+          "control_id": "PR.DS-01",
+          "title": "Data-at-rest is protected",
           "status": "COMPLIANT"
         }
       ]

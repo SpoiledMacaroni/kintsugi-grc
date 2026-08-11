@@ -63,6 +63,13 @@ class ControlRegistry:
         
         # Comprehensive Rule Mapping Registry (Coverage for HIPAA, PCI DSS, NIST 800-53, HITRUST, NIST CSF)
         rule_mappings = {
+            "COMPLIANT_SECURITY_BASELINE": [
+                {"framework": "HIPAA", "control_id": "164.312(a)(1)", "title": "Technical Safeguards - Compliant Security Baseline", "status": "COMPLIANT"},
+                {"framework": "PCI DSS", "control_id": "Requirement 2.2", "title": "System components configured to baseline standards", "status": "COMPLIANT"},
+                {"framework": "HITRUST CSF", "control_id": "Domain 01", "title": "Access Control & Baseline Security Management", "status": "COMPLIANT"},
+                {"framework": "NIST 800-53", "control_id": "CM-6", "title": "Configuration Settings Baseline", "status": "COMPLIANT"},
+                {"framework": "NIST CSF", "control_id": "PR.PS-01", "title": "Configuration management baseline applied", "status": "COMPLIANT"}
+            ],
             "ENCRYPTED_COMPLIANT_AES_256_CBC": [
                 {"framework": "HIPAA", "control_id": "164.312(a)(2)(iv)", "title": "Encryption and decryption safeguards", "status": "COMPLIANT"},
                 {"framework": "PCI DSS", "control_id": "Requirement 3.5", "title": "Document and implement procedures to protect stored PAN", "status": "COMPLIANT"},

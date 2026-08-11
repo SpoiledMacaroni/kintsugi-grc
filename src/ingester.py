@@ -1,10 +1,30 @@
+"""
+Kintsugi-GRC Relational Policy Ingester (Aryan's Component)
+Vectorizes compliance knowledge base statements and custom policy documents
+into FAISS index & SQLite relational database table.
+"""
+
+import json
+import logging
 import os
-import sqlite3
-import faiss
 import pickle
-import numpy as np
-from sentence_transformers import SentenceTransformer
+import sqlite3
+from typing import Any, Dict, List, Optional
 from src.database import DB_PATH, init_db
+
+logger = logging.getLogger("kintsugi_policy_ingester")
+
+try:
+    import faiss
+    import numpy as np
+    from sentence_transformers import SentenceTransformer
+    HAS_ML_INGEST = True
+except ImportError:
+    faiss = None
+    np = None
+    SentenceTransformer = None
+    HAS_ML_INGEST = False
+
 
 COMPLIANCE_KNOWLEDGE_BASE = [
     {
@@ -37,20 +57,20 @@ COMPLIANCE_KNOWLEDGE_BASE = [
     }
 ]
 
-class RelationalPolicyIngester:
-    def __init__(self, model_name="BAAI/bge-large-en-v1.5", cache_dir="./.model_cache"):
-        os.makedirs(cache_dir, exist_ok=True)
-        model_path = os.path.join(cache_dir, f"models--{model_name.replace('/', '--')}")
-        if not os.path.exists(model_path):
-            ans = input(f"Model {model_name} not found locally. Download it now? (y/n): ")
-            if ans.lower() != 'y':
-                print("Model download cancelled.")
-                import sys
-                sys.exit(1)
-        self.model = SentenceTransformer(model_name, cache_folder=cache_dir)
-        self.dimension = 1024  # BGE-Large-v1.5 produces 1024-dimensional dense vectors
 
-    def ingest_custom_policy(self, file_path):
+class RelationalPolicyIngester:
+    def __init__(self, model_name: str = "BAAI/bge-large-en-v1.5", cache_dir: str = "./.model_cache"):
+        os.makedirs(cache_dir, exist_ok=True)
+        self.dimension = 1024
+        self.model = None
+
+        if HAS_ML_INGEST:
+            try:
+                self.model = SentenceTransformer(model_name, cache_folder=cache_dir)
+            except Exception as e:
+                logger.debug(f"SentenceTransformer initialization skipped: {e}")
+
+    def ingest_custom_policy(self, file_path: str):
         """Reads a local company policy file, chunks it, and appends it to the knowledge base."""
         if not os.path.exists(file_path):
             print(f"Custom policy file '{file_path}' not found. Skipping.")
@@ -79,35 +99,38 @@ class RelationalPolicyIngester:
             })
         print(f"Ingested {len(chunks)} chunks from custom company policy: '{file_path}'.")
 
-    def build_index(self, output_index_path="imports/compliance_index.faiss", db_path=DB_PATH):
+    def build_index(self, output_index_path: str = "imports/compliance_index.faiss", db_path: str = DB_PATH):
         # 1. Initialize relational schema
         init_db(db_path)
-        print("Vectorizing compliance standards and policies via BGE-Large-v1.5...")
-        
-        corpus_texts = [f"{c['standard']} {c['section']}: {c['context']}" for c in COMPLIANCE_KNOWLEDGE_BASE]
-        embeddings = self.model.encode(corpus_texts, normalize_embeddings=True, show_progress_bar=False)
-        embeddings_np = np.array(embeddings).astype('float32')
-        
-        # 2. Build and write local FAISS index
-        index = faiss.IndexFlatIP(self.dimension)
-        index.add(embeddings_np)
-        
-        os.makedirs(os.path.dirname(output_index_path), exist_ok=True)
-        faiss.write_index(index, output_index_path)
-        
+
+        if HAS_ML_INGEST and self.model:
+            print("Vectorizing compliance standards and policies via BGE-Large-v1.5...")
+            corpus_texts = [f"{c['standard']} {c['section']}: {c['context']}" for c in COMPLIANCE_KNOWLEDGE_BASE]
+            embeddings = self.model.encode(corpus_texts, normalize_embeddings=True, show_progress_bar=False)
+            embeddings_np = np.array(embeddings).astype('float32')
+
+            # 2. Build and write local FAISS index
+            index = faiss.IndexFlatIP(self.dimension)
+            index.add(embeddings_np)
+
+            os.makedirs(os.path.dirname(output_index_path), exist_ok=True)
+            faiss.write_index(index, output_index_path)
+
         # 3. Synchronize relational database
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        
-        # Clear old rules to prevent duplicate constraints on rebuild
         cursor.execute("DELETE FROM compliance_rules")
-        
+
         for idx, rule in enumerate(COMPLIANCE_KNOWLEDGE_BASE):
             cursor.execute("""
                 INSERT OR REPLACE INTO compliance_rules (id, clause_id, standard, section, context, remediation)
                 VALUES (?, ?, ?, ?, ?, ?)
             """, (idx, rule['clause_id'], rule['standard'], rule['section'], rule['context'], rule['remediation']))
-            
+
         conn.commit()
         conn.close()
         print(f"FAISS index and SQLite compliance rules updated with {len(COMPLIANCE_KNOWLEDGE_BASE)} records.")
+
+
+# Alias for backward compatibility
+PolicyIngester = RelationalPolicyIngester
