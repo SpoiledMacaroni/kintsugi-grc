@@ -22,7 +22,7 @@ from typing import Any, Dict, List, Optional
 from src.mapping.controls import ControlRegistry
 from src.output.pdf_exporter import PDFComplianceExporter
 from src.output.reporter import ScanReporter
-from src.placeholders.rag_pipeline import RAGPipelineClient
+from src.rag.pipeline import RAGPipelineClient
 from src.scanner.audit import ScannerAuditLogger
 from src.scanner.engine import ScannerEngine
 from src.scanner.watcher import DynamicDirectoryWatcher
@@ -98,6 +98,7 @@ class KintsugiAppTkinterGUI:
         self.root.configure(background="#f8fafc")
 
         self.target_dir_var = tk.StringVar(value=os.path.abspath("./synthetic_test_env"))
+        self.custom_policy_var = tk.StringVar(value="")
         self.industry_var = tk.StringVar(value="All Industries")
         self.filter_var = tk.StringVar(value="Violations Only")
 
@@ -192,6 +193,22 @@ class KintsugiAppTkinterGUI:
         btn_open_finder = ttk.Button(row_dir, text="📂 Open in Finder", style="Secondary.TButton", command=self._open_target_in_explorer)
         btn_open_finder.pack(side="left", padx=4)
         ToolTip(btn_open_finder, "Opens the target folder in native macOS Finder / Windows Explorer.")
+
+        # Custom JSON Policy File Selector Row
+        row_policy = tk.Frame(config_card, bg="#ffffff")
+        row_policy.pack(fill="x", pady=4)
+        tk.Label(row_policy, text="Custom Security Policy (JSON):", font=("Segoe UI", 10, "bold"), fg="#0f172a", bg="#ffffff", width=24, anchor="w").pack(side="left")
+
+        ent_policy = ttk.Entry(row_policy, textvariable=self.custom_policy_var, font=("Consolas", 10))
+        ent_policy.pack(side="left", fill="x", expand=True, padx=6)
+        ToolTip(ent_policy, "Upload a custom JSON or text company security policy (e.g. sample_company_policy.json, max 10MB). The policy ingester chunks & vectorizes rules into the RAG engine.")
+
+        btn_upload_policy = ttk.Button(row_policy, text="📄 Upload Policy...", style="Secondary.TButton", command=self._upload_custom_policy)
+        btn_upload_policy.pack(side="left", padx=4)
+        ToolTip(btn_upload_policy, "Browse and upload a custom JSON company policy document into the vector engine.")
+
+        self.lbl_policy_status = tk.Label(row_policy, text="[No Custom Policy Loaded]", font=("Segoe UI", 9, "italic"), fg="#64748b", bg="#ffffff")
+        self.lbl_policy_status.pack(side="left", padx=6)
 
         # Industry Dropdown & Action Controls Row
         row_act = tk.Frame(config_card, bg="#ffffff")
@@ -460,9 +477,15 @@ class KintsugiAppTkinterGUI:
             self.rag_client = RAGPipelineClient()
             self.rag_client.connect()
 
+            # Auto-vectorize custom policy if selected by user
+            custom_policy_str = self.custom_policy_var.get().strip()
+            if custom_policy_str and Path(custom_policy_str).exists():
+                self.rag_client.ingest_and_vectorize_policy(Path(custom_policy_str))
+
+            industry = self.industry_var.get()
             for f in summary.get("findings", []):
                 if f.get("severity") in ["CRITICAL", "HIGH", "MEDIUM"]:
-                    advisory = self.rag_client.generate_advisory(f)
+                    advisory = self.rag_client.generate_advisory(f, industry=industry)
                     f["rag_advisory"] = advisory
                     f["rag_ai_remediation"] = advisory.get("remediation_command", "")
 
@@ -495,9 +518,10 @@ class KintsugiAppTkinterGUI:
 
         # Enrich any new findings with RAG advisory
         if self.rag_client:
+            industry = self.industry_var.get()
             for f in updated_summary.get("findings", []):
                 if f.get("severity") in ["CRITICAL", "HIGH", "MEDIUM"] and "rag_advisory" not in f:
-                    advisory = self.rag_client.generate_advisory(f)
+                    advisory = self.rag_client.generate_advisory(f, industry=industry)
                     f["rag_advisory"] = advisory
                     f["rag_ai_remediation"] = advisory.get("remediation_command", "")
 
@@ -688,9 +712,18 @@ class KintsugiAppTkinterGUI:
         self.txt_detail.insert("end", "• Finding Description    : ", "LABEL")
         self.txt_detail.insert("end", f"{desc}\n", "VALUE")
 
+        advisory = f.get("rag_advisory", {})
+        biz_explanation = details.get("business_explanation") or advisory.get("business_explanation", "")
+
+        if biz_explanation:
+            self.txt_detail.insert("end", "• Business Risk & Meaning: ", "LABEL")
+            self.txt_detail.insert("end", f"{biz_explanation}\n", "VALUE")
+
         if details:
-            self.txt_detail.insert("end", "• Technical Parameters   : ", "LABEL")
-            self.txt_detail.insert("end", f"{json.dumps(details)}\n", "VALUE")
+            tech_details = {k: v for k, v in details.items() if k != "business_explanation"}
+            if tech_details:
+                self.txt_detail.insert("end", "• Technical Parameters   : ", "LABEL")
+                self.txt_detail.insert("end", f"{json.dumps(tech_details)}\n", "VALUE")
 
         if mappings:
             self.txt_detail.insert("end", "\n• Addressed GRC Framework Controls:\n", "LABEL")
@@ -701,18 +734,77 @@ class KintsugiAppTkinterGUI:
                 st = m.get("status", "REVIEW")
                 self.txt_detail.insert("end", f"   - [{fw}] {cid}: {ctitle} ({st})\n", "TITLE")
 
-        advisory = f.get("rag_advisory", {})
         if advisory:
             self.txt_detail.insert("end", "\n• RAG AI Remediation Card:\n", "LABEL")
             self.txt_detail.insert("end", f"   - Mapped Clause ID     : {advisory.get('clause_id')}\n", "VALUE")
             self.txt_detail.insert("end", f"   - Standards Involved   : {advisory.get('standard')}\n", "VALUE")
-            self.txt_detail.insert("end", f"   - Risk Statement       : {advisory.get('risk_statement')}\n", "VALUE")
+            self.txt_detail.insert("end", f"   - Technical Risk       : {advisory.get('risk_statement')}\n", "VALUE")
+            if advisory.get("business_explanation") and not details.get("business_explanation"):
+                self.txt_detail.insert("end", f"   - Business Explanation : {advisory.get('business_explanation')}\n", "VALUE")
             self.txt_detail.insert("end", f"   - Recommended Command  : ", "LABEL")
             self.txt_detail.insert("end", f"{advisory.get('remediation_command')}\n", "CMD")
             if advisory.get("rationale"):
                 self.txt_detail.insert("end", f"   - Context Rationale    : {advisory.get('rationale')}\n", "VALUE")
 
         self.txt_detail.config(state="disabled")
+
+    def _browse_directory(self):
+        """Browses system folders to select target directory to monitor."""
+        folder = filedialog.askdirectory(title="Select Target Directory to Monitor")
+        if folder:
+            self.target_dir_var.set(folder)
+
+    def _upload_custom_policy(self):
+        """Allows the user to upload a reasonably sized JSON or text policy file into the policy ingester."""
+        file_path = filedialog.askopenfilename(
+            title="Upload Custom Company Policy Document",
+            filetypes=[
+                ("JSON Policy & Text Files", "*.json *.txt *.md"),
+                ("JSON Files (*.json)", "*.json"),
+                ("Text Files (*.txt)", "*.txt"),
+                ("All Files", "*.*")
+            ]
+        )
+        if not file_path:
+            return
+
+        path_obj = Path(file_path)
+
+        # Enforce max 10MB size limit
+        if path_obj.stat().st_size > 10 * 1024 * 1024:
+            messagebox.showerror(
+                "File Too Large",
+                f"Selected policy file '{path_obj.name}' is {path_obj.stat().st_size / (1024*1024):.1f} MB.\n"
+                "Please upload a reasonably sized policy file (under 10 MB)."
+            )
+            return
+
+        self.custom_policy_var.set(file_path)
+
+        if not self.rag_client:
+            self.rag_client = RAGPipelineClient()
+            self.rag_client.connect()
+
+        self.lbl_policy_status.config(text="⏳ Vectorizing policy...", fg="#0284c7")
+        self.root.update_idletasks()
+
+        res = self.rag_client.ingest_and_vectorize_policy(path_obj)
+        if res.get("status") in ["VECTORIZED", "SUCCESS"]:
+            vector_cnt = res.get("vector_count", 0)
+            self.lbl_policy_status.config(
+                text=f"🟢 Policy Active: {path_obj.name} ({vector_cnt} rules vectorized)",
+                fg="#15803d"
+            )
+            messagebox.showinfo(
+                "Policy Vectorized Successfully",
+                f"Custom policy '{path_obj.name}' successfully ingested!\n"
+                f"• Rules/Chunks Vectorized: {vector_cnt}\n"
+                f"• Storage: Vector FAISS index & SQLite compliance database."
+            )
+        else:
+            err_msg = res.get("message", "Unknown error during policy ingestion.")
+            self.lbl_policy_status.config(text=f"❌ Ingestion Failed: {err_msg}", fg="#dc2626")
+            messagebox.showerror("Policy Ingestion Error", f"Failed to ingest custom policy:\n{err_msg}")
 
     def _export_pdf(self):
         """Triggers PDF export of current scan summary."""

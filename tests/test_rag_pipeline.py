@@ -85,5 +85,37 @@ class TestKintsugiSingleModelPipeline(unittest.TestCase):
         print(f"Remediation Command: {card['remediation_command']}")
         print(f"Execution Mode: {card['execution_mode']}\n")
 
+    def test_json_policy_ingestion(self):
+        """Verify that a structured JSON company policy file can be ingested into PolicyIngester."""
+        json_policy_path = "imports/test_custom_policy.json"
+        with open(json_policy_path, "w", encoding="utf-8") as f:
+            json.dump({
+                "policies": [
+                    {
+                        "clause_id": "TEST-JSON-RULE-99",
+                        "standard": "Acme Test Security Baseline",
+                        "section": "Password Expiry",
+                        "context": "Password expiry must not exceed 90 days.",
+                        "remediation": "Update PASS_MAX_DAYS in login.defs."
+                    }
+                ]
+            }, f)
+
+        res = self.ingester.ingest_custom_policy(json_policy_path)
+        self.assertEqual(res.get("status"), "SUCCESS")
+        self.assertGreaterEqual(res.get("chunks_count", 0), 1)
+
+    def test_healthcare_industry_isolation_advisory(self):
+        """Verify that Healthcare industry scope isolates HIPAA citations and excludes PCI DSS / irrelevant custom policies."""
+        violation_payload = {
+            "filepath": "etc/ssl/openssl.cnf",
+            "file_path": "etc/ssl/openssl.cnf"
+        }
+        card = self.orchestrator.generate_advisory("INSECURE_SYSTEM_TLS_POLICY", violation_payload, industry="Healthcare")
+        self.assertIn("HIPAA", card.get("clause_id"))
+        self.assertNotIn("PCI-DSS", card.get("clause_id"))
+        self.assertNotIn("Password Expiration Policy", card.get("rationale"))
+        self.assertNotIn("chmod 640", card.get("rationale"))
+
 if __name__ == "__main__":
     unittest.main()

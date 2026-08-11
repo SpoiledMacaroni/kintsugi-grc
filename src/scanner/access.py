@@ -83,8 +83,12 @@ class IAMAuditor:
                     "rule_id": "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE",
                     "title": "Permissive Access Control (0o777 World-Writable)",
                     "severity": "CRITICAL",
-                    "description": f"File permissions '{mode_octal}' allow global write access to sensitive payload.",
-                    "details": {"mode": mode_octal, "uid": uid}
+                    "description": f"File permissions '{mode_octal}' allow unrestricted public access (anyone on the system can read, edit, or delete this file).",
+                    "details": {
+                        "mode": mode_octal,
+                        "uid": uid,
+                        "business_explanation": "Full Unrestricted Access: Permission 0o777 means any user or process on the machine has write access to overwrite or delete this file. Changing it to 0o640 restricts modification strictly to the file owner."
+                    }
                 })
 
             # Rule 2: World-Writable Audit Subsystem Log (0o666 on audit.log)
@@ -93,8 +97,11 @@ class IAMAuditor:
                     "rule_id": "INSECURE_AUDIT_LOG_PERMISSIONS",
                     "title": "Audit Log World-Writable Permission",
                     "severity": "HIGH",
-                    "description": f"Audit subsystem log '{file_path.name}' permissions '{mode_octal}' allow non-privileged tamper.",
-                    "details": {"mode": mode_octal}
+                    "description": f"Audit subsystem log '{file_path.name}' permissions '{mode_octal}' allow non-privileged users to edit or erase logs.",
+                    "details": {
+                        "mode": mode_octal,
+                        "business_explanation": "Unprotected Audit Trail: Permission 0o666 allows low-privilege users or attackers to alter audit logs to erase evidence of security breaches. Changing to 0o600 restricts log access exclusively to system administrators."
+                    }
                 })
 
             # Rule 3: Disabled or Orphaned Active Directory Account Access
@@ -108,7 +115,12 @@ class IAMAuditor:
                         "title": "File Access Assigned to Disabled Active Directory Identity",
                         "severity": "HIGH",
                         "description": f"File is owned by disabled AD user '{sam_account}' (userAccountControl=514).",
-                        "details": {"username": sam_account, "uid": uid, "userAccountControl": uac}
+                        "details": {
+                            "username": sam_account,
+                            "uid": uid,
+                            "userAccountControl": uac,
+                            "business_explanation": "Terminated Account Exposure: The owner of this file is flagged as a disabled/terminated employee account in Active Directory. Ownership should be reassigned to an active custodian."
+                        }
                     })
 
         except Exception as e:

@@ -23,7 +23,8 @@ RUN pip install --no-cache-dir \
     pydantic
 
 # Copy RAG pipeline scripts and preseeded control schemas
-COPY ./src/placeholders/rag_pipeline.py /app/rag_pipeline.py
+COPY ./src/rag /app/src/rag
+COPY ./src/placeholders /app/src/placeholders
 COPY ./grc_controls.zip /app/grc_controls.zip
 
 EXPOSE 8000

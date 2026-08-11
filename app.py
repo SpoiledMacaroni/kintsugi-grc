@@ -13,8 +13,8 @@ from pathlib import Path
 from src.mapping.controls import ControlRegistry
 from src.output.pdf_exporter import PDFComplianceExporter
 from src.output.reporter import ScanReporter
-from src.placeholders.framework_storage import FrameworkStorageClient
-from src.placeholders.rag_pipeline import RAGPipelineClient
+from src.storage.framework_storage import FrameworkStorageClient
+from src.rag.pipeline import RAGPipelineClient
 from src.scanner.audit import ScannerAuditLogger
 from src.scanner.engine import ScannerEngine
 from src.ui.interface import launch_tkinter_gui

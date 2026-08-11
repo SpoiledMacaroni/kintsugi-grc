@@ -1,19 +1,19 @@
-[2026-08-11 18:39:42] [INFO] [AUDIT_LOG] Seeded random generator with seed=42
-[2026-08-11 18:39:42] [INFO] [AUDIT_LOG] Starting Kintsugi-GRC Synthetic Generator (Python 3.13.2)
-[2026-08-11 18:39:42] [INFO] [AUDIT_LOG] Target Output Directory: /Users/dennislay/Downloads/kintsugi-grc/test_env
-[2026-08-11 18:39:42] [INFO] [AUDIT_LOG] --- Constructing Healthcare Environment: /Users/dennislay/Downloads/kintsugi-grc/test_env/healthcare_production_env ---
-[2026-08-11 18:39:42] [INFO] [AUDIT_LOG] [Category A] Created AES-256-CBC compliant file (184274 bytes): patient_records/ehr_db_master.gpg
-[2026-08-11 18:39:42] [INFO] [AUDIT_LOG] [Category C - Heuristic 1] Created ASCII Armored block: patient_records/patient_consent_forms.asc
-[2026-08-11 18:39:42] [INFO] [AUDIT_LOG] [Category C - Heuristic 2] Created Hybrid file (512B header + 50546B AES): patient_records/patient_encounters_2026.csv
-[2026-08-11 18:39:42] [INFO] [AUDIT_LOG] [Category C - Heuristic 3] Created Micro Payload (32 bytes): patient_records/patient_access_token.bin
-[2026-08-11 18:39:42] [INFO] [AUDIT_LOG] Generated mock radiology image binaries: radiology_images/chest_xray_20260810_001.png, radiology_images/brain_mri_patient_9021.jpg
-[2026-08-11 18:39:42] [WARNING] [AUDIT_LOG] [Category D - Access Violation] Injected 0o777 world-writable file: billing_department/merchant_copay_ledger.csv
-[2026-08-11 18:39:42] [WARNING] [AUDIT_LOG] [Category D - Transmission Protection] Injected SSH Protocol 1 & weak ciphers: etc/ssh/sshd_config
-[2026-08-11 18:39:42] [WARNING] [AUDIT_LOG] [Category D - Config Management] Injected invalid PASS_MAX_DAYS 99999: etc/login.defs
-[2026-08-11 18:39:42] [WARNING] [AUDIT_LOG] [Category D - Account Hardening] Injected active shells for system daemon/bin: etc/passwd
-[2026-08-11 18:39:42] [WARNING] [AUDIT_LOG] [Category D - Audit Subsystem] Injected 0o666 world-writable audit log: var/log/audit/audit.log
-[2026-08-11 18:39:42] [WARNING] [AUDIT_LOG] [Category D - TLS Policy] Injected mock system TLS policy configurations: etc/ssl/openssl.cnf, etc/nginx/conf.d/ssl_policy.conf, etc/registry/hklm_schannel_export.reg
-[2026-08-11 18:39:42] [INFO] [AUDIT_LOG] Generated Active Directory exports at etc/ad/ad_users_export.csv
-[2026-08-11 18:39:42] [INFO] [AUDIT_LOG] Recorded 4 encryption keys in /Users/dennislay/Downloads/kintsugi-grc/test_env/.keys/manifest.json
-[2026-08-11 18:39:42] [INFO] [AUDIT_LOG] Recorded 11 expected scan findings in expected_scan_results.json
-[2026-08-11 18:39:42] [INFO] [AUDIT_LOG] Successfully completed synthetic environment generation. Audit log saved to synthetic_generation_audit.log
+[2026-08-11 18:50:41] [INFO] [AUDIT_LOG] Seeded random generator with seed=42
+[2026-08-11 18:50:41] [INFO] [AUDIT_LOG] Starting Kintsugi-GRC Synthetic Generator (Python 3.13.2)
+[2026-08-11 18:50:41] [INFO] [AUDIT_LOG] Target Output Directory: /Users/dennislay/Downloads/kintsugi-grc/test_env
+[2026-08-11 18:50:41] [INFO] [AUDIT_LOG] --- Constructing Healthcare Environment: /Users/dennislay/Downloads/kintsugi-grc/test_env/healthcare_production_env ---
+[2026-08-11 18:50:41] [INFO] [AUDIT_LOG] [Category A] Created AES-256-CBC compliant file (184274 bytes): patient_records/ehr_db_master.gpg
+[2026-08-11 18:50:41] [INFO] [AUDIT_LOG] [Category C - Heuristic 1] Created ASCII Armored block: patient_records/patient_consent_forms.asc
+[2026-08-11 18:50:41] [INFO] [AUDIT_LOG] [Category C - Heuristic 2] Created Hybrid file (512B header + 50546B AES): patient_records/patient_encounters_2026.csv
+[2026-08-11 18:50:41] [INFO] [AUDIT_LOG] [Category C - Heuristic 3] Created Micro Payload (32 bytes): patient_records/patient_access_token.bin
+[2026-08-11 18:50:41] [INFO] [AUDIT_LOG] Generated mock radiology image binaries: radiology_images/chest_xray_20260810_001.png, radiology_images/brain_mri_patient_9021.jpg
+[2026-08-11 18:50:41] [WARNING] [AUDIT_LOG] [Category D - Access Violation] Injected 0o777 world-writable file: billing_department/merchant_copay_ledger.csv
+[2026-08-11 18:50:41] [WARNING] [AUDIT_LOG] [Category D - Transmission Protection] Injected SSH Protocol 1 & weak ciphers: etc/ssh/sshd_config
+[2026-08-11 18:50:41] [WARNING] [AUDIT_LOG] [Category D - Config Management] Injected invalid PASS_MAX_DAYS 99999: etc/login.defs
+[2026-08-11 18:50:41] [WARNING] [AUDIT_LOG] [Category D - Account Hardening] Injected active shells for system daemon/bin: etc/passwd
+[2026-08-11 18:50:41] [WARNING] [AUDIT_LOG] [Category D - Audit Subsystem] Injected 0o666 world-writable audit log: var/log/audit/audit.log
+[2026-08-11 18:50:41] [WARNING] [AUDIT_LOG] [Category D - TLS Policy] Injected mock system TLS policy configurations: etc/ssl/openssl.cnf, etc/nginx/conf.d/ssl_policy.conf, etc/registry/hklm_schannel_export.reg
+[2026-08-11 18:50:41] [INFO] [AUDIT_LOG] Generated Active Directory exports at etc/ad/ad_users_export.csv
+[2026-08-11 18:50:41] [INFO] [AUDIT_LOG] Recorded 4 encryption keys in /Users/dennislay/Downloads/kintsugi-grc/test_env/.keys/manifest.json
+[2026-08-11 18:50:41] [INFO] [AUDIT_LOG] Recorded 11 expected scan findings in expected_scan_results.json
+[2026-08-11 18:50:41] [INFO] [AUDIT_LOG] Successfully completed synthetic environment generation. Audit log saved to synthetic_generation_audit.log

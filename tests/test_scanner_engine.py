@@ -22,7 +22,7 @@ if str(project_root) not in sys.path:
 from src.mapping.controls import ControlRegistry
 from src.output.pdf_exporter import PDFComplianceExporter
 from src.output.reporter import ScanReporter
-from src.placeholders.rag_pipeline import RAGPipelineClient
+from src.rag.pipeline import RAGPipelineClient
 from src.scanner.audit import ScannerAuditLogger
 from src.scanner.engine import ScannerEngine
 from scripts.generate_synthetic import generate_luhn_pan, generate_ssn
