@@ -43,6 +43,12 @@ try:
 except ModuleNotFoundError:
     print("[Kintsugi-GRC] Missing required dependency 'cryptography'. Automatically installing via pip...")
     subprocess.check_call([sys.executable, "-m", "pip", "install", "cryptography"])
+    import site
+    import importlib
+    user_site = site.getusersitepackages()
+    if user_site and user_site not in sys.path and os.path.exists(user_site):
+        sys.path.insert(0, user_site)
+    importlib.invalidate_caches()
     from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
     from cryptography.hazmat.primitives import padding
     from cryptography.hazmat.backends import default_backend
