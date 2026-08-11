@@ -1,6 +1,6 @@
 """
-Kintsugi-GRC Responsive Windows Security-Style Desktop UI
-Provides a bright, modern, responsive Windows Defender / Security Center style interface.
+Kintsugi-GRC Native Desktop UI
+Provides a bright, modern, responsive security and compliance protection center interface.
 Prompts user for target directory monitoring with rich hover tooltips, highlights non-intrusive 
 GRC domain controls, compiles a running ledger of findings with interactive clickable file paths 
 that reveal files in native system Explorer/Finder, and runs a dynamic background watcher that 
@@ -90,7 +90,7 @@ class KintsugiAppTkinterGUI:
 
     def __init__(self, root: tk.Tk):
         self.root = root
-        self.root.title("Windows Security - Kintsugi GRC Monitoring Center")
+        self.root.title("Kintsugi GRC - Security & Compliance Monitoring Center")
         self.root.geometry("1180x820")
         self.root.minsize(920, 680)
 
@@ -149,7 +149,7 @@ class KintsugiAppTkinterGUI:
 
         lbl_shield = tk.Label(hero_left, text="🛡️", font=("Segoe UI Emoji", 28), bg="#ffffff")
         lbl_shield.pack(side="left", padx=(0, 12))
-        ToolTip(lbl_shield, "Windows Security - Kintsugi GRC Dynamic Protection Engine actively monitoring directory security standards.")
+        ToolTip(lbl_shield, "Kintsugi GRC Dynamic Protection Engine actively monitoring directory security standards.")
 
         title_box = tk.Frame(hero_left, bg="#ffffff")
         title_box.pack(side="left", anchor="w")
