@@ -1,0 +1,1 @@
+ACME Corporation Policy Clause 3.2: To secure medical PHI and financial files, all local database archives and directory stores holding raw customer credentials or patient SSN details must be cryptographically encrypted using local GPG or AES algorithms, and local permissions must be locked down to owner-only read/write masks.

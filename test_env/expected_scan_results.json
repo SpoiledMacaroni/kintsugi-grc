@@ -1,0 +1,146 @@
+{
+  "system": "Kintsugi-GRC Expected Synthetic Scan Findings",
+  "security_warning": "DO NOT UPLOAD TO GITHUB. Local QA test assertion target.",
+  "total_expected_findings": 11,
+  "expected_findings": [
+    {
+      "file_path": "patient_records/ehr_db_master.gpg",
+      "expected_classification": "ENCRYPTED_COMPLIANT_AES_256_CBC",
+      "category": "Category_A",
+      "compliance_status": "PASS",
+      "severity": "PASS",
+      "rule_ids": [
+        "HIPAA_164_312_a_2_iv",
+        "HITRUST_09_v",
+        "PCI_DSS_v4_3_5"
+      ],
+      "magic_header": "8501",
+      "min_entropy": 7.92
+    },
+    {
+      "file_path": "patient_records/patient_consent_forms.asc",
+      "expected_classification": "ASCII_ARMORED_ENCRYPTED_BLOCK",
+      "category": "Category_C",
+      "compliance_status": "PASS",
+      "severity": "PASS",
+      "rule_ids": [
+        "KINTSUGI_ASCII_DECODER_01"
+      ]
+    },
+    {
+      "file_path": "patient_records/patient_encounters_2026.csv",
+      "expected_classification": "HYBRID_HEADER_ENCRYPTED_PAYLOAD",
+      "category": "Category_C",
+      "compliance_status": "PASS",
+      "severity": "PASS",
+      "rule_ids": [
+        "KINTSUGI_SLIDING_WINDOW_256B"
+      ],
+      "cleartext_header_bytes": 512
+    },
+    {
+      "file_path": "patient_records/patient_access_token.bin",
+      "expected_classification": "MICRO_ENCRYPTED_PAYLOAD_32B",
+      "category": "Category_C",
+      "compliance_status": "PASS",
+      "severity": "PASS",
+      "rule_ids": [
+        "KINTSUGI_MAGIC_BYTE_01"
+      ]
+    },
+    {
+      "file_path": "billing_department/claims_export_2026_q2.csv",
+      "expected_classification": "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN",
+      "category": "Category_D",
+      "compliance_status": "FAIL",
+      "severity": "CRITICAL",
+      "rule_ids": [
+        "HIPAA_164_312_e_1",
+        "PCI_DSS_v4_4_2_1"
+      ],
+      "findings": [
+        "SSN",
+        "LUHN_PAN",
+        "ICD10"
+      ]
+    },
+    {
+      "file_path": "billing_department/merchant_copay_ledger.csv",
+      "expected_classification": "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE",
+      "category": "Category_D",
+      "compliance_status": "FAIL",
+      "severity": "CRITICAL",
+      "rule_ids": [
+        "PCI_DSS_v4_7_1",
+        "HIPAA_164_312_a_1"
+      ],
+      "permissions": "0777"
+    },
+    {
+      "file_path": "etc/ssh/sshd_config",
+      "expected_classification": "INSECURE_SSH_TRANSMISSION_PROTOCOL",
+      "category": "Category_D",
+      "compliance_status": "FAIL",
+      "severity": "HIGH",
+      "rule_ids": [
+        "PCI_DSS_v4_2_2_4",
+        "HITRUST_09_m"
+      ],
+      "issues": [
+        "Protocol 1",
+        "Blowfish-CBC",
+        "HMAC-MD5"
+      ]
+    },
+    {
+      "file_path": "etc/login.defs",
+      "expected_classification": "INSECURE_PASSWORD_POLICY_MAX_DAYS",
+      "category": "Category_D",
+      "compliance_status": "FAIL",
+      "severity": "MEDIUM",
+      "rule_ids": [
+        "PCI_DSS_v4_8_3_6",
+        "HITRUST_10_j"
+      ],
+      "PASS_MAX_DAYS": 99999
+    },
+    {
+      "file_path": "etc/passwd",
+      "expected_classification": "INSECURE_SYSTEM_ACCOUNT_HARDENING",
+      "category": "Category_D",
+      "compliance_status": "FAIL",
+      "severity": "HIGH",
+      "rule_ids": [
+        "PCI_DSS_v4_8_2_1",
+        "HIPAA_164_312_a_1"
+      ],
+      "daemon_shell": "/bin/sh",
+      "bin_shell": "/bin/sh"
+    },
+    {
+      "file_path": "var/log/audit/audit.log",
+      "expected_classification": "INSECURE_AUDIT_LOG_PERMISSIONS",
+      "category": "Category_D",
+      "compliance_status": "FAIL",
+      "severity": "HIGH",
+      "rule_ids": [
+        "HIPAA_164_312_b",
+        "PCI_DSS_v4_10_2_1"
+      ],
+      "permissions": "0666"
+    },
+    {
+      "file_path": "etc/ssl/openssl.cnf",
+      "expected_classification": "INSECURE_SYSTEM_TLS_POLICY",
+      "category": "Category_D",
+      "compliance_status": "FAIL",
+      "severity": "HIGH",
+      "rule_ids": [
+        "PCI_DSS_v4_4_2_1",
+        "HIPAA_164_312_e_1"
+      ],
+      "MinProtocol": "TLSv1.0",
+      "SECLEVEL": 0
+    }
+  ]
+}
