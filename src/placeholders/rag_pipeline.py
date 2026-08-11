@@ -8,10 +8,16 @@ and supplies automated AI compliance remediation endpoints.
 import json
 import logging
 import os
-import requests
 import zipfile
+import urllib.request
+import urllib.error
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+try:
+    import requests
+except ImportError:
+    requests = None
 
 logger = logging.getLogger("kintsugi_rag_pipeline")
 
@@ -30,10 +36,17 @@ class RAGPipelineClient:
     def connect(self) -> bool:
         """Checks connection to Open Ollama endpoint and RAG service."""
         try:
-            res = requests.get(f"{self.ollama_url}/api/tags", timeout=2)
-            if res.status_code == 200:
-                self.ollama_available = True
-                logger.info(f"Connected to Open Ollama endpoint at {self.ollama_url}")
+            if requests:
+                res = requests.get(f"{self.ollama_url}/api/tags", timeout=2)
+                if res.status_code == 200:
+                    self.ollama_available = True
+                    logger.info(f"Connected to Open Ollama endpoint at {self.ollama_url}")
+            else:
+                req = urllib.request.Request(f"{self.ollama_url}/api/tags")
+                with urllib.request.urlopen(req, timeout=2) as response:
+                    if response.status == 200:
+                        self.ollama_available = True
+                        logger.info(f"Connected to Open Ollama endpoint at {self.ollama_url}")
         except Exception:
             logger.debug(f"Open Ollama endpoint at {self.ollama_url} not active. Running fallback RAG vectorizer.")
 
@@ -74,11 +87,21 @@ class RAGPipelineClient:
                     "prompt": f"Provide concise 2-sentence GRC remediation steps for rule {rule_id} on file {file_path}.",
                     "stream": False
                 }
-                res = requests.post(f"{self.ollama_url}/api/generate", json=payload, timeout=3)
-                if res.status_code == 200:
-                    answer = res.json().get("response", "").strip()
-                    if answer:
-                        return f"[Ollama AI Remediation] {answer}"
+                if requests:
+                    res = requests.post(f"{self.ollama_url}/api/generate", json=payload, timeout=3)
+                    if res.status_code == 200:
+                        answer = res.json().get("response", "").strip()
+                        if answer:
+                            return f"[Ollama AI Remediation] {answer}"
+                else:
+                    data = json.dumps(payload).encode("utf-8")
+                    req = urllib.request.Request(f"{self.ollama_url}/api/generate", data=data, headers={"Content-Type": "application/json"})
+                    with urllib.request.urlopen(req, timeout=3) as response:
+                        if response.status == 200:
+                            res_json = json.loads(response.read().decode("utf-8"))
+                            answer = res_json.get("response", "").strip()
+                            if answer:
+                                return f"[Ollama AI Remediation] {answer}"
             except Exception:
                 pass
 

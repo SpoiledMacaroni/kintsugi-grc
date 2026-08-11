@@ -52,6 +52,12 @@ def main():
         help="Path to GRC control schema zip file (default: grc_controls.zip)."
     )
     scan_parser.add_argument(
+        "--industry", "-i",
+        default="All Industries",
+        choices=["All Industries", "Healthcare", "Merchant / E-Commerce", "Finance / Treasury", "Banking / SWIFT"],
+        help="Industry focus to filter framework control citations (default: All Industries)."
+    )
+    scan_parser.add_argument(
         "--audit-log", "-a",
         default="kintsugi_scanner_audit.log",
         help="Target file path for operation audit log (default: kintsugi_scanner_audit.log)."
@@ -138,7 +144,8 @@ def main():
         storage_client.get_framework_references("HITRUST_v11.8.0")
 
         # 4. Instantiate & Run Scanner Engine
-        engine = ScannerEngine(target_dir, control_reg, audit_logger)
+        industry_choice = getattr(args, "industry", "All Industries")
+        engine = ScannerEngine(target_dir, control_reg, audit_logger, industry=industry_choice)
         scan_summary = engine.run_scan()
 
         # Attach RAG AI remediation guidance to findings
