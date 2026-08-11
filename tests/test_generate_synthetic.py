@@ -114,6 +114,31 @@ class TestSyntheticGenerator(unittest.TestCase):
             self.assertIn("identity_mappings", ad_map)
             self.assertIn("S-1-5-21-3623811015-3361044348-30300820-1001", ad_map["identity_mappings"])
 
+            # Check expected scan findings JSON & Audit Log
+            exp_json_path = test_dir / "expected_scan_results.json"
+            audit_log_path = test_dir / "synthetic_generation_audit.log"
+            self.assertTrue(exp_json_path.exists())
+            self.assertTrue(audit_log_path.exists())
+            with open(exp_json_path, "r", encoding="utf-8") as f:
+                exp_data = json.load(f)
+            self.assertGreater(exp_data["total_expected_findings"], 0)
+            self.assertGreater(len(exp_data["expected_findings"]), 0)
+            with open(audit_log_path, "r", encoding="utf-8") as f:
+                audit_content = f.read()
+            self.assertIn("Constructing Healthcare Environment", audit_content)
+
+            # Check mock system TLS policy files
+            openssl_cnf = env_root / "etc" / "ssl" / "openssl.cnf"
+            crypto_state = env_root / "etc" / "crypto-policies" / "state" / "current"
+            nginx_ssl = env_root / "etc" / "nginx" / "conf.d" / "ssl_policy.conf"
+            schannel_reg = env_root / "etc" / "registry" / "hklm_schannel_export.reg"
+            self.assertTrue(openssl_cnf.exists())
+            self.assertTrue(crypto_state.exists())
+            self.assertTrue(nginx_ssl.exists())
+            self.assertTrue(schannel_reg.exists())
+            with open(openssl_cnf, "r", encoding="utf-8") as f:
+                self.assertIn("MinProtocol = TLSv1.0", f.read())
+
     def test_synthetic_generation_all_industries(self):
         """Verify all 4 industry production environments generate cleanly."""
         with TemporaryDirectory() as tmp_dir:
