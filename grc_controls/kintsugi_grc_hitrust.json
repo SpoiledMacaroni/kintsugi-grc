@@ -1,0 +1,136 @@
+{
+  "framework": "HITRUST CSF",
+  "framework_version": "v11",
+  "jira": "KINTGRC-10",
+  "structure_note": "Rebuilt 2026-08-12: the project's authoritative anchors are now 5 HITRUST CSF Control References from the 14-Control-Category structure (Category > Objective > Control Reference), replacing the earlier 19-Assessment-Domain selection. Note: the Audit Logging anchor uses the published HITRUST CSF reference 09.aa (Objective 09.10 Monitoring); earlier project scoping material listed this control as '10.aa', which was a transcription error - any '10.aa' in prior documents refers to this same control reference.",
+  "vectorization": {
+    "status": "embedding_ready",
+    "embedding_field": "embedding_text",
+    "id_field": "chunk_id",
+    "recommended_model": "sentence-transformers/all-MiniLM-L6-v2 (384-dim) or any FAISS-compatible encoder",
+    "notes": "Embed 'embedding_text' per chunk; store 'chunk_id' as the FAISS external ID. All other fields are retrieval metadata. Files intentionally contain no vectors so the index stays model-agnostic.",
+    "generated": "2026-08-12"
+  },
+  "controls": [
+    {
+      "control_reference": "01.c",
+      "control_title": "Privilege Management",
+      "objective_id": "01.02",
+      "objective_title": "Authorized Access to Information Systems",
+      "category_id": "01.0",
+      "category_title": "Access Control",
+      "requirement_summary": "The allocation and use of privileges to information systems and services is restricted and controlled. Privileges are allocated on a need-to-use basis and only after formal authorization, applying the principle of least privilege; privileged access is tracked to an identified role or individual.",
+      "chunk_id": "hitrust__01-c",
+      "technical_validation_method": "Active Directory/host UID/GID shadow access check: enumerate file and directory ownership, group membership breadth, and world-writable or otherwise overbroad permission bits against a least-privilege baseline; flag orphaned owners and privilege sprawl.",
+      "sources": [
+        {
+          "publisher": "HITRUST Alliance",
+          "title": "Introduction to the HITRUST CSF v11 (framework structure: 14 control categories, control objectives, control references)",
+          "citation": "https://hitrustalliance.net/hitrust-framework"
+        },
+        {
+          "publisher": "HITRUST Alliance",
+          "title": "HITRUST CSF license note",
+          "citation": "Verbatim HITRUST CSF control text is licensed and is not reproduced; requirement_summary paraphrases the control reference's ISO/IEC 27002-derived intent."
+        }
+      ],
+      "embedding_text": "HITRUST CSF 01.c Privilege Management (Objective 01.02 Authorized Access to Information Systems, Category 01.0 Access Control). The allocation and use of privileges to information systems and services is restricted and controlled. Privileges are allocated on a need-to-use basis and only after formal authorization, applying the principle of least privilege; privileged access is tracked to an identified role or individual."
+    },
+    {
+      "control_reference": "06.d",
+      "control_title": "Data Protection and Privacy of Covered Information",
+      "objective_id": "06.01",
+      "objective_title": "Compliance with Legal Requirements",
+      "category_id": "06.0",
+      "category_title": "Compliance",
+      "requirement_summary": "Data protection and privacy are ensured as required in relevant legislation, regulations, and contractual clauses. An organizational data protection and privacy policy is implemented and covered information (e.g., PII/PHI, cardholder data) is identified, minimized, and protected wherever it is stored or processed.",
+      "chunk_id": "hitrust__06-d",
+      "technical_validation_method": "Multi-attribute cryptographic pipeline: regex detection of PII/PHI/PAN patterns in traversed files combined with Shannon-entropy and chi-square tests to distinguish encrypted from plaintext storage; flag covered information found unencrypted or outside sanctioned locations.",
+      "sources": [
+        {
+          "publisher": "HITRUST Alliance",
+          "title": "Introduction to the HITRUST CSF v11 (framework structure: 14 control categories, control objectives, control references)",
+          "citation": "https://hitrustalliance.net/hitrust-framework"
+        },
+        {
+          "publisher": "HITRUST Alliance",
+          "title": "HITRUST CSF license note",
+          "citation": "Verbatim HITRUST CSF control text is licensed and is not reproduced; requirement_summary paraphrases the control reference's ISO/IEC 27002-derived intent."
+        }
+      ],
+      "embedding_text": "HITRUST CSF 06.d Data Protection and Privacy of Covered Information (Objective 06.01 Compliance with Legal Requirements, Category 06.0 Compliance). Data protection and privacy are ensured as required in relevant legislation, regulations, and contractual clauses. An organizational data protection and privacy policy is implemented and covered information (e.g., PII/PHI, cardholder data) is identified, minimized, and protected wherever it is stored or processed."
+    },
+    {
+      "control_reference": "10.m",
+      "control_title": "Control of Technical Vulnerabilities",
+      "objective_id": "10.06",
+      "objective_title": "Technical Vulnerability Management",
+      "category_id": "10.0",
+      "category_title": "Information Systems Acquisition, Development, and Maintenance",
+      "requirement_summary": "Timely information about technical vulnerabilities of information systems in use is obtained, the organization's exposure to such vulnerabilities is evaluated, and appropriate measures are taken to address the associated risk.",
+      "chunk_id": "hitrust__10-m",
+      "technical_validation_method": "Regex audit of service configuration files (SSH/TLS/web server) for weak ciphers, legacy protocol versions, and insecure directives; extraction of software version strings from package manifests and binaries for comparison against known-vulnerable version ranges.",
+      "sources": [
+        {
+          "publisher": "HITRUST Alliance",
+          "title": "Introduction to the HITRUST CSF v11 (framework structure: 14 control categories, control objectives, control references)",
+          "citation": "https://hitrustalliance.net/hitrust-framework"
+        },
+        {
+          "publisher": "HITRUST Alliance",
+          "title": "HITRUST CSF license note",
+          "citation": "Verbatim HITRUST CSF control text is licensed and is not reproduced; requirement_summary paraphrases the control reference's ISO/IEC 27002-derived intent."
+        }
+      ],
+      "embedding_text": "HITRUST CSF 10.m Control of Technical Vulnerabilities (Objective 10.06 Technical Vulnerability Management, Category 10.0 Information Systems Acquisition, Development, and Maintenance). Timely information about technical vulnerabilities of information systems in use is obtained, the organization's exposure to such vulnerabilities is evaluated, and appropriate measures are taken to address the associated risk."
+    },
+    {
+      "control_reference": "09.q",
+      "control_title": "Information Handling Procedures",
+      "objective_id": "09.07",
+      "objective_title": "Media Handling",
+      "category_id": "09.0",
+      "category_title": "Communications and Operations Management",
+      "requirement_summary": "Procedures for the handling and storage of information are established to protect it from unauthorized disclosure or misuse, covering handling, labeling, storage, secure disposal, and re-use of media consistent with the information's classification.",
+      "chunk_id": "hitrust__09-q",
+      "technical_validation_method": "Recursive file-system traverser and ZIP archive chunker locate covered information across storage paths, including temp, recycle, and archive locations; entropy analysis detects residual plaintext sensitive data on paths staged for re-use or disposal.",
+      "sources": [
+        {
+          "publisher": "HITRUST Alliance",
+          "title": "Introduction to the HITRUST CSF v11 (framework structure: 14 control categories, control objectives, control references)",
+          "citation": "https://hitrustalliance.net/hitrust-framework"
+        },
+        {
+          "publisher": "HITRUST Alliance",
+          "title": "HITRUST CSF license note",
+          "citation": "Verbatim HITRUST CSF control text is licensed and is not reproduced; requirement_summary paraphrases the control reference's ISO/IEC 27002-derived intent."
+        }
+      ],
+      "embedding_text": "HITRUST CSF 09.q Information Handling Procedures (Objective 09.07 Media Handling, Category 09.0 Communications and Operations Management). Procedures for the handling and storage of information are established to protect it from unauthorized disclosure or misuse, covering handling, labeling, storage, secure disposal, and re-use of media consistent with the information's classification."
+    },
+    {
+      "control_reference": "09.aa",
+      "control_title": "Audit Logging",
+      "objective_id": "09.10",
+      "objective_title": "Monitoring",
+      "category_id": "09.0",
+      "category_title": "Communications and Operations Management",
+      "requirement_summary": "Audit logs recording user activities, exceptions, and information security events are produced and kept for an agreed period to support access-control monitoring and future investigations; logs capture who, what, when, where, and outcome.",
+      "chunk_id": "hitrust__09-aa",
+      "technical_validation_method": "Audit Ledger Synthesis: every scan produces a tamper-evident kintsugi_scan.json evidence ledger; the scanner additionally verifies presence, permissions (via UID/GID module), and non-zero recency of host audit/syslog artifacts and logging daemon configuration files.",
+      "sources": [
+        {
+          "publisher": "HITRUST Alliance",
+          "title": "Introduction to the HITRUST CSF v11 (framework structure: 14 control categories, control objectives, control references)",
+          "citation": "https://hitrustalliance.net/hitrust-framework"
+        },
+        {
+          "publisher": "HITRUST Alliance",
+          "title": "HITRUST CSF license note",
+          "citation": "Verbatim HITRUST CSF control text is licensed and is not reproduced; requirement_summary paraphrases the control reference's ISO/IEC 27002-derived intent."
+        }
+      ],
+      "embedding_text": "HITRUST CSF 09.aa Audit Logging (Objective 09.10 Monitoring, Category 09.0 Communications and Operations Management). Audit logs recording user activities, exceptions, and information security events are produced and kept for an agreed period to support access-control monitoring and future investigations; logs capture who, what, when, where, and outcome."
+    }
+  ]
+}

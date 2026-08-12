@@ -1,0 +1,120 @@
+{
+  "framework": "NIST Cybersecurity Framework",
+  "framework_version": "2.0 (NIST CSWP 29, February 2024)",
+  "jira": "KINTGRC-25",
+  "vectorization": {
+    "status": "embedding_ready",
+    "embedding_field": "embedding_text",
+    "id_field": "chunk_id",
+    "recommended_model": "sentence-transformers/all-MiniLM-L6-v2 (384-dim) or any FAISS-compatible encoder",
+    "notes": "Embed 'embedding_text' per chunk; store 'chunk_id' as the FAISS external ID. All other fields are retrieval metadata. Files intentionally contain no vectors so the index stays model-agnostic.",
+    "generated": "2026-08-12"
+  },
+  "mappings": [
+    {
+      "chunk_id": "nist-csf-2-0__pr-aa-01__01-c",
+      "hitrust_control": {
+        "control_reference": "01.c",
+        "control_title": "Privilege Management"
+      },
+      "id": "PR.AA-01",
+      "title": "Identities and credentials are managed",
+      "text": "Identities and credentials for authorized users, services, and hardware are managed by the organization.",
+      "mapping_rationale": "Managed identities are the prerequisite for attributable privilege allocation under 01.c.",
+      "technical_validation_method": "UID/GID shadow access check: enumerate account-to-resource ownership; flag orphaned UIDs and unmanaged service identities owning files.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST Cybersecurity Framework 2.0 (NIST CSWP 29, February 2024), PR.AA-01",
+      "embedding_text": "Identities and credentials are managed (PR.AA-01). Identities and credentials for authorized users, services, and hardware are managed by the organization. | HITRUST anchor: 01.c Privilege Management - The allocation and use of privileges to information systems and services is restricted and controlled. Privileges are allocated on a need-to-use basis and only after formal authorization, applying the principle of least privilege; privileged access is tracked to an identified role or individual."
+    },
+    {
+      "chunk_id": "nist-csf-2-0__pr-aa-05__01-c",
+      "hitrust_control": {
+        "control_reference": "01.c",
+        "control_title": "Privilege Management"
+      },
+      "id": "PR.AA-05",
+      "title": "Access permissions incorporate least privilege and separation of duties",
+      "text": "Access permissions, entitlements, and authorizations are defined in a policy, managed, enforced, and reviewed, and incorporate the principles of least privilege and separation of duties.",
+      "mapping_rationale": "PR.AA-05 is CSF 2.0's consolidated privilege-management subcategory - define, manage, enforce, review with least privilege - a one-to-one match for 01.c.",
+      "technical_validation_method": "Active Directory/host UID/GID shadow access check: enumerate file and directory ownership, group membership breadth, and world-writable or otherwise overbroad permission bits against a least-privilege baseline; flag orphaned owners and privilege sprawl.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST Cybersecurity Framework 2.0 (NIST CSWP 29, February 2024), PR.AA-05",
+      "embedding_text": "Access permissions incorporate least privilege and separation of duties (PR.AA-05). Access permissions, entitlements, and authorizations are defined in a policy, managed, enforced, and reviewed, and incorporate the principles of least privilege and separation of duties. | HITRUST anchor: 01.c Privilege Management - The allocation and use of privileges to information systems and services is restricted and controlled. Privileges are allocated on a need-to-use basis and only after formal authorization, applying the principle of least privilege; privileged access is tracked to an identified role or individual."
+    },
+    {
+      "chunk_id": "nist-csf-2-0__gv-oc-03__06-d",
+      "hitrust_control": {
+        "control_reference": "06.d",
+        "control_title": "Data Protection and Privacy of Covered Information"
+      },
+      "id": "GV.OC-03",
+      "title": "Legal and regulatory requirements including privacy are managed",
+      "text": "Legal, regulatory, and contractual requirements regarding cybersecurity - including privacy and civil liberties obligations - are understood and managed.",
+      "mapping_rationale": "06.d sits in HITRUST's Compliance category; GV.OC-03 is CSF 2.0's home for managing legal/privacy obligations over covered information.",
+      "technical_validation_method": "Scan profile binds each detector to its legal source (HIPAA identifier classes, PAN rules); findings are reported per-obligation in the compliance report, evidencing managed requirements.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST Cybersecurity Framework 2.0 (NIST CSWP 29, February 2024), GV.OC-03",
+      "embedding_text": "Legal and regulatory requirements including privacy are managed (GV.OC-03). Legal, regulatory, and contractual requirements regarding cybersecurity - including privacy and civil liberties obligations - are understood and managed. | HITRUST anchor: 06.d Data Protection and Privacy of Covered Information - Data protection and privacy are ensured as required in relevant legislation, regulations, and contractual clauses. An organizational data protection and privacy policy is implemented and covered information (e.g., PII/PHI, cardholder data) is identified, minimized, and protected wherever it is stored or processed."
+    },
+    {
+      "chunk_id": "nist-csf-2-0__pr-ds-01__06-d",
+      "hitrust_control": {
+        "control_reference": "06.d",
+        "control_title": "Data Protection and Privacy of Covered Information"
+      },
+      "id": "PR.DS-01",
+      "title": "Confidentiality, integrity, and availability of data-at-rest are protected",
+      "text": "The confidentiality, integrity, and availability of data-at-rest are protected.",
+      "mapping_rationale": "Protection of covered information at rest is the technical half of 06.d; entropy/chi-square analysis empirically verifies at-rest confidentiality protection.",
+      "technical_validation_method": "Multi-attribute cryptographic pipeline: regex detection of PII/PHI/PAN patterns in traversed files combined with Shannon-entropy and chi-square tests to distinguish encrypted from plaintext storage; flag covered information found unencrypted or outside sanctioned locations.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST Cybersecurity Framework 2.0 (NIST CSWP 29, February 2024), PR.DS-01",
+      "embedding_text": "Confidentiality, integrity, and availability of data-at-rest are protected (PR.DS-01). The confidentiality, integrity, and availability of data-at-rest are protected. | HITRUST anchor: 06.d Data Protection and Privacy of Covered Information - Data protection and privacy are ensured as required in relevant legislation, regulations, and contractual clauses. An organizational data protection and privacy policy is implemented and covered information (e.g., PII/PHI, cardholder data) is identified, minimized, and protected wherever it is stored or processed."
+    },
+    {
+      "chunk_id": "nist-csf-2-0__id-ra-01__10-m",
+      "hitrust_control": {
+        "control_reference": "10.m",
+        "control_title": "Control of Technical Vulnerabilities"
+      },
+      "id": "ID.RA-01",
+      "title": "Vulnerabilities in assets are identified, validated, and recorded",
+      "text": "Vulnerabilities in assets are identified, validated, and recorded.",
+      "mapping_rationale": "ID.RA-01 is the CSF 2.0 statement of 10.m's identification-and-recording lifecycle for technical vulnerabilities.",
+      "technical_validation_method": "Regex audit of service configuration files (SSH/TLS/web server) for weak ciphers, legacy protocol versions, and insecure directives; extraction of software version strings from package manifests and binaries for comparison against known-vulnerable version ranges.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST Cybersecurity Framework 2.0 (NIST CSWP 29, February 2024), ID.RA-01",
+      "embedding_text": "Vulnerabilities in assets are identified, validated, and recorded (ID.RA-01). Vulnerabilities in assets are identified, validated, and recorded. | HITRUST anchor: 10.m Control of Technical Vulnerabilities - Timely information about technical vulnerabilities of information systems in use is obtained, the organization's exposure to such vulnerabilities is evaluated, and appropriate measures are taken to address the associated risk."
+    },
+    {
+      "chunk_id": "nist-csf-2-0__id-am-08__09-q",
+      "hitrust_control": {
+        "control_reference": "09.q",
+        "control_title": "Information Handling Procedures"
+      },
+      "id": "ID.AM-08",
+      "title": "Systems, hardware, software, services, and data are managed through their life cycles",
+      "text": "Systems, hardware, software, services, and data are managed throughout their life cycles.",
+      "mapping_rationale": "Lifecycle management of data - including end-of-life handling, re-use, and disposal - is 09.q's handling-procedures scope expressed in CSF 2.0 asset-management terms.",
+      "technical_validation_method": "Recursive file-system traverser and ZIP archive chunker locate covered information across storage paths, including temp, recycle, and archive locations; entropy analysis detects residual plaintext sensitive data on paths staged for re-use or disposal.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST Cybersecurity Framework 2.0 (NIST CSWP 29, February 2024), ID.AM-08",
+      "embedding_text": "Systems, hardware, software, services, and data are managed through their life cycles (ID.AM-08). Systems, hardware, software, services, and data are managed throughout their life cycles. | HITRUST anchor: 09.q Information Handling Procedures - Procedures for the handling and storage of information are established to protect it from unauthorized disclosure or misuse, covering handling, labeling, storage, secure disposal, and re-use of media consistent with the information's classification."
+    },
+    {
+      "chunk_id": "nist-csf-2-0__pr-ps-04__09-aa",
+      "hitrust_control": {
+        "control_reference": "09.aa",
+        "control_title": "Audit Logging"
+      },
+      "id": "PR.PS-04",
+      "title": "Log records are generated and made available for continuous monitoring",
+      "text": "Log records are generated and made available for continuous monitoring.",
+      "mapping_rationale": "PR.PS-04 is CSF 2.0's audit-logging subcategory: generation plus availability of log records - the direct counterpart of 09.aa.",
+      "technical_validation_method": "Audit Ledger Synthesis: every scan produces a tamper-evident kintsugi_scan.json evidence ledger; the scanner additionally verifies presence, permissions (via UID/GID module), and non-zero recency of host audit/syslog artifacts and logging daemon configuration files.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST Cybersecurity Framework 2.0 (NIST CSWP 29, February 2024), PR.PS-04",
+      "embedding_text": "Log records are generated and made available for continuous monitoring (PR.PS-04). Log records are generated and made available for continuous monitoring. | HITRUST anchor: 09.aa Audit Logging - Audit logs recording user activities, exceptions, and information security events are produced and kept for an agreed period to support access-control monitoring and future investigations; logs capture who, what, when, where, and outcome."
+    }
+  ]
+}

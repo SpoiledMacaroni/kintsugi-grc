@@ -1,0 +1,287 @@
+{
+  "framework": "NIST SP 800-53",
+  "framework_version": "Revision 5.2.0",
+  "jira": "KINTGRC-12",
+  "authoritative_source": "NIST CPRT catalog export cprt_SP_800_53_5_2_0 (2026-08-11)",
+  "vectorization": {
+    "status": "embedding_ready",
+    "embedding_field": "embedding_text",
+    "id_field": "chunk_id",
+    "recommended_model": "sentence-transformers/all-MiniLM-L6-v2 (384-dim) or any FAISS-compatible encoder",
+    "notes": "Embed 'embedding_text' per chunk; store 'chunk_id' as the FAISS external ID. All other fields are retrieval metadata. Files intentionally contain no vectors so the index stays model-agnostic.",
+    "generated": "2026-08-12"
+  },
+  "mappings": [
+    {
+      "chunk_id": "nist-800-53-r5__ac-2__01-c",
+      "hitrust_control": {
+        "control_reference": "01.c",
+        "control_title": "Privilege Management"
+      },
+      "id": "AC-2",
+      "title": "Account Management",
+      "text": "a. Define and document the types of accounts allowed and specifically prohibited for use within the system; b. Assign account managers; c. Require [Assignment: organization-defined prerequisites and criteria] for group and role membership; d. Specify: 1. Authorized users of the system; 2. Group and role membership; and 3. Access authorizations (i.e., privileges) and [Assignment: organization-defined attributes (as required)] for each account; e. Require approvals by [Assignment: organization-defined personnel or roles] for requests to create accounts; f. Create, enable, modify, disable, and remove accounts in accordance with [Assignment: organization-defined policy, procedures, prerequisites, and criteria]; g. Monitor the use of accounts; h. Notify account managers and [Assignment: organization-defined personnel or roles] within: 1. [Assignment: organization-defined time period] when accounts are no longer required; 2. [Assignment: organization-defined time period] when users are terminated or transferred; and 3. [Assignment: organization-defined time period] when system usage or need-to-know changes for an individual; i. Authorize access to the system based on: 1. A valid access authorization; 2. Intended system usage; and 3. [Assignment: organization-defined attributes (as required)]; j. Review accounts for compliance with account management requirements [Assignment: organization-defined frequency]; k. Establish and implement a process for changing shared or group account authenticators (if deployed) when individuals are removed from the group; and l. Align account management processes with personnel termination and transfer processes.",
+      "mapping_rationale": "Account management is the administrative lifecycle within which privileges are allocated, reviewed, and revoked - the machinery 01.c presupposes.",
+      "technical_validation_method": "Active Directory/host UID/GID shadow access check: enumerate file and directory ownership, group membership breadth, and world-writable or otherwise overbroad permission bits against a least-privilege baseline; flag orphaned owners and privilege sprawl.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST SP 800-53 Rev. 5.2.0, AC-2, extracted from official NIST CPRT catalog export (cprt_SP_800_53_5_2_0, 2026-08-11)",
+      "embedding_text": "Account Management (AC-2). a. Define and document the types of accounts allowed and specifically prohibited for use within the system; b. Assign account managers; c. Require [Assignment: organization-defined prerequisites and criteria] for group and role membership; d. Specify: 1. Authorized users of the system; 2. Group and role membership; and 3. Access authorizations (i.e., privileges) and [Assignment: organization-defined attributes (as required)] for each account; e. Require approvals by [Assignment: organization-defined personnel or roles] for requests to create accounts; f. Create, enable, modify, disable, and remove accounts in accordance with [Assignment: organization-defined policy, procedures, prerequisites, and criteria]; g. Monitor the use of accounts; h. Notify account managers and [Assignment: organization-defined personnel or roles] within: 1. [Assignment: organization-defined time period] when accounts are no longer required; 2. [Assignment: organization-defined time period] when users are terminated or transferred; and 3. [Assignment: organization-defined time period] when system usage or need-to-know changes for an individual; i. Authorize access to the system based on: 1. A valid access authorization; 2. Intended system usage; and 3. [Assignment: organization-defined attributes (as required)]; j. Review accounts for compliance with account management requirements [Assignment: organization-defined frequency]; k. Establish and implement a process for changing shared or group account authenticators (if deployed) when individuals are removed from the group; and l. Align account management processes with personnel termination and transfer processes. | HITRUST anchor: 01.c Privilege Management - The allocation and use of privileges to information systems and services is restricted and controlled. Privileges are allocated on a need-to-use basis and only after formal authorization, applying the principle of least privilege; privileged access is tracked to an identified role or individual."
+    },
+    {
+      "chunk_id": "nist-800-53-r5__ac-3__01-c",
+      "hitrust_control": {
+        "control_reference": "01.c",
+        "control_title": "Privilege Management"
+      },
+      "id": "AC-3",
+      "title": "Access Enforcement",
+      "text": "Enforce approved authorizations for logical access to information and system resources in accordance with applicable access control policies.",
+      "mapping_rationale": "Access enforcement is the technical gate that makes allocated privileges binding; 01.c is only real where approved authorizations are enforced.",
+      "technical_validation_method": "Active Directory/host UID/GID shadow access check: enumerate file and directory ownership, group membership breadth, and world-writable or otherwise overbroad permission bits against a least-privilege baseline; flag orphaned owners and privilege sprawl.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST SP 800-53 Rev. 5.2.0, AC-3, extracted from official NIST CPRT catalog export (cprt_SP_800_53_5_2_0, 2026-08-11)",
+      "embedding_text": "Access Enforcement (AC-3). Enforce approved authorizations for logical access to information and system resources in accordance with applicable access control policies. | HITRUST anchor: 01.c Privilege Management - The allocation and use of privileges to information systems and services is restricted and controlled. Privileges are allocated on a need-to-use basis and only after formal authorization, applying the principle of least privilege; privileged access is tracked to an identified role or individual."
+    },
+    {
+      "chunk_id": "nist-800-53-r5__ac-5__01-c",
+      "hitrust_control": {
+        "control_reference": "01.c",
+        "control_title": "Privilege Management"
+      },
+      "id": "AC-5",
+      "title": "Separation of Duties",
+      "text": "a. Identify and document [Assignment: organization-defined duties of individuals requiring separation]; and b. Define system access authorizations to support separation of duties.",
+      "mapping_rationale": "Separation of duties constrains how privileges may be combined per identity - a named element of privilege-management practice under 01.c.",
+      "technical_validation_method": "Active Directory/host UID/GID shadow access check: enumerate file and directory ownership, group membership breadth, and world-writable or otherwise overbroad permission bits against a least-privilege baseline; flag orphaned owners and privilege sprawl.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST SP 800-53 Rev. 5.2.0, AC-5, extracted from official NIST CPRT catalog export (cprt_SP_800_53_5_2_0, 2026-08-11)",
+      "embedding_text": "Separation of Duties (AC-5). a. Identify and document [Assignment: organization-defined duties of individuals requiring separation]; and b. Define system access authorizations to support separation of duties. | HITRUST anchor: 01.c Privilege Management - The allocation and use of privileges to information systems and services is restricted and controlled. Privileges are allocated on a need-to-use basis and only after formal authorization, applying the principle of least privilege; privileged access is tracked to an identified role or individual."
+    },
+    {
+      "chunk_id": "nist-800-53-r5__ac-6__01-c",
+      "hitrust_control": {
+        "control_reference": "01.c",
+        "control_title": "Privilege Management"
+      },
+      "id": "AC-6",
+      "title": "Least Privilege",
+      "text": "Employ the principle of least privilege, allowing only authorized accesses for users (or processes acting on behalf of users) that are necessary to accomplish assigned organizational tasks.",
+      "mapping_rationale": "Least privilege is the literal principle 01.c codifies: only authorized accesses necessary for assigned tasks.",
+      "technical_validation_method": "Active Directory/host UID/GID shadow access check: enumerate file and directory ownership, group membership breadth, and world-writable or otherwise overbroad permission bits against a least-privilege baseline; flag orphaned owners and privilege sprawl.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST SP 800-53 Rev. 5.2.0, AC-6, extracted from official NIST CPRT catalog export (cprt_SP_800_53_5_2_0, 2026-08-11)",
+      "embedding_text": "Least Privilege (AC-6). Employ the principle of least privilege, allowing only authorized accesses for users (or processes acting on behalf of users) that are necessary to accomplish assigned organizational tasks. | HITRUST anchor: 01.c Privilege Management - The allocation and use of privileges to information systems and services is restricted and controlled. Privileges are allocated on a need-to-use basis and only after formal authorization, applying the principle of least privilege; privileged access is tracked to an identified role or individual."
+    },
+    {
+      "chunk_id": "nist-800-53-r5__pt-2__06-d",
+      "hitrust_control": {
+        "control_reference": "06.d",
+        "control_title": "Data Protection and Privacy of Covered Information"
+      },
+      "id": "PT-2",
+      "title": "Authority to Process Personally Identifiable Information",
+      "text": "a. Determine and document the [Assignment: organization-defined authority] that permits the [Assignment: organization-defined processing] of personally identifiable information; and b. Restrict the [Assignment: organization-defined processing] of personally identifiable information to only that which is authorized.",
+      "mapping_rationale": "Restricting processing of PII to what is legally authorized is the statutory-basis core of 06.d.",
+      "technical_validation_method": "PII regex/entropy sweep flags personal data discovered in locations or systems with no declared processing authority in the scan profile.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST SP 800-53 Rev. 5.2.0, PT-2, extracted from official NIST CPRT catalog export (cprt_SP_800_53_5_2_0, 2026-08-11)",
+      "embedding_text": "Authority to Process Personally Identifiable Information (PT-2). a. Determine and document the [Assignment: organization-defined authority] that permits the [Assignment: organization-defined processing] of personally identifiable information; and b. Restrict the [Assignment: organization-defined processing] of personally identifiable information to only that which is authorized. | HITRUST anchor: 06.d Data Protection and Privacy of Covered Information - Data protection and privacy are ensured as required in relevant legislation, regulations, and contractual clauses. An organizational data protection and privacy policy is implemented and covered information (e.g., PII/PHI, cardholder data) is identified, minimized, and protected wherever it is stored or processed."
+    },
+    {
+      "chunk_id": "nist-800-53-r5__si-12__06-d",
+      "hitrust_control": {
+        "control_reference": "06.d",
+        "control_title": "Data Protection and Privacy of Covered Information"
+      },
+      "id": "SI-12",
+      "title": "Information Management and Retention",
+      "text": "Manage and retain information within the system and information output from the system in accordance with applicable laws, executive orders, directives, regulations, policies, standards, guidelines and operational requirements.",
+      "mapping_rationale": "Managing and retaining information per applicable law is 06.d's retention/limitation obligation in 800-53 terms.",
+      "technical_validation_method": "Traverser inventories covered-information files with last-modified ages against declared retention windows; over-retention flagged in the findings aggregator.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST SP 800-53 Rev. 5.2.0, SI-12, extracted from official NIST CPRT catalog export (cprt_SP_800_53_5_2_0, 2026-08-11)",
+      "embedding_text": "Information Management and Retention (SI-12). Manage and retain information within the system and information output from the system in accordance with applicable laws, executive orders, directives, regulations, policies, standards, guidelines and operational requirements. | HITRUST anchor: 06.d Data Protection and Privacy of Covered Information - Data protection and privacy are ensured as required in relevant legislation, regulations, and contractual clauses. An organizational data protection and privacy policy is implemented and covered information (e.g., PII/PHI, cardholder data) is identified, minimized, and protected wherever it is stored or processed."
+    },
+    {
+      "chunk_id": "nist-800-53-r5__sc-28__06-d",
+      "hitrust_control": {
+        "control_reference": "06.d",
+        "control_title": "Data Protection and Privacy of Covered Information"
+      },
+      "id": "SC-28",
+      "title": "Protection of Information at Rest",
+      "text": "Protect the [Selection (one or more): confidentiality; integrity] of the following information at rest: [Assignment: organization-defined information at rest].",
+      "mapping_rationale": "Protection of information at rest is the technical safeguard 06.d expects for stored covered information; entropy/chi-square analysis verifies at-rest protection empirically.",
+      "technical_validation_method": "Multi-attribute cryptographic pipeline: regex detection of PII/PHI/PAN patterns in traversed files combined with Shannon-entropy and chi-square tests to distinguish encrypted from plaintext storage; flag covered information found unencrypted or outside sanctioned locations.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST SP 800-53 Rev. 5.2.0, SC-28, extracted from official NIST CPRT catalog export (cprt_SP_800_53_5_2_0, 2026-08-11)",
+      "embedding_text": "Protection of Information at Rest (SC-28). Protect the [Selection (one or more): confidentiality; integrity] of the following information at rest: [Assignment: organization-defined information at rest]. | HITRUST anchor: 06.d Data Protection and Privacy of Covered Information - Data protection and privacy are ensured as required in relevant legislation, regulations, and contractual clauses. An organizational data protection and privacy policy is implemented and covered information (e.g., PII/PHI, cardholder data) is identified, minimized, and protected wherever it is stored or processed."
+    },
+    {
+      "chunk_id": "nist-800-53-r5__ra-5__10-m",
+      "hitrust_control": {
+        "control_reference": "10.m",
+        "control_title": "Control of Technical Vulnerabilities"
+      },
+      "id": "RA-5",
+      "title": "Vulnerability Monitoring and Scanning",
+      "text": "a. Monitor and scan for vulnerabilities in the system and hosted applications [Assignment: organization-defined frequency and/or randomly in accordance with organization-defined process] and when new vulnerabilities potentially affecting the system are identified and reported; b. Employ vulnerability monitoring tools and techniques that facilitate interoperability among tools and automate parts of the vulnerability management process by using standards for: 1. Enumerating platforms, software flaws, and improper configurations; 2. Formatting checklists and test procedures; and 3. Measuring vulnerability impact; c. Analyze vulnerability scan reports and results from vulnerability monitoring; d. Remediate legitimate vulnerabilities [Assignment: organization-defined response times] in accordance with an organizational assessment of risk; e. Share information obtained from the vulnerability monitoring process and control assessments with [Assignment: organization-defined personnel or roles] to help eliminate similar vulnerabilities in other systems; and f. Employ vulnerability monitoring tools that include the capability to readily update the vulnerabilities to be scanned.",
+      "mapping_rationale": "Vulnerability monitoring and scanning is the direct 800-53 implementation of 10.m: obtain vulnerability information, scan, evaluate exposure.",
+      "technical_validation_method": "Regex audit of service configuration files (SSH/TLS/web server) for weak ciphers, legacy protocol versions, and insecure directives; extraction of software version strings from package manifests and binaries for comparison against known-vulnerable version ranges.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST SP 800-53 Rev. 5.2.0, RA-5, extracted from official NIST CPRT catalog export (cprt_SP_800_53_5_2_0, 2026-08-11)",
+      "embedding_text": "Vulnerability Monitoring and Scanning (RA-5). a. Monitor and scan for vulnerabilities in the system and hosted applications [Assignment: organization-defined frequency and/or randomly in accordance with organization-defined process] and when new vulnerabilities potentially affecting the system are identified and reported; b. Employ vulnerability monitoring tools and techniques that facilitate interoperability among tools and automate parts of the vulnerability management process by using standards for: 1. Enumerating platforms, software flaws, and improper configurations; 2. Formatting checklists and test procedures; and 3. Measuring vulnerability impact; c. Analyze vulnerability scan reports and results from vulnerability monitoring; d. Remediate legitimate vulnerabilities [Assignment: organization-defined response times] in accordance with an organizational assessment of risk; e. Share information obtained from the vulnerability monitoring process and control assessments with [Assignment: organization-defined personnel or roles] to help eliminate similar vulnerabilities in other systems; and f. Employ vulnerability monitoring tools that include the capability to readily update the vulnerabilities to be scanned. | HITRUST anchor: 10.m Control of Technical Vulnerabilities - Timely information about technical vulnerabilities of information systems in use is obtained, the organization's exposure to such vulnerabilities is evaluated, and appropriate measures are taken to address the associated risk."
+    },
+    {
+      "chunk_id": "nist-800-53-r5__si-2__10-m",
+      "hitrust_control": {
+        "control_reference": "10.m",
+        "control_title": "Control of Technical Vulnerabilities"
+      },
+      "id": "SI-2",
+      "title": "Flaw Remediation",
+      "text": "a. Identify, report, and correct system flaws; b. Test software and firmware updates related to flaw remediation for effectiveness and potential side effects before installation; c. Install security-relevant software and firmware updates within [Assignment: organization-defined time period] of the release of the updates; and d. Incorporate flaw remediation into the organizational configuration management process.",
+      "mapping_rationale": "Flaw remediation is the 'take appropriate measures' step of 10.m: identify, report, correct, and patch within defined periods.",
+      "technical_validation_method": "Version-string extraction from package manifests/binaries compared against known-vulnerable ranges; finding age across scan ledgers evidences remediation timeliness.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST SP 800-53 Rev. 5.2.0, SI-2, extracted from official NIST CPRT catalog export (cprt_SP_800_53_5_2_0, 2026-08-11)",
+      "embedding_text": "Flaw Remediation (SI-2). a. Identify, report, and correct system flaws; b. Test software and firmware updates related to flaw remediation for effectiveness and potential side effects before installation; c. Install security-relevant software and firmware updates within [Assignment: organization-defined time period] of the release of the updates; and d. Incorporate flaw remediation into the organizational configuration management process. | HITRUST anchor: 10.m Control of Technical Vulnerabilities - Timely information about technical vulnerabilities of information systems in use is obtained, the organization's exposure to such vulnerabilities is evaluated, and appropriate measures are taken to address the associated risk."
+    },
+    {
+      "chunk_id": "nist-800-53-r5__mp-2__09-q",
+      "hitrust_control": {
+        "control_reference": "09.q",
+        "control_title": "Information Handling Procedures"
+      },
+      "id": "MP-2",
+      "title": "Media Access",
+      "text": "Restrict access to [Assignment: organization-defined types of digital and/or non-digital media] to [Assignment: organization-defined personnel or roles].",
+      "mapping_rationale": "Restricting media access to defined roles is the access-control face of 09.q information handling.",
+      "technical_validation_method": "Recursive file-system traverser and ZIP archive chunker locate covered information across storage paths, including temp, recycle, and archive locations; entropy analysis detects residual plaintext sensitive data on paths staged for re-use or disposal.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST SP 800-53 Rev. 5.2.0, MP-2, extracted from official NIST CPRT catalog export (cprt_SP_800_53_5_2_0, 2026-08-11)",
+      "embedding_text": "Media Access (MP-2). Restrict access to [Assignment: organization-defined types of digital and/or non-digital media] to [Assignment: organization-defined personnel or roles]. | HITRUST anchor: 09.q Information Handling Procedures - Procedures for the handling and storage of information are established to protect it from unauthorized disclosure or misuse, covering handling, labeling, storage, secure disposal, and re-use of media consistent with the information's classification."
+    },
+    {
+      "chunk_id": "nist-800-53-r5__mp-4__09-q",
+      "hitrust_control": {
+        "control_reference": "09.q",
+        "control_title": "Information Handling Procedures"
+      },
+      "id": "MP-4",
+      "title": "Media Storage",
+      "text": "a. Physically control and securely store [Assignment: organization-defined types of digital and/or non-digital media] within [Assignment: organization-defined controlled areas]; and b. Protect system media types defined in MP-4a until the media are destroyed or sanitized using approved equipment, techniques, and procedures.",
+      "mapping_rationale": "Controlled storage and protection of media until sanitized or destroyed matches 09.q's storage element.",
+      "technical_validation_method": "Recursive file-system traverser and ZIP archive chunker locate covered information across storage paths, including temp, recycle, and archive locations; entropy analysis detects residual plaintext sensitive data on paths staged for re-use or disposal.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST SP 800-53 Rev. 5.2.0, MP-4, extracted from official NIST CPRT catalog export (cprt_SP_800_53_5_2_0, 2026-08-11)",
+      "embedding_text": "Media Storage (MP-4). a. Physically control and securely store [Assignment: organization-defined types of digital and/or non-digital media] within [Assignment: organization-defined controlled areas]; and b. Protect system media types defined in MP-4a until the media are destroyed or sanitized using approved equipment, techniques, and procedures. | HITRUST anchor: 09.q Information Handling Procedures - Procedures for the handling and storage of information are established to protect it from unauthorized disclosure or misuse, covering handling, labeling, storage, secure disposal, and re-use of media consistent with the information's classification."
+    },
+    {
+      "chunk_id": "nist-800-53-r5__mp-6__09-q",
+      "hitrust_control": {
+        "control_reference": "09.q",
+        "control_title": "Information Handling Procedures"
+      },
+      "id": "MP-6",
+      "title": "Media Sanitization",
+      "text": "a. Sanitize [Assignment: organization-defined system media] prior to disposal, release out of organizational control, or release for reuse using [Assignment: organization-defined sanitization techniques and procedures]; and b. Employ sanitization mechanisms with the strength and integrity commensurate with the security category or classification of the information.",
+      "mapping_rationale": "Media sanitization before disposal, release, or re-use is 09.q's disposal/re-use element; residual-data detection is its software verification.",
+      "technical_validation_method": "Entropy analysis and covered-information regex over re-use/disposal-staged paths detect recoverable plaintext that sanitization should have removed.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST SP 800-53 Rev. 5.2.0, MP-6, extracted from official NIST CPRT catalog export (cprt_SP_800_53_5_2_0, 2026-08-11)",
+      "embedding_text": "Media Sanitization (MP-6). a. Sanitize [Assignment: organization-defined system media] prior to disposal, release out of organizational control, or release for reuse using [Assignment: organization-defined sanitization techniques and procedures]; and b. Employ sanitization mechanisms with the strength and integrity commensurate with the security category or classification of the information. | HITRUST anchor: 09.q Information Handling Procedures - Procedures for the handling and storage of information are established to protect it from unauthorized disclosure or misuse, covering handling, labeling, storage, secure disposal, and re-use of media consistent with the information's classification."
+    },
+    {
+      "chunk_id": "nist-800-53-r5__mp-7__09-q",
+      "hitrust_control": {
+        "control_reference": "09.q",
+        "control_title": "Information Handling Procedures"
+      },
+      "id": "MP-7",
+      "title": "Media Use",
+      "text": "a. [Selection (one): Restrict; Prohibit] the use of [Assignment: organization-defined types of system media] on [Assignment: organization-defined systems or system components] using [Assignment: organization-defined controls]; and b. Prohibit the use of portable storage devices in organizational systems when such devices have no identifiable owner.",
+      "mapping_rationale": "Restricting use of media types (including ownerless portable storage) is a handling procedure limiting where covered information may travel - 09.q scope.",
+      "technical_validation_method": "Traverser flags covered information found on mounted removable-media paths and archives originating from unsanctioned media locations.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST SP 800-53 Rev. 5.2.0, MP-7, extracted from official NIST CPRT catalog export (cprt_SP_800_53_5_2_0, 2026-08-11)",
+      "embedding_text": "Media Use (MP-7). a. [Selection (one): Restrict; Prohibit] the use of [Assignment: organization-defined types of system media] on [Assignment: organization-defined systems or system components] using [Assignment: organization-defined controls]; and b. Prohibit the use of portable storage devices in organizational systems when such devices have no identifiable owner. | HITRUST anchor: 09.q Information Handling Procedures - Procedures for the handling and storage of information are established to protect it from unauthorized disclosure or misuse, covering handling, labeling, storage, secure disposal, and re-use of media consistent with the information's classification."
+    },
+    {
+      "chunk_id": "nist-800-53-r5__au-2__09-aa",
+      "hitrust_control": {
+        "control_reference": "09.aa",
+        "control_title": "Audit Logging"
+      },
+      "id": "AU-2",
+      "title": "Event Logging",
+      "text": "a. Identify the types of events that the system is capable of logging in support of the audit function: [Assignment: organization-defined event types that the system is capable of logging]; b. Coordinate the event logging function with other organizational entities requiring audit-related information to guide and inform the selection criteria for events to be logged; c. Specify the following event types for logging within the system: [Assignment: organization-defined event types (subset of the event types defined in AU-02a.) along with the frequency of (or situation requiring) logging for each identified event type]; d. Provide a rationale for why the event types selected for logging are deemed to be adequate to support after-the-fact investigations of incidents; and e. Review and update the event types selected for logging [Assignment: organization-defined frequency].",
+      "mapping_rationale": "Event logging - selecting and enabling the event types systems log - is the foundation 09.aa's 'audit logs are produced' clause rests on.",
+      "technical_validation_method": "Audit Ledger Synthesis: every scan produces a tamper-evident kintsugi_scan.json evidence ledger; the scanner additionally verifies presence, permissions (via UID/GID module), and non-zero recency of host audit/syslog artifacts and logging daemon configuration files.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST SP 800-53 Rev. 5.2.0, AU-2, extracted from official NIST CPRT catalog export (cprt_SP_800_53_5_2_0, 2026-08-11)",
+      "embedding_text": "Event Logging (AU-2). a. Identify the types of events that the system is capable of logging in support of the audit function: [Assignment: organization-defined event types that the system is capable of logging]; b. Coordinate the event logging function with other organizational entities requiring audit-related information to guide and inform the selection criteria for events to be logged; c. Specify the following event types for logging within the system: [Assignment: organization-defined event types (subset of the event types defined in AU-02a.) along with the frequency of (or situation requiring) logging for each identified event type]; d. Provide a rationale for why the event types selected for logging are deemed to be adequate to support after-the-fact investigations of incidents; and e. Review and update the event types selected for logging [Assignment: organization-defined frequency]. | HITRUST anchor: 09.aa Audit Logging - Audit logs recording user activities, exceptions, and information security events are produced and kept for an agreed period to support access-control monitoring and future investigations; logs capture who, what, when, where, and outcome."
+    },
+    {
+      "chunk_id": "nist-800-53-r5__au-3__09-aa",
+      "hitrust_control": {
+        "control_reference": "09.aa",
+        "control_title": "Audit Logging"
+      },
+      "id": "AU-3",
+      "title": "Content of Audit Records",
+      "text": "Ensure that audit records contain information that establishes the following: a. What type of event occurred; b. When the event occurred; c. Where the event occurred; d. Source of the event; e. Outcome of the event; and f. Identity of any individuals, subjects, or objects/entities associated with the event.",
+      "mapping_rationale": "Content of audit records supplies 09.aa's what/when/where/source/outcome/identity record requirements.",
+      "technical_validation_method": "Sampling parser over discovered logs verifies record fields; logging-daemon configuration regex confirms field capture is enabled.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST SP 800-53 Rev. 5.2.0, AU-3, extracted from official NIST CPRT catalog export (cprt_SP_800_53_5_2_0, 2026-08-11)",
+      "embedding_text": "Content of Audit Records (AU-3). Ensure that audit records contain information that establishes the following: a. What type of event occurred; b. When the event occurred; c. Where the event occurred; d. Source of the event; e. Outcome of the event; and f. Identity of any individuals, subjects, or objects/entities associated with the event. | HITRUST anchor: 09.aa Audit Logging - Audit logs recording user activities, exceptions, and information security events are produced and kept for an agreed period to support access-control monitoring and future investigations; logs capture who, what, when, where, and outcome."
+    },
+    {
+      "chunk_id": "nist-800-53-r5__au-6__09-aa",
+      "hitrust_control": {
+        "control_reference": "09.aa",
+        "control_title": "Audit Logging"
+      },
+      "id": "AU-6",
+      "title": "Audit Record Review, Analysis, and Reporting",
+      "text": "a. Review and analyze system audit records [Assignment: organization-defined frequency] for indications of [Assignment: organization-defined inappropriate or unusual activity] and the potential impact of the inappropriate or unusual activity; b. Report findings to [Assignment: organization-defined personnel or roles]; and c. Adjust the level of audit record review, analysis, and reporting within the system when there is a change in risk based on law enforcement information, intelligence information, or other credible sources of information.",
+      "mapping_rationale": "Review, analysis, and reporting of audit records is the 'assist future investigations and monitoring' purpose clause of 09.aa.",
+      "technical_validation_method": "kintsugi_scan.json ledger provides reviewable, timestamped findings; staleness checks on host logs evidence whether review-ready records exist.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST SP 800-53 Rev. 5.2.0, AU-6, extracted from official NIST CPRT catalog export (cprt_SP_800_53_5_2_0, 2026-08-11)",
+      "embedding_text": "Audit Record Review, Analysis, and Reporting (AU-6). a. Review and analyze system audit records [Assignment: organization-defined frequency] for indications of [Assignment: organization-defined inappropriate or unusual activity] and the potential impact of the inappropriate or unusual activity; b. Report findings to [Assignment: organization-defined personnel or roles]; and c. Adjust the level of audit record review, analysis, and reporting within the system when there is a change in risk based on law enforcement information, intelligence information, or other credible sources of information. | HITRUST anchor: 09.aa Audit Logging - Audit logs recording user activities, exceptions, and information security events are produced and kept for an agreed period to support access-control monitoring and future investigations; logs capture who, what, when, where, and outcome."
+    },
+    {
+      "chunk_id": "nist-800-53-r5__au-9__09-aa",
+      "hitrust_control": {
+        "control_reference": "09.aa",
+        "control_title": "Audit Logging"
+      },
+      "id": "AU-9",
+      "title": "Protection of Audit Information",
+      "text": "a. Protect audit information and audit logging tools from unauthorized access, modification, and deletion; and b. Alert [Assignment: organization-defined personnel or roles] upon detection of unauthorized access, modification, or deletion of audit information.",
+      "mapping_rationale": "Protection of audit information from unauthorized access/modification/deletion is 09.aa's retention-custody requirement.",
+      "technical_validation_method": "UID/GID and permission-bit audit of log files/directories; hash comparison of ledger files across runs surfaces tampering.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST SP 800-53 Rev. 5.2.0, AU-9, extracted from official NIST CPRT catalog export (cprt_SP_800_53_5_2_0, 2026-08-11)",
+      "embedding_text": "Protection of Audit Information (AU-9). a. Protect audit information and audit logging tools from unauthorized access, modification, and deletion; and b. Alert [Assignment: organization-defined personnel or roles] upon detection of unauthorized access, modification, or deletion of audit information. | HITRUST anchor: 09.aa Audit Logging - Audit logs recording user activities, exceptions, and information security events are produced and kept for an agreed period to support access-control monitoring and future investigations; logs capture who, what, when, where, and outcome."
+    },
+    {
+      "chunk_id": "nist-800-53-r5__au-12__09-aa",
+      "hitrust_control": {
+        "control_reference": "09.aa",
+        "control_title": "Audit Logging"
+      },
+      "id": "AU-12",
+      "title": "Audit Record Generation",
+      "text": "a. Provide audit record generation capability for the event types the system is capable of auditing as defined in AU-2a on [Assignment: organization-defined system components]; b. Allow [Assignment: organization-defined personnel or roles] to select the event types that are to be logged by specific components of the system; and c. Generate audit records for the event types defined in AU-2c that include the audit record content defined in AU-3.",
+      "mapping_rationale": "Audit record generation ties the AU-2 event selection to concrete generating components - the production mechanism 09.aa mandates.",
+      "technical_validation_method": "Audit Ledger Synthesis: every scan produces a tamper-evident kintsugi_scan.json evidence ledger; the scanner additionally verifies presence, permissions (via UID/GID module), and non-zero recency of host audit/syslog artifacts and logging daemon configuration files.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "NIST SP 800-53 Rev. 5.2.0, AU-12, extracted from official NIST CPRT catalog export (cprt_SP_800_53_5_2_0, 2026-08-11)",
+      "embedding_text": "Audit Record Generation (AU-12). a. Provide audit record generation capability for the event types the system is capable of auditing as defined in AU-2a on [Assignment: organization-defined system components]; b. Allow [Assignment: organization-defined personnel or roles] to select the event types that are to be logged by specific components of the system; and c. Generate audit records for the event types defined in AU-2c that include the audit record content defined in AU-3. | HITRUST anchor: 09.aa Audit Logging - Audit logs recording user activities, exceptions, and information security events are produced and kept for an agreed period to support access-control monitoring and future investigations; logs capture who, what, when, where, and outcome."
+    }
+  ],
+  "unsupported_mappings_note": "Selection rebuilt 2026-08-12 around the 5 authoritative HITRUST control references (01.c, 06.d, 10.m, 09.q, 09.aa). Control text extracted verbatim from the official NIST CPRT SP 800-53 r5.2.0 catalog export; bracketed [Assignment/Selection] ODPs retained as published."
+}

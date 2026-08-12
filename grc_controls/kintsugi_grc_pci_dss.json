@@ -1,0 +1,211 @@
+{
+  "framework": "PCI DSS",
+  "framework_version": "v4.0.1 (PCI SSC, June 2024)",
+  "jira": "KINTGRC-11",
+  "vectorization": {
+    "status": "embedding_ready",
+    "embedding_field": "embedding_text",
+    "id_field": "chunk_id",
+    "recommended_model": "sentence-transformers/all-MiniLM-L6-v2 (384-dim) or any FAISS-compatible encoder",
+    "notes": "Embed 'embedding_text' per chunk; store 'chunk_id' as the FAISS external ID. All other fields are retrieval metadata. Files intentionally contain no vectors so the index stays model-agnostic.",
+    "generated": "2026-08-12"
+  },
+  "mappings": [
+    {
+      "chunk_id": "pci-dss-v4-0-1__req-7-2-1__01-c",
+      "hitrust_control": {
+        "control_reference": "01.c",
+        "control_title": "Privilege Management"
+      },
+      "id": "Req 7.2.1",
+      "title": "Access control model is defined",
+      "text": "An access control model is defined and includes granting access as follows: Appropriate access depending on the entity's business and access needs; Access to system components and data resources that is based on users' job classification and functions; The least privileges required (for example, user, administrator) to perform a job function.",
+      "mapping_rationale": "PCI's access-control-model requirement is a direct restatement of 01.c: privileges granted by business need, job function, and least privilege.",
+      "technical_validation_method": "Active Directory/host UID/GID shadow access check: enumerate file and directory ownership, group membership breadth, and world-writable or otherwise overbroad permission bits against a least-privilege baseline; flag orphaned owners and privilege sprawl.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "PCI DSS v4.0.1, Requirements and Testing Procedures (PCI SSC, June 2024), Requirement 7.2.1",
+      "embedding_text": "Access control model is defined (Req 7.2.1). An access control model is defined and includes granting access as follows: Appropriate access depending on the entity's business and access needs; Access to system components and data resources that is based on users' job classification and functions; The least privileges required (for example, user, administrator) to perform a job function. | HITRUST anchor: 01.c Privilege Management - The allocation and use of privileges to information systems and services is restricted and controlled. Privileges are allocated on a need-to-use basis and only after formal authorization, applying the principle of least privilege; privileged access is tracked to an identified role or individual."
+    },
+    {
+      "chunk_id": "pci-dss-v4-0-1__req-7-2-2__01-c",
+      "hitrust_control": {
+        "control_reference": "01.c",
+        "control_title": "Privilege Management"
+      },
+      "id": "Req 7.2.2",
+      "title": "Access assigned by job classification and least privilege",
+      "text": "Access is assigned to users, including privileged users, based on: Job classification and function; Least privileges necessary to perform job responsibilities.",
+      "mapping_rationale": "Assignment of (privileged) user access on least-privilege grounds is the allocation step 01.c governs.",
+      "technical_validation_method": "Active Directory/host UID/GID shadow access check: enumerate file and directory ownership, group membership breadth, and world-writable or otherwise overbroad permission bits against a least-privilege baseline; flag orphaned owners and privilege sprawl.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "PCI DSS v4.0.1, Requirements and Testing Procedures (PCI SSC, June 2024), Requirement 7.2.2",
+      "embedding_text": "Access assigned by job classification and least privilege (Req 7.2.2). Access is assigned to users, including privileged users, based on: Job classification and function; Least privileges necessary to perform job responsibilities. | HITRUST anchor: 01.c Privilege Management - The allocation and use of privileges to information systems and services is restricted and controlled. Privileges are allocated on a need-to-use basis and only after formal authorization, applying the principle of least privilege; privileged access is tracked to an identified role or individual."
+    },
+    {
+      "chunk_id": "pci-dss-v4-0-1__req-7-2-5__01-c",
+      "hitrust_control": {
+        "control_reference": "01.c",
+        "control_title": "Privilege Management"
+      },
+      "id": "Req 7.2.5",
+      "title": "System and application accounts least privilege",
+      "text": "All application and system accounts and related access privileges are assigned and managed as follows: Based on the least privileges necessary for the operability of the system or application; Access is limited to the systems, applications, or processes that specifically require their use.",
+      "mapping_rationale": "Extends 01.c privilege management to non-human accounts, which Kintsugi's UID/GID sweep observes directly as service-account file ownership and permission breadth.",
+      "technical_validation_method": "UID/GID shadow access check applied to service accounts: flag service-owned files with overbroad group/world permissions and service accounts owning resources outside their functional directories.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "PCI DSS v4.0.1, Requirements and Testing Procedures (PCI SSC, June 2024), Requirement 7.2.5",
+      "embedding_text": "System and application accounts least privilege (Req 7.2.5). All application and system accounts and related access privileges are assigned and managed as follows: Based on the least privileges necessary for the operability of the system or application; Access is limited to the systems, applications, or processes that specifically require their use. | HITRUST anchor: 01.c Privilege Management - The allocation and use of privileges to information systems and services is restricted and controlled. Privileges are allocated on a need-to-use basis and only after formal authorization, applying the principle of least privilege; privileged access is tracked to an identified role or individual."
+    },
+    {
+      "chunk_id": "pci-dss-v4-0-1__req-3-2-1__06-d",
+      "hitrust_control": {
+        "control_reference": "06.d",
+        "control_title": "Data Protection and Privacy of Covered Information"
+      },
+      "id": "Req 3.2.1",
+      "title": "Account data storage is minimized",
+      "text": "Account data storage is kept to a minimum through implementation of data retention and disposal policies, procedures, and processes that include at least the following: Coverage for all locations of stored account data; Coverage for any sensitive authentication data (SAD) stored prior to completion of authorization; Limiting data storage amount and retention time to that which is required for legal or regulatory, and/or business requirements; Specific retention requirements for stored account data that defines length of retention period and includes a documented business justification; Processes for secure deletion or rendering account data unrecoverable when no longer needed per the retention policy; A process for verifying, at least once every three months, that stored account data exceeding the defined retention period has been securely deleted or rendered unrecoverable.",
+      "mapping_rationale": "Storage minimization and verified deletion of account data is PCI's data-protection core, matching 06.d's requirement to identify, minimize, and protect covered information.",
+      "technical_validation_method": "File-system traverser + PAN regex (with Luhn check) inventories all locations of stored account data; repeat scans evidence the quarterly verification that expired data is gone.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "PCI DSS v4.0.1, Requirements and Testing Procedures (PCI SSC, June 2024), Requirement 3.2.1",
+      "embedding_text": "Account data storage is minimized (Req 3.2.1). Account data storage is kept to a minimum through implementation of data retention and disposal policies, procedures, and processes that include at least the following: Coverage for all locations of stored account data; Coverage for any sensitive authentication data (SAD) stored prior to completion of authorization; Limiting data storage amount and retention time to that which is required for legal or regulatory, and/or business requirements; Specific retention requirements for stored account data that defines length of retention period and includes a documented business justification; Processes for secure deletion or rendering account data unrecoverable when no longer needed per the retention policy; A process for verifying, at least once every three months, that stored account data exceeding the defined retention period has been securely deleted or rendered unrecoverable. | HITRUST anchor: 06.d Data Protection and Privacy of Covered Information - Data protection and privacy are ensured as required in relevant legislation, regulations, and contractual clauses. An organizational data protection and privacy policy is implemented and covered information (e.g., PII/PHI, cardholder data) is identified, minimized, and protected wherever it is stored or processed."
+    },
+    {
+      "chunk_id": "pci-dss-v4-0-1__req-3-5-1__06-d",
+      "hitrust_control": {
+        "control_reference": "06.d",
+        "control_title": "Data Protection and Privacy of Covered Information"
+      },
+      "id": "Req 3.5.1",
+      "title": "PAN rendered unreadable wherever stored",
+      "text": "PAN is rendered unreadable anywhere it is stored by using any of the following approaches: One-way hashes based on strong cryptography of the entire PAN; Truncation (hashing cannot be used to replace the truncated segment of PAN) - if hashed and truncated versions of the same PAN, or different truncation formats of the same PAN, are present in an environment, additional controls are in place such that the different versions cannot be correlated to reconstruct the original PAN; Index tokens; Strong cryptography with associated key-management processes and procedures.",
+      "mapping_rationale": "Rendering covered information unreadable at rest is the protection half of 06.d; entropy/chi-square analysis distinguishes encrypted or tokenized storage from readable PAN.",
+      "technical_validation_method": "Multi-attribute cryptographic pipeline: regex detection of PII/PHI/PAN patterns in traversed files combined with Shannon-entropy and chi-square tests to distinguish encrypted from plaintext storage; flag covered information found unencrypted or outside sanctioned locations.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "PCI DSS v4.0.1, Requirements and Testing Procedures (PCI SSC, June 2024), Requirement 3.5.1",
+      "embedding_text": "PAN rendered unreadable wherever stored (Req 3.5.1). PAN is rendered unreadable anywhere it is stored by using any of the following approaches: One-way hashes based on strong cryptography of the entire PAN; Truncation (hashing cannot be used to replace the truncated segment of PAN) - if hashed and truncated versions of the same PAN, or different truncation formats of the same PAN, are present in an environment, additional controls are in place such that the different versions cannot be correlated to reconstruct the original PAN; Index tokens; Strong cryptography with associated key-management processes and procedures. | HITRUST anchor: 06.d Data Protection and Privacy of Covered Information - Data protection and privacy are ensured as required in relevant legislation, regulations, and contractual clauses. An organizational data protection and privacy policy is implemented and covered information (e.g., PII/PHI, cardholder data) is identified, minimized, and protected wherever it is stored or processed."
+    },
+    {
+      "chunk_id": "pci-dss-v4-0-1__req-6-3-1__10-m",
+      "hitrust_control": {
+        "control_reference": "10.m",
+        "control_title": "Control of Technical Vulnerabilities"
+      },
+      "id": "Req 6.3.1",
+      "title": "Security vulnerabilities are identified and managed",
+      "text": "Security vulnerabilities are identified and managed as follows: New security vulnerabilities are identified using industry-recognized sources for security vulnerability information, including alerts from international and national computer emergency response teams (CERTs); Vulnerabilities are assigned a risk ranking based on industry best practices and consideration of potential impact; Risk rankings identify, at a minimum, all vulnerabilities considered to be a high-risk or critical to the environment; Vulnerabilities for bespoke and custom, and third-party software (for example operating systems and databases) are covered.",
+      "mapping_rationale": "Identification and risk-ranking of technical vulnerabilities is verbatim the 10.m lifecycle (obtain information, evaluate exposure).",
+      "technical_validation_method": "Regex audit of service configuration files (SSH/TLS/web server) for weak ciphers, legacy protocol versions, and insecure directives; extraction of software version strings from package manifests and binaries for comparison against known-vulnerable version ranges.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "PCI DSS v4.0.1, Requirements and Testing Procedures (PCI SSC, June 2024), Requirement 6.3.1",
+      "embedding_text": "Security vulnerabilities are identified and managed (Req 6.3.1). Security vulnerabilities are identified and managed as follows: New security vulnerabilities are identified using industry-recognized sources for security vulnerability information, including alerts from international and national computer emergency response teams (CERTs); Vulnerabilities are assigned a risk ranking based on industry best practices and consideration of potential impact; Risk rankings identify, at a minimum, all vulnerabilities considered to be a high-risk or critical to the environment; Vulnerabilities for bespoke and custom, and third-party software (for example operating systems and databases) are covered. | HITRUST anchor: 10.m Control of Technical Vulnerabilities - Timely information about technical vulnerabilities of information systems in use is obtained, the organization's exposure to such vulnerabilities is evaluated, and appropriate measures are taken to address the associated risk."
+    },
+    {
+      "chunk_id": "pci-dss-v4-0-1__req-6-3-3__10-m",
+      "hitrust_control": {
+        "control_reference": "10.m",
+        "control_title": "Control of Technical Vulnerabilities"
+      },
+      "id": "Req 6.3.3",
+      "title": "Security patches installed",
+      "text": "All system components are protected from known vulnerabilities by installing applicable security patches/updates as follows: Patches/updates for critical vulnerabilities (identified according to the risk ranking process at Requirement 6.3.1) are installed within one month of release; All other applicable security patches/updates are installed within an appropriate time frame as determined by the entity's assessment of the criticality of the risk to the environment as identified according to the risk ranking process at Requirement 6.3.1.",
+      "mapping_rationale": "Patching within defined windows is 10.m's 'appropriate measures taken to address the risk'; version-string extraction against known-vulnerable ranges evidences unpatched components.",
+      "technical_validation_method": "Version-string extraction from package manifests/binaries compared against known-vulnerable version ranges; findings aged across scan runs to show patch-window compliance.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "PCI DSS v4.0.1, Requirements and Testing Procedures (PCI SSC, June 2024), Requirement 6.3.3",
+      "embedding_text": "Security patches installed (Req 6.3.3). All system components are protected from known vulnerabilities by installing applicable security patches/updates as follows: Patches/updates for critical vulnerabilities (identified according to the risk ranking process at Requirement 6.3.1) are installed within one month of release; All other applicable security patches/updates are installed within an appropriate time frame as determined by the entity's assessment of the criticality of the risk to the environment as identified according to the risk ranking process at Requirement 6.3.1. | HITRUST anchor: 10.m Control of Technical Vulnerabilities - Timely information about technical vulnerabilities of information systems in use is obtained, the organization's exposure to such vulnerabilities is evaluated, and appropriate measures are taken to address the associated risk."
+    },
+    {
+      "chunk_id": "pci-dss-v4-0-1__req-11-3-1__10-m",
+      "hitrust_control": {
+        "control_reference": "10.m",
+        "control_title": "Control of Technical Vulnerabilities"
+      },
+      "id": "Req 11.3.1",
+      "title": "Internal vulnerability scans are performed",
+      "text": "Internal vulnerability scans are performed as follows: At least once every three months; Vulnerabilities that are either high-risk or critical (according to the entity's vulnerability risk rankings defined at Requirement 6.3.1) are resolved; Rescans are performed that confirm all high-risk and all critical vulnerabilities (as noted above) have been resolved; Scan tool is kept up to date with latest vulnerability information; Scans are performed by qualified personnel and organizational independence of the tester exists.",
+      "mapping_rationale": "Recurring internal scans operationalize 10.m's 'timely' evaluation of exposure; Kintsugi's repeatable scan-and-ledger cycle is the in-scope analogue of an internal scan program for file/config-level weaknesses.",
+      "technical_validation_method": "Scheduled Kintsugi scan runs produce timestamped kintsugi_scan.json ledgers; rescans confirm closure of previously flagged weak-cipher/legacy-protocol/vulnerable-version findings.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "PCI DSS v4.0.1, Requirements and Testing Procedures (PCI SSC, June 2024), Requirement 11.3.1",
+      "embedding_text": "Internal vulnerability scans are performed (Req 11.3.1). Internal vulnerability scans are performed as follows: At least once every three months; Vulnerabilities that are either high-risk or critical (according to the entity's vulnerability risk rankings defined at Requirement 6.3.1) are resolved; Rescans are performed that confirm all high-risk and all critical vulnerabilities (as noted above) have been resolved; Scan tool is kept up to date with latest vulnerability information; Scans are performed by qualified personnel and organizational independence of the tester exists. | HITRUST anchor: 10.m Control of Technical Vulnerabilities - Timely information about technical vulnerabilities of information systems in use is obtained, the organization's exposure to such vulnerabilities is evaluated, and appropriate measures are taken to address the associated risk."
+    },
+    {
+      "chunk_id": "pci-dss-v4-0-1__req-3-3-1__09-q",
+      "hitrust_control": {
+        "control_reference": "09.q",
+        "control_title": "Information Handling Procedures"
+      },
+      "id": "Req 3.3.1",
+      "title": "SAD not retained after authorization",
+      "text": "SAD is not stored after authorization, even if encrypted. All sensitive authentication data received is rendered unrecoverable upon completion of the authorization process.",
+      "mapping_rationale": "Prohibiting retention of SAD is an information-handling rule about what may be kept at all - squarely 09.q's handling-and-disposal scope.",
+      "technical_validation_method": "Regex detectors for track data, CVV/CVC, and PIN-block patterns across traversed files and archives; any hit is a per-se 09.q handling violation.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "PCI DSS v4.0.1, Requirements and Testing Procedures (PCI SSC, June 2024), Requirement 3.3.1",
+      "embedding_text": "SAD not retained after authorization (Req 3.3.1). SAD is not stored after authorization, even if encrypted. All sensitive authentication data received is rendered unrecoverable upon completion of the authorization process. | HITRUST anchor: 09.q Information Handling Procedures - Procedures for the handling and storage of information are established to protect it from unauthorized disclosure or misuse, covering handling, labeling, storage, secure disposal, and re-use of media consistent with the information's classification."
+    },
+    {
+      "chunk_id": "pci-dss-v4-0-1__req-3-4-1__09-q",
+      "hitrust_control": {
+        "control_reference": "09.q",
+        "control_title": "Information Handling Procedures"
+      },
+      "id": "Req 3.4.1",
+      "title": "PAN masked when displayed",
+      "text": "PAN is masked when displayed (the BIN and last four digits are the maximum number of digits to be displayed), such that only personnel with a legitimate business need can see more than the BIN and last four digits of the PAN.",
+      "mapping_rationale": "Display masking is a handling procedure limiting disclosure of covered information during use, matching 09.q's protection-from-unauthorized-disclosure intent.",
+      "technical_validation_method": "Regex audit of application config/templates and exported reports in scanned directories for full unmasked PAN occurrences.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "PCI DSS v4.0.1, Requirements and Testing Procedures (PCI SSC, June 2024), Requirement 3.4.1",
+      "embedding_text": "PAN masked when displayed (Req 3.4.1). PAN is masked when displayed (the BIN and last four digits are the maximum number of digits to be displayed), such that only personnel with a legitimate business need can see more than the BIN and last four digits of the PAN. | HITRUST anchor: 09.q Information Handling Procedures - Procedures for the handling and storage of information are established to protect it from unauthorized disclosure or misuse, covering handling, labeling, storage, secure disposal, and re-use of media consistent with the information's classification."
+    },
+    {
+      "chunk_id": "pci-dss-v4-0-1__req-10-2-1__09-aa",
+      "hitrust_control": {
+        "control_reference": "09.aa",
+        "control_title": "Audit Logging"
+      },
+      "id": "Req 10.2.1",
+      "title": "Audit logs enabled and active",
+      "text": "Audit logs are enabled and active for all system components and cardholder data.",
+      "mapping_rationale": "Log production on all in-scope components is the baseline demand of 09.aa.",
+      "technical_validation_method": "Audit Ledger Synthesis: every scan produces a tamper-evident kintsugi_scan.json evidence ledger; the scanner additionally verifies presence, permissions (via UID/GID module), and non-zero recency of host audit/syslog artifacts and logging daemon configuration files.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "PCI DSS v4.0.1, Requirements and Testing Procedures (PCI SSC, June 2024), Requirement 10.2.1",
+      "embedding_text": "Audit logs enabled and active (Req 10.2.1). Audit logs are enabled and active for all system components and cardholder data. | HITRUST anchor: 09.aa Audit Logging - Audit logs recording user activities, exceptions, and information security events are produced and kept for an agreed period to support access-control monitoring and future investigations; logs capture who, what, when, where, and outcome."
+    },
+    {
+      "chunk_id": "pci-dss-v4-0-1__req-10-2-2__09-aa",
+      "hitrust_control": {
+        "control_reference": "09.aa",
+        "control_title": "Audit Logging"
+      },
+      "id": "Req 10.2.2",
+      "title": "Audit log record content",
+      "text": "Audit logs record the following details for each auditable event: User identification; Type of event; Date and time; Success and failure indication; Origination of event; Identity or name of affected data, system component, resource, or service (for example, name and protocol).",
+      "mapping_rationale": "Defines the who/what/when/where/outcome record content that 09.aa requires logs to capture.",
+      "technical_validation_method": "Sampling parser over discovered log files verifies records carry user, timestamp, event type, and outcome fields; logging-daemon config regex confirms these fields are configured.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "PCI DSS v4.0.1, Requirements and Testing Procedures (PCI SSC, June 2024), Requirement 10.2.2",
+      "embedding_text": "Audit log record content (Req 10.2.2). Audit logs record the following details for each auditable event: User identification; Type of event; Date and time; Success and failure indication; Origination of event; Identity or name of affected data, system component, resource, or service (for example, name and protocol). | HITRUST anchor: 09.aa Audit Logging - Audit logs recording user activities, exceptions, and information security events are produced and kept for an agreed period to support access-control monitoring and future investigations; logs capture who, what, when, where, and outcome."
+    },
+    {
+      "chunk_id": "pci-dss-v4-0-1__req-10-3-1__09-aa",
+      "hitrust_control": {
+        "control_reference": "09.aa",
+        "control_title": "Audit Logging"
+      },
+      "id": "Req 10.3.1",
+      "title": "Read access to audit logs limited",
+      "text": "Read access to audit logs files is limited to those with a job-related need.",
+      "mapping_rationale": "Log protection (restricting access to audit information) is part of 09.aa's 'kept for an agreed period' custody obligation.",
+      "technical_validation_method": "UID/GID and permission-bit audit of log files and log directories against a least-privilege baseline (no world-readable audit logs, owner/group restricted).",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "PCI DSS v4.0.1, Requirements and Testing Procedures (PCI SSC, June 2024), Requirement 10.3.1",
+      "embedding_text": "Read access to audit logs limited (Req 10.3.1). Read access to audit logs files is limited to those with a job-related need. | HITRUST anchor: 09.aa Audit Logging - Audit logs recording user activities, exceptions, and information security events are produced and kept for an agreed period to support access-control monitoring and future investigations; logs capture who, what, when, where, and outcome."
+    }
+  ],
+  "non_applicable_note": "Re-scoped 2026-08-12 for the 5 authoritative HITRUST control references. Requirements 6.3.x and 11.3.1 are now IN scope (they are the direct PCI counterparts of anchor 10.m). Still excluded as outside Kintsugi-GRC's software-scanner MVP: Requirement 1 (network security controls), Requirement 5 (anti-malware), Requirement 8 (authentication lifecycle - no live IdM integration), Requirement 9 (physical security, including 9.4.x physical media handling - 09.q is validated logically, not physically), and Requirement 12 (organizational policy/governance)."
+}

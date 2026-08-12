@@ -1,0 +1,286 @@
+{
+  "framework": "HIPAA Security and Privacy Rules (45 CFR Part 164, Subparts C and E)",
+  "framework_version": "eCFR current as of 2026-08-10",
+  "jira": "KINTGRC-24",
+  "authoritative_source": "https://www.ecfr.gov/current/title-45/part-164",
+  "vectorization": {
+    "status": "embedding_ready",
+    "embedding_field": "embedding_text",
+    "id_field": "chunk_id",
+    "recommended_model": "sentence-transformers/all-MiniLM-L6-v2 (384-dim) or any FAISS-compatible encoder",
+    "notes": "Embed 'embedding_text' per chunk; store 'chunk_id' as the FAISS external ID. All other fields are retrieval metadata. Files intentionally contain no vectors so the index stays model-agnostic.",
+    "generated": "2026-08-12"
+  },
+  "mappings": [
+    {
+      "chunk_id": "hipaa__164-308-a-3-i__01-c",
+      "hitrust_control": {
+        "control_reference": "01.c",
+        "control_title": "Privilege Management"
+      },
+      "id": "164.308(a)(3)(i)",
+      "title": "Standard: Workforce security",
+      "text": "Implement policies and procedures to ensure that all members of its workforce have appropriate access to electronic protected health information, as provided under paragraph (a)(4) of this section, and to prevent those workforce members who do not have access under paragraph (a)(4) of this section from obtaining access to electronic protected health information.",
+      "mapping_rationale": "Workforce security is HIPAA's administrative expression of privilege management: access is appropriate to role and denied to everyone else, which is exactly the allocation-and-restriction intent of 01.c.",
+      "technical_validation_method": "Active Directory/host UID/GID shadow access check: enumerate file and directory ownership, group membership breadth, and world-writable or otherwise overbroad permission bits against a least-privilege baseline; flag orphaned owners and privilege sprawl.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "45 CFR 164.308(a)(3)(i), verified against eCFR (www.ecfr.gov), title 45 current as of 2026-08-10, retrieved 2026-08-12",
+      "embedding_text": "Standard: Workforce security (164.308(a)(3)(i)). Implement policies and procedures to ensure that all members of its workforce have appropriate access to electronic protected health information, as provided under paragraph (a)(4) of this section, and to prevent those workforce members who do not have access under paragraph (a)(4) of this section from obtaining access to electronic protected health information. | HITRUST anchor: 01.c Privilege Management - The allocation and use of privileges to information systems and services is restricted and controlled. Privileges are allocated on a need-to-use basis and only after formal authorization, applying the principle of least privilege; privileged access is tracked to an identified role or individual."
+    },
+    {
+      "chunk_id": "hipaa__164-308-a-4-i__01-c",
+      "hitrust_control": {
+        "control_reference": "01.c",
+        "control_title": "Privilege Management"
+      },
+      "id": "164.308(a)(4)(i)",
+      "title": "Standard: Information access management",
+      "text": "Implement policies and procedures for authorizing access to electronic protected health information that are consistent with the applicable requirements of subpart E of this part.",
+      "mapping_rationale": "Formal authorization of access before it is granted is the core mechanism of privilege management under 01.c (need-to-use, authorize-then-grant).",
+      "technical_validation_method": "Active Directory/host UID/GID shadow access check: enumerate file and directory ownership, group membership breadth, and world-writable or otherwise overbroad permission bits against a least-privilege baseline; flag orphaned owners and privilege sprawl.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "45 CFR 164.308(a)(4)(i), verified against eCFR (www.ecfr.gov), title 45 current as of 2026-08-10, retrieved 2026-08-12",
+      "embedding_text": "Standard: Information access management (164.308(a)(4)(i)). Implement policies and procedures for authorizing access to electronic protected health information that are consistent with the applicable requirements of subpart E of this part. | HITRUST anchor: 01.c Privilege Management - The allocation and use of privileges to information systems and services is restricted and controlled. Privileges are allocated on a need-to-use basis and only after formal authorization, applying the principle of least privilege; privileged access is tracked to an identified role or individual."
+    },
+    {
+      "chunk_id": "hipaa__164-308-a-4-ii-c__01-c",
+      "hitrust_control": {
+        "control_reference": "01.c",
+        "control_title": "Privilege Management"
+      },
+      "id": "164.308(a)(4)(ii)(C)",
+      "title": "Access establishment and modification (Addressable)",
+      "text": "Implement policies and procedures that, based upon the covered entity's or the business associate's access authorization policies, establish, document, review, and modify a user's right of access to a workstation, transaction, program, or process.",
+      "mapping_rationale": "Establish/document/review/modify of access rights is the operational review loop 01.c requires for allocated privileges.",
+      "technical_validation_method": "Active Directory/host UID/GID shadow access check: enumerate file and directory ownership, group membership breadth, and world-writable or otherwise overbroad permission bits against a least-privilege baseline; flag orphaned owners and privilege sprawl.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "45 CFR 164.308(a)(4)(ii)(C), verified against eCFR (www.ecfr.gov), title 45 current as of 2026-08-10, retrieved 2026-08-12",
+      "embedding_text": "Access establishment and modification (Addressable) (164.308(a)(4)(ii)(C)). Implement policies and procedures that, based upon the covered entity's or the business associate's access authorization policies, establish, document, review, and modify a user's right of access to a workstation, transaction, program, or process. | HITRUST anchor: 01.c Privilege Management - The allocation and use of privileges to information systems and services is restricted and controlled. Privileges are allocated on a need-to-use basis and only after formal authorization, applying the principle of least privilege; privileged access is tracked to an identified role or individual."
+    },
+    {
+      "chunk_id": "hipaa__164-312-a-1__01-c",
+      "hitrust_control": {
+        "control_reference": "01.c",
+        "control_title": "Privilege Management"
+      },
+      "id": "164.312(a)(1)",
+      "title": "Standard: Access control",
+      "text": "Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights as specified in 164.308(a)(4).",
+      "mapping_rationale": "The technical enforcement point for granted privileges; maps to 01.c as the mechanism that makes least-privilege allocation real on systems holding ePHI.",
+      "technical_validation_method": "Active Directory/host UID/GID shadow access check: enumerate file and directory ownership, group membership breadth, and world-writable or otherwise overbroad permission bits against a least-privilege baseline; flag orphaned owners and privilege sprawl.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "45 CFR 164.312(a)(1), verified against eCFR (www.ecfr.gov), title 45 current as of 2026-08-10, retrieved 2026-08-12",
+      "embedding_text": "Standard: Access control (164.312(a)(1)). Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights as specified in 164.308(a)(4). | HITRUST anchor: 01.c Privilege Management - The allocation and use of privileges to information systems and services is restricted and controlled. Privileges are allocated on a need-to-use basis and only after formal authorization, applying the principle of least privilege; privileged access is tracked to an identified role or individual."
+    },
+    {
+      "chunk_id": "hipaa__164-312-a-2-i__01-c",
+      "hitrust_control": {
+        "control_reference": "01.c",
+        "control_title": "Privilege Management"
+      },
+      "id": "164.312(a)(2)(i)",
+      "title": "Unique user identification (Required)",
+      "text": "Assign a unique name and/or number for identifying and tracking user identity.",
+      "mapping_rationale": "01.c requires privileges to be attributable to an identified individual; unique user IDs are the precondition for tracking privilege use.",
+      "technical_validation_method": "UID/GID shadow access check: detect shared/ambiguous account ownership of files (multiple-writer group accounts, UID reuse, files owned by non-enumerable UIDs).",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "45 CFR 164.312(a)(2)(i), verified against eCFR (www.ecfr.gov), title 45 current as of 2026-08-10, retrieved 2026-08-12",
+      "embedding_text": "Unique user identification (Required) (164.312(a)(2)(i)). Assign a unique name and/or number for identifying and tracking user identity. | HITRUST anchor: 01.c Privilege Management - The allocation and use of privileges to information systems and services is restricted and controlled. Privileges are allocated on a need-to-use basis and only after formal authorization, applying the principle of least privilege; privileged access is tracked to an identified role or individual."
+    },
+    {
+      "chunk_id": "hipaa__164-514-a__06-d",
+      "hitrust_control": {
+        "control_reference": "06.d",
+        "control_title": "Data Protection and Privacy of Covered Information"
+      },
+      "id": "164.514(a)",
+      "title": "Standard: De-identification of protected health information",
+      "text": "Health information that does not identify an individual and with respect to which there is no reasonable basis to believe that the information can be used to identify an individual is not individually identifiable health information.",
+      "mapping_rationale": "06.d requires covered information to be protected per legal requirements; de-identification is the Privacy Rule's defined mechanism for taking data out of covered status, and its 18-identifier catalog is the regulatory basis for Kintsugi's PII/PHI detector patterns.",
+      "technical_validation_method": "Multi-attribute cryptographic pipeline: regex detection of PII/PHI/PAN patterns in traversed files combined with Shannon-entropy and chi-square tests to distinguish encrypted from plaintext storage; flag covered information found unencrypted or outside sanctioned locations.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "45 CFR 164.514(a), verified against eCFR (www.ecfr.gov), title 45 current as of 2026-08-10, retrieved 2026-08-12",
+      "embedding_text": "Standard: De-identification of protected health information (164.514(a)). Health information that does not identify an individual and with respect to which there is no reasonable basis to believe that the information can be used to identify an individual is not individually identifiable health information. | HITRUST anchor: 06.d Data Protection and Privacy of Covered Information - Data protection and privacy are ensured as required in relevant legislation, regulations, and contractual clauses. An organizational data protection and privacy policy is implemented and covered information (e.g., PII/PHI, cardholder data) is identified, minimized, and protected wherever it is stored or processed."
+    },
+    {
+      "chunk_id": "hipaa__164-514-b-2-i__06-d",
+      "hitrust_control": {
+        "control_reference": "06.d",
+        "control_title": "Data Protection and Privacy of Covered Information"
+      },
+      "id": "164.514(b)(2)(i)",
+      "title": "Safe harbor de-identification identifiers",
+      "text": "The following identifiers of the individual or of relatives, employers, or household members of the individual, are removed: (A) Names; (B) All geographic subdivisions smaller than a State, including street address, city, county, precinct, zip code, and their equivalent geocodes, except for the initial three digits of a zip code if, according to the current publicly available data from the Bureau of the Census: (1) The geographic unit formed by combining all zip codes with the same three initial digits contains more than 20,000 people; and (2) The initial three digits of a zip code for all such geographic units containing 20,000 or fewer people is changed to 000; (C) All elements of dates (except year) for dates directly related to an individual, including birth date, admission date, discharge date, date of death; and all ages over 89 and all elements of dates (including year) indicative of such age, except that such ages and elements may be aggregated into a single category of age 90 or older; (D) Telephone numbers; (E) Fax numbers; (F) Electronic mail addresses; (G) Social security numbers; (H) Medical record numbers; (I) Health plan beneficiary numbers; (J) Account numbers; (K) Certificate/license numbers; (L) Vehicle identifiers and serial numbers, including license plate numbers; (M) Device identifiers and serial numbers; (N) Web Universal Resource Locators (URLs); (O) Internet Protocol (IP) address numbers; (P) Biometric identifiers, including finger and voice prints; (Q) Full face photographic images and any comparable images; and (R) Any other unique identifying number, characteristic, or code, except as permitted by paragraph (c) of this section.",
+      "mapping_rationale": "The safe-harbor identifier list is the concrete, enumerable target set for 06.d covered-information discovery; each identifier class corresponds to a regex/entropy detector in the scan pipeline.",
+      "technical_validation_method": "Multi-attribute cryptographic pipeline: regex detection of PII/PHI/PAN patterns in traversed files combined with Shannon-entropy and chi-square tests to distinguish encrypted from plaintext storage; flag covered information found unencrypted or outside sanctioned locations.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "45 CFR 164.514(b)(2)(i), verified against eCFR (www.ecfr.gov), title 45 current as of 2026-08-10, retrieved 2026-08-12",
+      "embedding_text": "Safe harbor de-identification identifiers (164.514(b)(2)(i)). The following identifiers of the individual or of relatives, employers, or household members of the individual, are removed: (A) Names; (B) All geographic subdivisions smaller than a State, including street address, city, county, precinct, zip code, and their equivalent geocodes, except for the initial three digits of a zip code if, according to the current publicly available data from the Bureau of the Census: (1) The geographic unit formed by combining all zip codes with the same three initial digits contains more than 20,000 people; and (2) The initial three digits of a zip code for all such geographic units containing 20,000 or fewer people is changed to 000; (C) All elements of dates (except year) for dates directly related to an individual, including birth date, admission date, discharge date, date of death; and all ages over 89 and all elements of dates (including year) indicative of such age, except that such ages and elements may be aggregated into a single category of age 90 or older; (D) Telephone numbers; (E) Fax numbers; (F) Electronic mail addresses; (G) Social security numbers; (H) Medical record numbers; (I) Health plan beneficiary numbers; (J) Account numbers; (K) Certificate/license numbers; (L) Vehicle identifiers and serial numbers, including license plate numbers; (M) Device identifiers and serial numbers; (N) Web Universal Resource Locators (URLs); (O) Internet Protocol (IP) address numbers; (P) Biometric identifiers, including finger and voice prints; (Q) Full face photographic images and any comparable images; and (R) Any other unique identifying number, characteristic, or code, except as permitted by paragraph (c) of this section. | HITRUST anchor: 06.d Data Protection and Privacy of Covered Information - Data protection and privacy are ensured as required in relevant legislation, regulations, and contractual clauses. An organizational data protection and privacy policy is implemented and covered information (e.g., PII/PHI, cardholder data) is identified, minimized, and protected wherever it is stored or processed."
+    },
+    {
+      "chunk_id": "hipaa__164-514-d-1__06-d",
+      "hitrust_control": {
+        "control_reference": "06.d",
+        "control_title": "Data Protection and Privacy of Covered Information"
+      },
+      "id": "164.514(d)(1)",
+      "title": "Standard: Minimum necessary requirements",
+      "text": "In order to comply with 164.502(b) and this section, a covered entity must meet the requirements of paragraphs (d)(2) through (d)(5) of this section with respect to a request for, or the use and disclosure of, protected health information.",
+      "mapping_rationale": "Minimum-necessary is HIPAA's data-minimization rule; 06.d's privacy-of-covered-information intent includes limiting where covered data may legitimately reside, which Kintsugi validates by flagging PHI outside sanctioned locations.",
+      "technical_validation_method": "File-system traverser flags PHI-bearing files discovered outside declared sanctioned data locations, evidencing minimum-necessary drift.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "45 CFR 164.514(d)(1), verified against eCFR (www.ecfr.gov), title 45 current as of 2026-08-10, retrieved 2026-08-12",
+      "embedding_text": "Standard: Minimum necessary requirements (164.514(d)(1)). In order to comply with 164.502(b) and this section, a covered entity must meet the requirements of paragraphs (d)(2) through (d)(5) of this section with respect to a request for, or the use and disclosure of, protected health information. | HITRUST anchor: 06.d Data Protection and Privacy of Covered Information - Data protection and privacy are ensured as required in relevant legislation, regulations, and contractual clauses. An organizational data protection and privacy policy is implemented and covered information (e.g., PII/PHI, cardholder data) is identified, minimized, and protected wherever it is stored or processed."
+    },
+    {
+      "chunk_id": "hipaa__164-308-a-1-ii-a__10-m",
+      "hitrust_control": {
+        "control_reference": "10.m",
+        "control_title": "Control of Technical Vulnerabilities"
+      },
+      "id": "164.308(a)(1)(ii)(A)",
+      "title": "Risk analysis (Required)",
+      "text": "Conduct an accurate and thorough assessment of the potential risks and vulnerabilities to the confidentiality, integrity, and availability of electronic protected health information held by the covered entity or business associate.",
+      "mapping_rationale": "10.m requires evaluating organizational exposure to technical vulnerabilities; HIPAA's risk-analysis specification is the regulatory mandate for that evaluation on systems holding ePHI.",
+      "technical_validation_method": "Regex audit of service configuration files (SSH/TLS/web server) for weak ciphers, legacy protocol versions, and insecure directives; extraction of software version strings from package manifests and binaries for comparison against known-vulnerable version ranges.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "45 CFR 164.308(a)(1)(ii)(A), verified against eCFR (www.ecfr.gov), title 45 current as of 2026-08-10, retrieved 2026-08-12",
+      "embedding_text": "Risk analysis (Required) (164.308(a)(1)(ii)(A)). Conduct an accurate and thorough assessment of the potential risks and vulnerabilities to the confidentiality, integrity, and availability of electronic protected health information held by the covered entity or business associate. | HITRUST anchor: 10.m Control of Technical Vulnerabilities - Timely information about technical vulnerabilities of information systems in use is obtained, the organization's exposure to such vulnerabilities is evaluated, and appropriate measures are taken to address the associated risk."
+    },
+    {
+      "chunk_id": "hipaa__164-308-a-1-ii-b__10-m",
+      "hitrust_control": {
+        "control_reference": "10.m",
+        "control_title": "Control of Technical Vulnerabilities"
+      },
+      "id": "164.308(a)(1)(ii)(B)",
+      "title": "Risk management (Required)",
+      "text": "Implement security measures sufficient to reduce risks and vulnerabilities to a reasonable and appropriate level to comply with 164.306(a).",
+      "mapping_rationale": "10.m's 'take appropriate measures to address the risk' step corresponds directly to HIPAA risk management: identified weak configurations must be remediated to a reasonable level.",
+      "technical_validation_method": "Regex audit of service configuration files (SSH/TLS/web server) for weak ciphers, legacy protocol versions, and insecure directives; extraction of software version strings from package manifests and binaries for comparison against known-vulnerable version ranges.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "45 CFR 164.308(a)(1)(ii)(B), verified against eCFR (www.ecfr.gov), title 45 current as of 2026-08-10, retrieved 2026-08-12",
+      "embedding_text": "Risk management (Required) (164.308(a)(1)(ii)(B)). Implement security measures sufficient to reduce risks and vulnerabilities to a reasonable and appropriate level to comply with 164.306(a). | HITRUST anchor: 10.m Control of Technical Vulnerabilities - Timely information about technical vulnerabilities of information systems in use is obtained, the organization's exposure to such vulnerabilities is evaluated, and appropriate measures are taken to address the associated risk."
+    },
+    {
+      "chunk_id": "hipaa__164-308-a-8__10-m",
+      "hitrust_control": {
+        "control_reference": "10.m",
+        "control_title": "Control of Technical Vulnerabilities"
+      },
+      "id": "164.308(a)(8)",
+      "title": "Standard: Evaluation",
+      "text": "Perform a periodic technical and nontechnical evaluation, based initially upon the standards implemented under this rule and, subsequently, in response to environmental or operational changes affecting the security of electronic protected health information, that establishes the extent to which a covered entity's or business associate's security policies and procedures meet the requirements of this subpart.",
+      "mapping_rationale": "Periodic technical evaluation is the recurring-cadence element of 10.m (timely, repeated identification of technical weaknesses); each Kintsugi scan run is an instance of such an evaluation.",
+      "technical_validation_method": "Repeatable scan runs with timestamped kintsugi_scan.json ledgers evidence periodic technical evaluation; config-regex and version-extraction findings quantify drift between runs.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "45 CFR 164.308(a)(8), verified against eCFR (www.ecfr.gov), title 45 current as of 2026-08-10, retrieved 2026-08-12",
+      "embedding_text": "Standard: Evaluation (164.308(a)(8)). Perform a periodic technical and nontechnical evaluation, based initially upon the standards implemented under this rule and, subsequently, in response to environmental or operational changes affecting the security of electronic protected health information, that establishes the extent to which a covered entity's or business associate's security policies and procedures meet the requirements of this subpart. | HITRUST anchor: 10.m Control of Technical Vulnerabilities - Timely information about technical vulnerabilities of information systems in use is obtained, the organization's exposure to such vulnerabilities is evaluated, and appropriate measures are taken to address the associated risk."
+    },
+    {
+      "chunk_id": "hipaa__164-310-d-1__09-q",
+      "hitrust_control": {
+        "control_reference": "09.q",
+        "control_title": "Information Handling Procedures"
+      },
+      "id": "164.310(d)(1)",
+      "title": "Standard: Device and media controls",
+      "text": "Implement policies and procedures that govern the receipt and removal of hardware and electronic media that contain electronic protected health information into and out of a facility, and the movement of these items within the facility.",
+      "mapping_rationale": "Device and media controls are HIPAA's media-handling standard, matching 09.q's handling/storage/movement scope for covered information.",
+      "technical_validation_method": "Recursive file-system traverser and ZIP archive chunker locate covered information across storage paths, including temp, recycle, and archive locations; entropy analysis detects residual plaintext sensitive data on paths staged for re-use or disposal.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "45 CFR 164.310(d)(1), verified against eCFR (www.ecfr.gov), title 45 current as of 2026-08-10, retrieved 2026-08-12",
+      "embedding_text": "Standard: Device and media controls (164.310(d)(1)). Implement policies and procedures that govern the receipt and removal of hardware and electronic media that contain electronic protected health information into and out of a facility, and the movement of these items within the facility. | HITRUST anchor: 09.q Information Handling Procedures - Procedures for the handling and storage of information are established to protect it from unauthorized disclosure or misuse, covering handling, labeling, storage, secure disposal, and re-use of media consistent with the information's classification."
+    },
+    {
+      "chunk_id": "hipaa__164-310-d-2-i__09-q",
+      "hitrust_control": {
+        "control_reference": "09.q",
+        "control_title": "Information Handling Procedures"
+      },
+      "id": "164.310(d)(2)(i)",
+      "title": "Disposal (Required)",
+      "text": "Implement policies and procedures to address the final disposition of electronic protected health information, and/or the hardware or electronic media on which it is stored.",
+      "mapping_rationale": "Secure disposal is a named element of 09.q information-handling procedures; Kintsugi validates it in software by detecting residual ePHI in locations that should have been sanitized.",
+      "technical_validation_method": "Entropy analysis and PII/PHI regex over recycle/temp/staging paths detect residual plaintext covered information that disposal procedures should have removed.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "45 CFR 164.310(d)(2)(i), verified against eCFR (www.ecfr.gov), title 45 current as of 2026-08-10, retrieved 2026-08-12",
+      "embedding_text": "Disposal (Required) (164.310(d)(2)(i)). Implement policies and procedures to address the final disposition of electronic protected health information, and/or the hardware or electronic media on which it is stored. | HITRUST anchor: 09.q Information Handling Procedures - Procedures for the handling and storage of information are established to protect it from unauthorized disclosure or misuse, covering handling, labeling, storage, secure disposal, and re-use of media consistent with the information's classification."
+    },
+    {
+      "chunk_id": "hipaa__164-310-d-2-ii__09-q",
+      "hitrust_control": {
+        "control_reference": "09.q",
+        "control_title": "Information Handling Procedures"
+      },
+      "id": "164.310(d)(2)(ii)",
+      "title": "Media re-use (Required)",
+      "text": "Implement procedures for removal of electronic protected health information from electronic media before the media are made available for re-use.",
+      "mapping_rationale": "Pre-re-use removal of covered information is the media re-use element of 09.q; residual-data detection on re-use-staged paths is the direct software check.",
+      "technical_validation_method": "Scan of re-use-staged volumes/paths for recoverable PHI patterns; chi-square/entropy verdicts distinguish wiped or encrypted regions from residual plaintext.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "45 CFR 164.310(d)(2)(ii), verified against eCFR (www.ecfr.gov), title 45 current as of 2026-08-10, retrieved 2026-08-12",
+      "embedding_text": "Media re-use (Required) (164.310(d)(2)(ii)). Implement procedures for removal of electronic protected health information from electronic media before the media are made available for re-use. | HITRUST anchor: 09.q Information Handling Procedures - Procedures for the handling and storage of information are established to protect it from unauthorized disclosure or misuse, covering handling, labeling, storage, secure disposal, and re-use of media consistent with the information's classification."
+    },
+    {
+      "chunk_id": "hipaa__164-312-c-1__09-q",
+      "hitrust_control": {
+        "control_reference": "09.q",
+        "control_title": "Information Handling Procedures"
+      },
+      "id": "164.312(c)(1)",
+      "title": "Standard: Integrity",
+      "text": "Implement policies and procedures to protect electronic protected health information from improper alteration or destruction.",
+      "mapping_rationale": "09.q requires information to be protected from misuse during handling; HIPAA's integrity standard covers the improper-alteration/destruction half of that protection.",
+      "technical_validation_method": "Cryptographic hash inventory of PHI-bearing files across scan runs surfaces unexplained alteration or destruction between scans.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "45 CFR 164.312(c)(1), verified against eCFR (www.ecfr.gov), title 45 current as of 2026-08-10, retrieved 2026-08-12",
+      "embedding_text": "Standard: Integrity (164.312(c)(1)). Implement policies and procedures to protect electronic protected health information from improper alteration or destruction. | HITRUST anchor: 09.q Information Handling Procedures - Procedures for the handling and storage of information are established to protect it from unauthorized disclosure or misuse, covering handling, labeling, storage, secure disposal, and re-use of media consistent with the information's classification."
+    },
+    {
+      "chunk_id": "hipaa__164-312-b__09-aa",
+      "hitrust_control": {
+        "control_reference": "09.aa",
+        "control_title": "Audit Logging"
+      },
+      "id": "164.312(b)",
+      "title": "Standard: Audit controls",
+      "text": "Implement hardware, software, and/or procedural mechanisms that record and examine activity in information systems that contain or use electronic protected health information.",
+      "mapping_rationale": "HIPAA's audit-controls standard is the direct regulatory counterpart of 09.aa: mechanisms that record and examine system activity.",
+      "technical_validation_method": "Audit Ledger Synthesis: every scan produces a tamper-evident kintsugi_scan.json evidence ledger; the scanner additionally verifies presence, permissions (via UID/GID module), and non-zero recency of host audit/syslog artifacts and logging daemon configuration files.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "45 CFR 164.312(b), verified against eCFR (www.ecfr.gov), title 45 current as of 2026-08-10, retrieved 2026-08-12",
+      "embedding_text": "Standard: Audit controls (164.312(b)). Implement hardware, software, and/or procedural mechanisms that record and examine activity in information systems that contain or use electronic protected health information. | HITRUST anchor: 09.aa Audit Logging - Audit logs recording user activities, exceptions, and information security events are produced and kept for an agreed period to support access-control monitoring and future investigations; logs capture who, what, when, where, and outcome."
+    },
+    {
+      "chunk_id": "hipaa__164-308-a-1-ii-d__09-aa",
+      "hitrust_control": {
+        "control_reference": "09.aa",
+        "control_title": "Audit Logging"
+      },
+      "id": "164.308(a)(1)(ii)(D)",
+      "title": "Information system activity review (Required)",
+      "text": "Implement procedures to regularly review records of information system activity, such as audit logs, access reports, and security incident tracking reports.",
+      "mapping_rationale": "09.aa requires logs to be kept and used; the activity-review specification supplies the 'examine and act on logs' half of the anchor.",
+      "technical_validation_method": "Verify audit/syslog artifacts exist, are recent (non-stale mtimes), and are readable by reviewers; kintsugi_scan.json records the review evidence trail.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "45 CFR 164.308(a)(1)(ii)(D), verified against eCFR (www.ecfr.gov), title 45 current as of 2026-08-10, retrieved 2026-08-12",
+      "embedding_text": "Information system activity review (Required) (164.308(a)(1)(ii)(D)). Implement procedures to regularly review records of information system activity, such as audit logs, access reports, and security incident tracking reports. | HITRUST anchor: 09.aa Audit Logging - Audit logs recording user activities, exceptions, and information security events are produced and kept for an agreed period to support access-control monitoring and future investigations; logs capture who, what, when, where, and outcome."
+    },
+    {
+      "chunk_id": "hipaa__164-308-a-5-ii-c__09-aa",
+      "hitrust_control": {
+        "control_reference": "09.aa",
+        "control_title": "Audit Logging"
+      },
+      "id": "164.308(a)(5)(ii)(C)",
+      "title": "Log-in monitoring (Addressable)",
+      "text": "Procedures for monitoring log-in attempts and reporting discrepancies.",
+      "mapping_rationale": "Log-in attempt monitoring is a canonical 09.aa event class (user activity and exceptions).",
+      "technical_validation_method": "Presence and permission check of authentication logs (e.g., auth.log/secure, wtmp/btmp) and logging-daemon config directives that enable auth-event capture.",
+      "applicability": "Applicable - in MVP scope",
+      "citation": "45 CFR 164.308(a)(5)(ii)(C), verified against eCFR (www.ecfr.gov), title 45 current as of 2026-08-10, retrieved 2026-08-12",
+      "embedding_text": "Log-in monitoring (Addressable) (164.308(a)(5)(ii)(C)). Procedures for monitoring log-in attempts and reporting discrepancies. | HITRUST anchor: 09.aa Audit Logging - Audit logs recording user activities, exceptions, and information security events are produced and kept for an agreed period to support access-control monitoring and future investigations; logs capture who, what, when, where, and outcome."
+    }
+  ]
+}
