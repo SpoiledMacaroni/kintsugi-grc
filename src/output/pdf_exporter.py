@@ -74,7 +74,7 @@ class PDFComplianceExporter:
 
         p1_cmds.append("BT /F1 10 Tf 35 665 Td (Target Environment : " + cls._escape_pdf_str(target_dir[:60]) + ") Tj ET")
         p1_cmds.append("BT /F1 10 Tf 35 650 Td (Total Files Scanned : " + str(total_files) + ") Tj ET")
-        p1_cmds.append("BT /F2 11 Tf 35 635 Td (Overall Health Score : " + str(score) + "% / 100%) Tj ET")
+        p1_cmds.append("BT /F2 11 Tf 35 635 Td (Overall Health Score : " + str(score) + "%) Tj ET")
 
         # Severity breakdown & Visual Bar Box
         p1_cmds.append("0.95 0.95 0.97 rg 35 555 542 65 re f 0.7 0.7 0.7 RG 1 w 35 555 542 65 re S")

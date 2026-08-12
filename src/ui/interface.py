@@ -104,6 +104,7 @@ class KintsugiAppTkinterGUI:
 
         self.scan_summary: Optional[Dict[str, Any]] = None
         self.displayed_findings: List[Dict[str, Any]] = []
+        self.active_pie_severity_filter: Optional[str] = None
         self.is_scanning = False
         self.is_monitoring = False
 
@@ -125,13 +126,13 @@ class KintsugiAppTkinterGUI:
         style.configure("Card.TFrame", background="#ffffff", relief="solid", borderwidth=1)
 
         # Buttons
-        style.configure("Primary.TButton", font=("Segoe UI", 10, "bold"), background="#0284c7", foreground="white", padding=6)
+        style.configure("Primary.TButton", font=("Segoe UI", 9, "bold"), background="#0284c7", foreground="white", padding=(4, 2))
         style.map("Primary.TButton", background=[("active", "#0369a1")])
 
-        style.configure("Secondary.TButton", font=("Segoe UI", 9), background="#e2e8f0", foreground="#0f172a", padding=5)
+        style.configure("Secondary.TButton", font=("Segoe UI", 9), background="#e2e8f0", foreground="#0f172a", padding=(4, 2))
         style.map("Secondary.TButton", background=[("active", "#cbd5e1")])
 
-        style.configure("Danger.TButton", font=("Segoe UI", 9, "bold"), background="#ef4444", foreground="white", padding=5)
+        style.configure("Danger.TButton", font=("Segoe UI", 9, "bold"), background="#ef4444", foreground="white", padding=(4, 2))
 
     def _build_ui(self):
         """Constructs responsive Windows Security style dashboard layout using standard tk containers for colors."""
@@ -179,59 +180,59 @@ class KintsugiAppTkinterGUI:
 
         # Target Directory Selector Row
         row_dir = tk.Frame(config_card, bg="#ffffff")
-        row_dir.pack(fill="x", pady=4)
-        tk.Label(row_dir, text="Target Directory to Monitor:", font=("Segoe UI", 10, "bold"), fg="#0f172a", bg="#ffffff", width=24, anchor="w").pack(side="left")
+        row_dir.pack(fill="x", pady=2)
+        tk.Label(row_dir, text="Target Directory to Monitor:", font=("Segoe UI", 9, "bold"), fg="#0f172a", bg="#ffffff", width=22, anchor="w").pack(side="left")
         
-        ent_dir = ttk.Entry(row_dir, textvariable=self.target_dir_var, font=("Consolas", 10))
-        ent_dir.pack(side="left", fill="x", expand=True, padx=6)
-        ToolTip(ent_dir, "Select a target codebase or environment directory. The background watcher actively listens for file edits, creations, or corrections.")
+        ent_dir = ttk.Entry(row_dir, textvariable=self.target_dir_var, font=("Consolas", 9))
+        ent_dir.pack(side="left", fill="x", expand=True, padx=4)
+        ToolTip(ent_dir, "Select target codebase or environment directory to monitor.")
 
-        btn_browse = ttk.Button(row_dir, text="📁 Browse Folder...", style="Secondary.TButton", command=self._browse_directory)
-        btn_browse.pack(side="left", padx=4)
-        ToolTip(btn_browse, "Browse system folders to pick a target directory for dynamic monitoring.")
+        btn_browse = ttk.Button(row_dir, text="📁 Browse...", style="Secondary.TButton", command=self._browse_directory)
+        btn_browse.pack(side="left", padx=2)
+        ToolTip(btn_browse, "Browse system folders to pick target directory.")
 
-        btn_open_finder = ttk.Button(row_dir, text="📂 Open in Finder", style="Secondary.TButton", command=self._open_target_in_explorer)
-        btn_open_finder.pack(side="left", padx=4)
-        ToolTip(btn_open_finder, "Opens the target folder in native macOS Finder / Windows Explorer.")
+        btn_open_finder = ttk.Button(row_dir, text="📂 Open Folder", style="Secondary.TButton", command=self._open_target_in_explorer)
+        btn_open_finder.pack(side="left", padx=2)
+        ToolTip(btn_open_finder, "Opens target folder in native macOS Finder / Windows Explorer.")
 
         # Custom JSON Policy File Selector Row
         row_policy = tk.Frame(config_card, bg="#ffffff")
-        row_policy.pack(fill="x", pady=4)
-        tk.Label(row_policy, text="Custom Security Policy (JSON):", font=("Segoe UI", 10, "bold"), fg="#0f172a", bg="#ffffff", width=24, anchor="w").pack(side="left")
+        row_policy.pack(fill="x", pady=2)
+        tk.Label(row_policy, text="Custom Security Policy (JSON):", font=("Segoe UI", 9, "bold"), fg="#0f172a", bg="#ffffff", width=22, anchor="w").pack(side="left")
 
-        ent_policy = ttk.Entry(row_policy, textvariable=self.custom_policy_var, font=("Consolas", 10))
-        ent_policy.pack(side="left", fill="x", expand=True, padx=6)
-        ToolTip(ent_policy, "Upload a custom JSON or text company security policy (e.g. sample_company_policy.json, max 10MB). The policy ingester chunks & vectorizes rules into the RAG engine.")
+        ent_policy = ttk.Entry(row_policy, textvariable=self.custom_policy_var, font=("Consolas", 9))
+        ent_policy.pack(side="left", fill="x", expand=True, padx=4)
+        ToolTip(ent_policy, "Upload a custom JSON company policy document into the vector engine.")
 
-        btn_upload_policy = ttk.Button(row_policy, text="📄 Upload Policy...", style="Secondary.TButton", command=self._upload_custom_policy)
-        btn_upload_policy.pack(side="left", padx=4)
-        ToolTip(btn_upload_policy, "Browse and upload a custom JSON company policy document into the vector engine.")
+        btn_upload_policy = ttk.Button(row_policy, text="📄 Upload...", style="Secondary.TButton", command=self._upload_custom_policy)
+        btn_upload_policy.pack(side="left", padx=2)
+        ToolTip(btn_upload_policy, "Browse and upload a custom JSON policy file.")
 
-        self.lbl_policy_status = tk.Label(row_policy, text="[No Custom Policy Loaded]", font=("Segoe UI", 9, "italic"), fg="#64748b", bg="#ffffff")
-        self.lbl_policy_status.pack(side="left", padx=6)
+        self.lbl_policy_status = tk.Label(row_policy, text="[No Custom Policy Loaded]", font=("Segoe UI", 8, "italic"), fg="#64748b", bg="#ffffff")
+        self.lbl_policy_status.pack(side="left", padx=4)
 
         # Industry Dropdown & Action Controls Row
         row_act = tk.Frame(config_card, bg="#ffffff")
-        row_act.pack(fill="x", pady=(8, 4))
+        row_act.pack(fill="x", pady=(4, 2))
 
-        tk.Label(row_act, text="Industry Citation Scope:", font=("Segoe UI", 10, "bold"), fg="#0f172a", bg="#ffffff", width=24, anchor="w").pack(side="left")
+        tk.Label(row_act, text="Industry Citation Scope:", font=("Segoe UI", 9, "bold"), fg="#0f172a", bg="#ffffff", width=22, anchor="w").pack(side="left")
         cb_ind = ttk.Combobox(
             row_act,
             textvariable=self.industry_var,
             values=["All Industries", "Healthcare", "Merchant / E-Commerce", "Finance / Treasury", "Banking / SWIFT"],
             state="readonly",
-            width=22
+            width=18
         )
-        cb_ind.pack(side="left", padx=6)
+        cb_ind.pack(side="left", padx=4)
         ToolTip(cb_ind, "Filters reported framework citations. e.g. Healthcare reports HIPAA §164.312 only.")
 
         # Start / Stop Monitoring Buttons
-        self.btn_start = ttk.Button(row_act, text="▶ START MONITORING", style="Primary.TButton", command=self._toggle_monitoring)
-        self.btn_start.pack(side="right", padx=4)
-        ToolTip(self.btn_start, "Launches background watcher to actively monitor directory changes, re-scan edited files, and auto-revise risk scores in real-time.")
+        self.btn_start = ttk.Button(row_act, text="▶ Start Monitoring", style="Primary.TButton", command=self._toggle_monitoring)
+        self.btn_start.pack(side="right", padx=2)
+        ToolTip(self.btn_start, "Launches background watcher to actively monitor directory changes.")
 
-        self.btn_pdf = ttk.Button(row_act, text="📄 Export PDF Report", style="Secondary.TButton", command=self._export_pdf, state="disabled")
-        self.btn_pdf.pack(side="right", padx=4)
+        self.btn_pdf = ttk.Button(row_act, text="📄 Export PDF", style="Secondary.TButton", command=self._export_pdf, state="disabled")
+        self.btn_pdf.pack(side="right", padx=2)
 
         # ---------------------------------------------------------------------
         # 3. NON-INTRUSIVE DOMAIN CONTROL BADGES
@@ -242,15 +243,30 @@ class KintsugiAppTkinterGUI:
         tk.Label(domain_card, text="Addressed Control Domains:", font=("Segoe UI", 9, "bold"), fg="#64748b", bg="#ffffff").pack(side="left", padx=(0, 8))
 
         domains = [
-            ("🔒 Cryptography & Encryption", "Audits AES-256-CBC headers, Shannon entropy (H >= 7.8), GPG packets, and Luhn credit cards."),
-            ("🔑 IAM & POSIX Permissions", "Audits Active Directory SID/UID maps, least privilege bitmasks (0o777/0o640), and root access."),
-            ("⚙️ System Config & Hardening", "Audits SSH Protocol 2, PASS_MAX_DAYS <= 90, disabled daemon shells, and OpenSSL TLS policies."),
-            ("📋 Audit Subsystem Logging", "Audits /var/log/audit integrity and prevents world-writable tamper permissions (0o666)."),
-            ("📜 RAG Policy Alignment", "Vectorizes internal corporate policies against ChromaDB embeddings to suggest exact AI remediation commands.")
+            (
+                "🔑 01.02 / 01.c: Privilege Management",
+                "HITRUST CSF Ref 01.02, 01.c (Access Control) - Governs identity-aware, least-privilege enforcement of access to systems and data, including authorization definition, user/group permission bitmasks, and periodic review."
+            ),
+            (
+                "🛡️ 06.01 / 06.d: Data Protection & Privacy",
+                "HITRUST CSF Ref 06.01, 06.d (Data Protection & Privacy) - Governs organizational compliance with privacy protocols and protection of sensitive data at rest (PHI, credit cards, SSNs) via strong AES-256 cryptography and secure media sanitization."
+            ),
+            (
+                "⚙️ 10.06 / 10.m: Tech Vulnerability Control",
+                "HITRUST CSF Ref 10.06, 10.m (Configuration & Vulnerability Management) - Governs secure configuration, system hardening, and control of technical vulnerabilities. Enforces strong SSH Protocol 2, TLS 1.2/1.3 encryption, and password rotation."
+            ),
+            (
+                "📦 09.07 / 09.q: Media & Info Handling",
+                "HITRUST CSF Ref 09.07, 09.q (Information Handling) - Governs information handling, raw compressed data streams, and media storage security procedures to safeguard sensitive data from unauthorized interception or block pattern leaks."
+            ),
+            (
+                "📋 09.10 / 10.aa: Monitoring & Audit Logging",
+                "HITRUST CSF Ref 09.10, 10.aa (Audit Logging and Monitoring) - Governs the generation, protection, and review of audit logs. Enforces strict file permission controls (0o600) on /var/log/audit trails to prevent log tampering or erasure."
+            )
         ]
         for name, tip in domains:
-            lbl_pill = tk.Label(domain_card, text=name, font=("Segoe UI", 9, "bold"), fg="#0369a1", bg="#e0f2fe", padx=8, pady=4)
-            lbl_pill.pack(side="left", padx=4)
+            lbl_pill = tk.Label(domain_card, text=name, font=("Segoe UI", 8, "bold"), fg="#0369a1", bg="#e0f2fe", padx=6, pady=3)
+            lbl_pill.pack(side="left", padx=2)
             ToolTip(lbl_pill, tip)
 
         # ---------------------------------------------------------------------
@@ -278,8 +294,26 @@ class KintsugiAppTkinterGUI:
         top3_frame = tk.Frame(exec_content, bg="#ffffff")
         top3_frame.pack(side="left", fill="both", expand=True)
 
-        tk.Label(top3_frame, text="🔥 Top 3 Priority Issues Requiring Remediation:", font=("Segoe UI", 9, "bold"), fg="#991b1b", bg="#ffffff").pack(anchor="w", pady=(0, 4))
-        
+        top3_hdr_row = tk.Frame(top3_frame, bg="#ffffff")
+        top3_hdr_row.pack(fill="x", pady=(0, 4))
+
+        self.lbl_top3_header = tk.Label(
+            top3_hdr_row,
+            text="🔥 Top 3 Priority Issues Requiring Remediation:",
+            font=("Segoe UI", 9, "bold"),
+            fg="#991b1b",
+            bg="#ffffff"
+        )
+        self.lbl_top3_header.pack(side="left")
+
+        self.btn_reset_pie_filter = ttk.Button(
+            top3_hdr_row,
+            text="🔄 Show All",
+            style="Secondary.TButton",
+            command=lambda: self._filter_top_3_by_severity("ALL")
+        )
+        ToolTip(self.btn_reset_pie_filter, "Reset pie chart filter to show overall top priority issues.")
+
         self.top3_container = tk.Frame(top3_frame, bg="#ffffff")
         self.top3_container.pack(fill="both", expand=True)
 
@@ -662,7 +696,7 @@ class KintsugiAppTkinterGUI:
             if count == 0:
                 continue
             extent = (count / total) * 360.0
-            self.canvas_pie.create_arc(
+            arc_id = self.canvas_pie.create_arc(
                 bbox[0], bbox[1], bbox[2], bbox[3],
                 start=current_angle,
                 extent=extent,
@@ -670,44 +704,89 @@ class KintsugiAppTkinterGUI:
                 outline="#ffffff",
                 width=1.5
             )
+            self.canvas_pie.tag_bind(arc_id, "<Button-1>", lambda e, s=label: self._filter_top_3_by_severity(s))
             current_angle += extent
 
             pct = (count / total) * 100.0
-            row = tk.Frame(self.pie_legend_frame, bg="#ffffff")
-            row.pack(anchor="w", pady=1)
-            tk.Label(row, text="■", font=("Segoe UI", 9, "bold"), fg=color, bg="#ffffff").pack(side="left")
-            tk.Label(row, text=f"{label}: {count} ({pct:.0f}%)", font=("Segoe UI", 8, "bold" if label=="CRITICAL" else "normal"), fg="#0f172a", bg="#ffffff").pack(side="left", padx=2)
+            is_active = (self.active_pie_severity_filter == label)
 
-    def _update_top_3_issues(self, findings: List[Dict[str, Any]]):
-        """Renders Top 3 Urgent Issues needing immediate remediation."""
+            row = tk.Frame(self.pie_legend_frame, bg="#f0f9ff" if is_active else "#ffffff", cursor="hand2")
+            row.pack(anchor="w", pady=1, fill="x")
+            row.bind("<Button-1>", lambda e, s=label: self._filter_top_3_by_severity(s))
+
+            lbl_sq = tk.Label(row, text="■", font=("Segoe UI", 9, "bold"), fg=color, bg="#f0f9ff" if is_active else "#ffffff", cursor="hand2")
+            lbl_sq.pack(side="left")
+            lbl_sq.bind("<Button-1>", lambda e, s=label: self._filter_top_3_by_severity(s))
+
+            lbl_txt = tk.Label(
+                row,
+                text=f"{label}: {count} ({pct:.0f}%){' 👈' if is_active else ''}",
+                font=("Segoe UI", 8, "bold" if (label=="CRITICAL" or is_active) else "normal"),
+                fg="#0284c7" if is_active else "#0f172a",
+                bg="#f0f9ff" if is_active else "#ffffff",
+                cursor="hand2"
+            )
+            lbl_txt.pack(side="left", padx=2)
+            lbl_txt.bind("<Button-1>", lambda e, s=label: self._filter_top_3_by_severity(s))
+            ToolTip(row, f"Click to view Top 3 {label} priority issues.")
+
+    def _filter_top_3_by_severity(self, severity: str):
+        """Filters Top 3 Urgent Issues panel when clicking a pie chart slice or legend item."""
+        if severity == "ALL" or self.active_pie_severity_filter == severity:
+            self.active_pie_severity_filter = None
+        else:
+            self.active_pie_severity_filter = severity
+
+        if self.scan_summary:
+            sev_counts = self.scan_summary.get("severity_counts", {})
+            findings = self.scan_summary.get("findings", [])
+            self._draw_pie_chart(sev_counts)
+            self._update_top_3_issues(findings, target_severity=self.active_pie_severity_filter)
+
+    def _update_top_3_issues(self, findings: List[Dict[str, Any]], target_severity: Optional[str] = None):
+        """Renders Top 3 Urgent Issues needing immediate remediation, optionally filtered by severity."""
         for w in self.top3_container.winfo_children():
             w.destroy()
 
-        non_pass = [f for f in findings if f.get("severity") != "PASS"]
+        if target_severity is None:
+            target_severity = self.active_pie_severity_filter
 
-        if not non_pass:
+        if target_severity:
+            self.lbl_top3_header.config(text=f"🔥 Top 3 Issues [{target_severity} Priority Filter]:", fg="#0284c7")
+            self.btn_reset_pie_filter.pack(side="right")
+        else:
+            self.lbl_top3_header.config(text="🔥 Top 3 Priority Issues Requiring Remediation:", fg="#991b1b")
+            self.btn_reset_pie_filter.pack_forget()
+
+        if target_severity:
+            filtered = [f for f in findings if f.get("severity") == target_severity]
+        else:
+            filtered = [f for f in findings if f.get("severity") != "PASS"]
+
+        if not filtered:
             empty_box = tk.Frame(self.top3_container, bg="#f0fdf4", highlightthickness=1, highlightbackground="#bbf7d0", padx=10, pady=8)
             empty_box.pack(fill="x", pady=2)
-            tk.Label(empty_box, text="🎉 Outstanding Work! Zero Active Violations Detected.", font=("Segoe UI", 9, "bold"), fg="#166534", bg="#f0fdf4").pack(anchor="w")
+            msg = f"No active {target_severity} findings detected." if target_severity else "Zero Active Violations Detected."
+            tk.Label(empty_box, text=f"🎉 {msg}", font=("Segoe UI", 9, "bold"), fg="#166534", bg="#f0fdf4").pack(anchor="w")
             tk.Label(empty_box, text="All monitored files pass GRC security and encryption baselines.", font=("Segoe UI", 8), fg="#15803d", bg="#f0fdf4").pack(anchor="w")
             return
 
-        sev_rank = {"CRITICAL": 3, "HIGH": 2, "MEDIUM": 1}
-        sorted_issues = sorted(non_pass, key=lambda x: (sev_rank.get(x.get("severity", "LOW"), 0), x.get("rule_id", "")), reverse=True)
+        sev_rank = {"CRITICAL": 3, "HIGH": 2, "MEDIUM": 1, "PASS": 0}
+        sorted_issues = sorted(filtered, key=lambda x: (sev_rank.get(x.get("severity", "LOW"), 0), x.get("rule_id", "")), reverse=True)
         top_3 = sorted_issues[:3]
 
         remediation_hints = {
-            "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE": "chmod 640 file",
-            "ERR-OCTAL-WORLD-WRITABLE": "chmod 640 file",
-            "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN": "Encrypt payload via GPG / AES-256-CBC",
-            "ERR-ENTROPY-PLAINTEXT-PII": "Encrypt payload via GPG / AES-256-CBC",
-            "INSECURE_SSH_TRANSMISSION_PROTOCOL": "Enforce SSH Protocol 2 & disable weak MACs",
-            "INSECURE_SYSTEM_TLS_POLICY": "Set MinProtocol = TLSv1.2 in OpenSSL/Nginx",
-            "INSECURE_PASSWORD_POLICY_MAX_DAYS": "Set PASS_MAX_DAYS <= 90 in login.defs",
-            "INSECURE_SYSTEM_ACCOUNT_HARDENING": "Set non-human shell to /sbin/nologin",
-            "INSECURE_AUDIT_LOG_PERMISSIONS": "chmod 600 /var/log/audit/audit.log",
-            "UNENCRYPTED_RAW_ZLIB_STREAM": "Encrypt zlib stream via AES-256-CBC",
-            "DECOMPRESSION_SAFETY_BOMB_TEST": "Verify zip decompression ratio < 100:1"
+            "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE": "🔒 Restrict Access: Lock file permissions so only owner can read/write (chmod 0640).",
+            "ERR-OCTAL-WORLD-WRITABLE": "🔒 Restrict Access: Lock file permissions so only owner can read/write (chmod 0640).",
+            "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN": "🛡️ Encrypt Sensitive Data: Secure SSN / credit card records using AES-256 or GPG encryption.",
+            "ERR-ENTROPY-PLAINTEXT-PII": "🛡️ Encrypt Sensitive Data: Secure unencrypted data records using AES-256 or GPG encryption.",
+            "INSECURE_SSH_TRANSMISSION_PROTOCOL": "⚙️ Harden Transmission: Disable weak SSH Protocol 1 & obsolete ciphers in sshd_config.",
+            "INSECURE_SYSTEM_TLS_POLICY": "🌐 Upgrade Encryption: Require TLS 1.2 or TLS 1.3 minimum in system web/SSL policies.",
+            "INSECURE_PASSWORD_POLICY_MAX_DAYS": "🔑 Enforce Password Rotation: Update policy to require password change every 90 days (login.defs).",
+            "INSECURE_SYSTEM_ACCOUNT_HARDENING": "🚫 Disable Service Logins: Set system service account shells to /sbin/nologin.",
+            "INSECURE_AUDIT_LOG_PERMISSIONS": "📋 Protect Audit Trails: Restrict /var/log/audit access exclusively to administrators (chmod 0600).",
+            "UNENCRYPTED_RAW_ZLIB_STREAM": "🔐 Secure Archives: Encrypt compressed file streams with AES-256-CBC.",
+            "DECOMPRESSION_SAFETY_BOMB_TEST": "⚠️ Inspect Compression: Check archive decompression ratio for safety boundary anomalies."
         }
 
         sev_colors = {
@@ -774,34 +853,34 @@ class KintsugiAppTkinterGUI:
         filter_mode = self.filter_var.get()
 
         domain_names = {
-            "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE": "🔑 IAM / Access",
-            "ERR-OCTAL-WORLD-WRITABLE": "🔑 IAM / Access",
-            "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN": "🔒 Encryption",
-            "ERR-ENTROPY-PLAINTEXT-PII": "🔒 Encryption",
-            "ENCRYPTED_COMPLIANT_AES_256_CBC": "🔒 Encryption",
-            "INSECURE_SSH_TRANSMISSION_PROTOCOL": "⚙️ System Config",
-            "INSECURE_SYSTEM_TLS_POLICY": "⚙️ System Config",
-            "INSECURE_PASSWORD_POLICY_MAX_DAYS": "⚙️ System Config",
-            "INSECURE_SYSTEM_ACCOUNT_HARDENING": "⚙️ System Config",
-            "INSECURE_AUDIT_LOG_PERMISSIONS": "📋 Audit Subsystem",
-            "UNENCRYPTED_RAW_ZLIB_STREAM": "🔒 Encryption",
-            "DECOMPRESSION_SAFETY_BOMB_TEST": "⚙️ System Config",
-            "INSECURE_AES_ECB_BLOCK_PATTERN_LEAK": "🔒 Encryption"
+            "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE": "🔑 Ref 01.02 / 01.c",
+            "ERR-OCTAL-WORLD-WRITABLE": "🔑 Ref 01.02 / 01.c",
+            "INSECURE_SYSTEM_ACCOUNT_HARDENING": "🔑 Ref 01.02 / 01.c",
+            "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN": "🛡️ Ref 06.01 / 06.d",
+            "ERR-ENTROPY-PLAINTEXT-PII": "🛡️ Ref 06.01 / 06.d",
+            "ENCRYPTED_COMPLIANT_AES_256_CBC": "🛡️ Ref 06.01 / 06.d",
+            "INSECURE_SSH_TRANSMISSION_PROTOCOL": "⚙️ Ref 10.06 / 10.m",
+            "INSECURE_SYSTEM_TLS_POLICY": "⚙️ Ref 10.06 / 10.m",
+            "INSECURE_PASSWORD_POLICY_MAX_DAYS": "⚙️ Ref 10.06 / 10.m",
+            "DECOMPRESSION_SAFETY_BOMB_TEST": "⚙️ Ref 10.06 / 10.m",
+            "UNENCRYPTED_RAW_ZLIB_STREAM": "📦 Ref 09.07 / 09.q",
+            "INSECURE_AES_ECB_BLOCK_PATTERN_LEAK": "📦 Ref 09.07 / 09.q",
+            "INSECURE_AUDIT_LOG_PERMISSIONS": "📋 Ref 09.10 / 10.aa"
         }
 
         remediation_hints = {
-            "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE": "chmod 640 {file}",
-            "ERR-OCTAL-WORLD-WRITABLE": "chmod 640 {file}",
-            "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN": "Encrypt payload via GPG / AES-256",
-            "ERR-ENTROPY-PLAINTEXT-PII": "Encrypt payload via GPG / AES-256",
-            "ENCRYPTED_COMPLIANT_AES_256_CBC": "None (Compliant AES-256)",
-            "INSECURE_SSH_TRANSMISSION_PROTOCOL": "Enforce SSH Protocol 2 in sshd_config",
-            "INSECURE_SYSTEM_TLS_POLICY": "Set MinProtocol = TLSv1.2 in OpenSSL/Nginx",
-            "INSECURE_PASSWORD_POLICY_MAX_DAYS": "Set PASS_MAX_DAYS <= 90 in login.defs",
-            "INSECURE_SYSTEM_ACCOUNT_HARDENING": "Set non-human shell to /sbin/nologin",
-            "INSECURE_AUDIT_LOG_PERMISSIONS": "chmod 600 /var/log/audit/audit.log",
-            "UNENCRYPTED_RAW_ZLIB_STREAM": "Encrypt zlib stream via AES-256-CBC",
-            "DECOMPRESSION_SAFETY_BOMB_TEST": "Verify zip decompression ratio < 100:1"
+            "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE": "🔒 Restrict Access: Lock file permissions so only owner can read/write (chmod 0640).",
+            "ERR-OCTAL-WORLD-WRITABLE": "🔒 Restrict Access: Lock file permissions so only owner can read/write (chmod 0640).",
+            "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN": "🛡️ Encrypt Sensitive Data: Secure SSN / credit card records using AES-256 or GPG encryption.",
+            "ERR-ENTROPY-PLAINTEXT-PII": "🛡️ Encrypt Sensitive Data: Secure unencrypted data records using AES-256 or GPG encryption.",
+            "ENCRYPTED_COMPLIANT_AES_256_CBC": "✅ Compliant: Verified AES-256-CBC payload encryption.",
+            "INSECURE_SSH_TRANSMISSION_PROTOCOL": "⚙️ Harden Transmission: Disable weak SSH Protocol 1 & obsolete ciphers in sshd_config.",
+            "INSECURE_SYSTEM_TLS_POLICY": "🌐 Upgrade Encryption: Require TLS 1.2 or TLS 1.3 minimum in system web/SSL policies.",
+            "INSECURE_PASSWORD_POLICY_MAX_DAYS": "🔑 Enforce Password Rotation: Update policy to require password change every 90 days (login.defs).",
+            "INSECURE_SYSTEM_ACCOUNT_HARDENING": "🚫 Disable Service Logins: Set system service account shells to /sbin/nologin.",
+            "INSECURE_AUDIT_LOG_PERMISSIONS": "📋 Protect Audit Trails: Restrict /var/log/audit access exclusively to administrators (chmod 0600).",
+            "UNENCRYPTED_RAW_ZLIB_STREAM": "🔐 Secure Archives: Encrypt compressed file streams with AES-256-CBC.",
+            "DECOMPRESSION_SAFETY_BOMB_TEST": "⚠️ Inspect Compression: Check archive decompression ratio for safety boundary anomalies."
         }
 
         for f in findings:
@@ -843,8 +922,158 @@ class KintsugiAppTkinterGUI:
         self._populate_detail_panel(finding)
 
     def _on_tree_double_click(self, event=None):
-        """Opens target file in native system Finder/Explorer on double-click."""
-        self._reveal_selected_file()
+        """Pops out detailed inspection modal view when user double-clicks a finding row."""
+        selected = self.tree.selection()
+        if not selected:
+            return
+        index = self.tree.index(selected[0])
+        if 0 <= index < len(self.displayed_findings):
+            finding = self.displayed_findings[index]
+            self._open_finding_detail_modal(finding)
+
+    def _open_finding_detail_modal(self, f: Dict[str, Any]):
+        """Pops out a rich detailed inspection modal window with interactive file hyperlink."""
+        severity = f.get("severity", "INFO")
+        title = f.get("title", "Security Finding")
+        rule_id = f.get("rule_id", "N/A")
+        rel_path = f.get("file_path", "N/A")
+        desc = f.get("description", "No description available.")
+        details = f.get("details", {})
+        mappings = f.get("framework_mappings", [])
+        advisory = f.get("rag_advisory", {})
+
+        target_root = Path(self.target_dir_var.get()).resolve()
+        full_path = (target_root / rel_path).resolve() if not Path(rel_path).is_absolute() else Path(rel_path).resolve()
+
+        modal = tk.Toplevel(self.root)
+        modal.title(f"Finding Inspection - {title}")
+        modal.geometry("840x650")
+        modal.minsize(700, 500)
+        modal.configure(background="#f8fafc")
+        modal.transient(self.root)
+        modal.grab_set()
+
+        # Modal Header Banner
+        header = tk.Frame(modal, bg="#ffffff", highlightthickness=1, highlightbackground="#e2e8f0", padx=16, pady=12)
+        header.pack(fill="x", padx=14, pady=(14, 10))
+
+        sev_colors = {
+            "CRITICAL": ("#fee2e2", "#991b1b", "🔴"),
+            "HIGH": ("#ffedd5", "#c2410c", "🟠"),
+            "MEDIUM": ("#fef9c3", "#a16207", "🟡"),
+            "PASS": ("#dcfce7", "#15803d", "🟢")
+        }
+        bg_color, fg_color, icon = sev_colors.get(severity, ("#f1f5f9", "#334155", "ℹ️"))
+
+        badge = tk.Label(header, text=f"{icon} {severity}", font=("Segoe UI", 10, "bold"), fg=fg_color, bg=bg_color, padx=8, pady=4)
+        badge.pack(side="left", padx=(0, 10))
+
+        h_text_box = tk.Frame(header, bg="#ffffff")
+        h_text_box.pack(side="left", fill="both", expand=True)
+        tk.Label(h_text_box, text=title, font=("Segoe UI", 12, "bold"), fg="#0f172a", bg="#ffffff", anchor="w").pack(fill="x")
+        tk.Label(h_text_box, text=f"Rule ID: {rule_id}", font=("Consolas", 9), fg="#64748b", bg="#ffffff", anchor="w").pack(fill="x")
+
+        # Clickable Hyperlink Card
+        link_card = tk.Frame(modal, bg="#f0f9ff", highlightthickness=1, highlightbackground="#bae6fd", padx=14, pady=10)
+        link_card.pack(fill="x", padx=14, pady=(0, 10))
+
+        tk.Label(link_card, text="📁 Target File Location (Click link to follow path in Finder/Explorer):", font=("Segoe UI", 9, "bold"), fg="#0369a1", bg="#f0f9ff").pack(anchor="w")
+        
+        link_row = tk.Frame(link_card, bg="#f0f9ff")
+        link_row.pack(fill="x", pady=(4, 0))
+
+        # Styled Hyperlink Label
+        file_url_text = full_path.as_uri() if full_path.exists() else str(full_path)
+        lbl_link = tk.Label(
+            link_row,
+            text=file_url_text,
+            font=("Consolas", 9, "underline"),
+            fg="#0284c7",
+            bg="#f0f9ff",
+            cursor="hand2",
+            anchor="w"
+        )
+        lbl_link.pack(side="left", fill="x", expand=True)
+        ToolTip(lbl_link, f"Click to open '{full_path.name}' in native macOS Finder / Windows Explorer.")
+        lbl_link.bind("<Button-1>", lambda e, p=full_path: reveal_in_file_explorer(p))
+
+        btn_follow = ttk.Button(
+            link_row,
+            text="📂 Follow Path in Explorer",
+            style="Primary.TButton",
+            command=lambda p=full_path: reveal_in_file_explorer(p)
+        )
+        btn_follow.pack(side="right", padx=(8, 0))
+
+        # Scrollable Detailed Content Text Area
+        content_frame = tk.Frame(modal, bg="#ffffff", highlightthickness=1, highlightbackground="#e2e8f0", padx=12, pady=12)
+        content_frame.pack(fill="both", expand=True, padx=14, pady=(0, 10))
+
+        scroll = ttk.Scrollbar(content_frame)
+        scroll.pack(side="right", fill="y")
+
+        txt = tk.Text(
+            content_frame,
+            wrap="word",
+            font=("Consolas", 9),
+            yscrollcommand=scroll.set,
+            bg="#ffffff",
+            fg="#0f172a",
+            relief="flat",
+            padx=8,
+            pady=8
+        )
+        scroll.config(command=txt.yview)
+        txt.pack(fill="both", expand=True)
+
+        txt.tag_configure("SECTION", font=("Segoe UI", 10, "bold"), foreground="#0284c7")
+        txt.tag_configure("LABEL", font=("Segoe UI", 9, "bold"), foreground="#475569")
+        txt.tag_configure("VALUE", font=("Consolas", 9), foreground="#0f172a")
+        txt.tag_configure("CMD", font=("Consolas", 9, "bold"), foreground="#0284c7", background="#f0f9ff")
+
+        # Populate Text
+        txt.insert("end", "📌 FINDING DESCRIPTION & AUDIT FINDINGS\n", "SECTION")
+        txt.insert("end", f"{desc}\n\n", "VALUE")
+
+        biz_explanation = details.get("business_explanation") or advisory.get("business_explanation", "")
+        if biz_explanation:
+            txt.insert("end", "🛡️ BUSINESS RISK & OPERATIONAL IMPACT\n", "SECTION")
+            txt.insert("end", f"{biz_explanation}\n\n", "VALUE")
+
+        if details:
+            tech_details = {k: v for k, v in details.items() if k != "business_explanation"}
+            if tech_details:
+                txt.insert("end", "⚙️ TECHNICAL SCAN PARAMETERS\n", "SECTION")
+                txt.insert("end", f"{json.dumps(tech_details, indent=2)}\n\n", "VALUE")
+
+        if mappings:
+            txt.insert("end", "📜 ADDRESSED GRC FRAMEWORK CITATIONS\n", "SECTION")
+            for m in mappings:
+                fw = m.get("framework", "GRC")
+                cid = m.get("control_id", "N/A")
+                ctitle = m.get("title", "Requirement")
+                st = m.get("status", "REVIEW")
+                txt.insert("end", f"  • [{fw}] {cid}: {ctitle} (Status: {st})\n", "VALUE")
+            txt.insert("end", "\n")
+
+        if advisory:
+            txt.insert("end", "🤖 RAG AI REMEDIATION ADVISORY CARD\n", "SECTION")
+            txt.insert("end", f"  • Mapped Clause ID     : {advisory.get('clause_id')}\n", "VALUE")
+            txt.insert("end", f"  • Standards Involved   : {advisory.get('standard')}\n", "VALUE")
+            txt.insert("end", f"  • Technical Risk       : {advisory.get('risk_statement')}\n", "VALUE")
+            txt.insert("end", f"  • Recommended Command  : ", "LABEL")
+            txt.insert("end", f"{advisory.get('remediation_command')}\n", "CMD")
+            if advisory.get("rationale"):
+                txt.insert("end", f"  • Context Rationale    : {advisory.get('rationale')}\n", "VALUE")
+
+        txt.config(state="disabled")
+
+        # Bottom Toolbar
+        bottom = tk.Frame(modal, bg="#f8fafc", padx=14, pady=8)
+        bottom.pack(fill="x")
+
+        btn_close = ttk.Button(bottom, text="❌ Close Inspection", style="Secondary.TButton", command=modal.destroy)
+        btn_close.pack(side="right")
 
     def _populate_detail_panel(self, f: Dict[str, Any]):
         """Renders rich formatted un-truncated finding details in lower card."""
