@@ -5,8 +5,8 @@ import sqlite3
 import subprocess
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.ingester import RelationalPolicyIngester
-from src.orchestrator import RelationalRAGOrchestrator
+from src.rag.ingester import RelationalPolicyIngester
+from src.rag.orchestrator import RelationalRAGOrchestrator
 from src.logger import RelationalScanLogger
 from src.database import DB_PATH
 
