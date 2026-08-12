@@ -253,6 +253,39 @@ class KintsugiAppTkinterGUI:
             lbl_pill.pack(side="left", padx=4)
             ToolTip(lbl_pill, tip)
 
+        # ---------------------------------------------------------------------
+        # 3. EXECUTIVE DASHBOARD: PIE CHART & TOP 3 ACTIONABLE ISSUES
+        # ---------------------------------------------------------------------
+        exec_card = tk.Frame(main_container, bg="#ffffff", highlightthickness=1, highlightbackground="#e2e8f0", padx=14, pady=10)
+        exec_card.pack(fill="x", pady=(0, 10))
+
+        tk.Label(exec_card, text="📈 Executive Summary & Priority Action Dashboard", font=("Segoe UI", 11, "bold"), fg="#0284c7", bg="#ffffff").pack(anchor="w", pady=(0, 6))
+
+        exec_content = tk.Frame(exec_card, bg="#ffffff")
+        exec_content.pack(fill="x")
+
+        # Left Column: Pie Chart Canvas & Legend
+        pie_frame = tk.Frame(exec_content, bg="#ffffff")
+        pie_frame.pack(side="left", fill="y", padx=(0, 14))
+
+        self.canvas_pie = tk.Canvas(pie_frame, width=140, height=120, bg="#ffffff", highlightthickness=0)
+        self.canvas_pie.pack(side="left")
+
+        self.pie_legend_frame = tk.Frame(pie_frame, bg="#ffffff")
+        self.pie_legend_frame.pack(side="left", padx=(6, 0), fill="y")
+
+        # Right Column: Top 3 Actionable Urgent Issues
+        top3_frame = tk.Frame(exec_content, bg="#ffffff")
+        top3_frame.pack(side="left", fill="both", expand=True)
+
+        tk.Label(top3_frame, text="🔥 Top 3 Priority Issues Requiring Remediation:", font=("Segoe UI", 9, "bold"), fg="#991b1b", bg="#ffffff").pack(anchor="w", pady=(0, 4))
+        
+        self.top3_container = tk.Frame(top3_frame, bg="#ffffff")
+        self.top3_container.pack(fill="both", expand=True)
+
+        self._draw_pie_chart({})
+        self._update_top_3_issues([])
+
         # Status / Progress Bar Line
         self.progress_frame = tk.Frame(main_container, bg="#f8fafc")
         self.progress_frame.pack(fill="x", pady=4)
@@ -564,6 +597,8 @@ class KintsugiAppTkinterGUI:
         else:
             self.hero_status_lbl.config(text=f"⚠️ Action Required - {total_viols} Active Violations", fg="#b91c1c", bg="#fee2e2")
 
+        self._draw_pie_chart(summary.get("severity_counts", {}))
+        self._update_top_3_issues(summary.get("findings", []))
         self._update_findings_table()
 
     def _update_progress(self, val: int, msg: str):
@@ -590,7 +625,132 @@ class KintsugiAppTkinterGUI:
         else:
             self.hero_status_lbl.config(text=f"⚠️ Action Required - {total_viols} Active Violations", fg="#b91c1c", bg="#fee2e2")
 
+        self._draw_pie_chart(summary.get("severity_counts", {}))
+        self._update_top_3_issues(summary.get("findings", []))
         self._update_findings_table()
+
+    def _draw_pie_chart(self, sev_counts: Dict[str, int]):
+        """Draws dynamic Tkinter pie chart of scan severities."""
+        self.canvas_pie.delete("all")
+        for w in self.pie_legend_frame.winfo_children():
+            w.destroy()
+
+        crits = sev_counts.get("CRITICAL", 0)
+        highs = sev_counts.get("HIGH", 0)
+        meds = sev_counts.get("MEDIUM", 0)
+        passes = sev_counts.get("PASS", 0)
+        total = crits + highs + meds + passes
+
+        if total == 0:
+            # Draw placeholder circle
+            self.canvas_pie.create_oval(15, 10, 125, 110, fill="#f1f5f9", outline="#cbd5e1", width=2)
+            self.canvas_pie.create_text(70, 60, text="No Scan\nData", font=("Segoe UI", 8, "bold"), fill="#64748b", justify="center")
+            tk.Label(self.pie_legend_frame, text="Run scan to view\nseverity pie chart", font=("Segoe UI", 8, "italic"), fg="#64748b", bg="#ffffff").pack(anchor="w")
+            return
+
+        slice_data = [
+            ("CRITICAL", crits, "#ef4444"),
+            ("HIGH", highs, "#f97316"),
+            ("MEDIUM", meds, "#eab308"),
+            ("PASS", passes, "#22c55e"),
+        ]
+
+        current_angle = 90.0
+        bbox = (10, 5, 125, 115)
+
+        for label, count, color in slice_data:
+            if count == 0:
+                continue
+            extent = (count / total) * 360.0
+            self.canvas_pie.create_arc(
+                bbox[0], bbox[1], bbox[2], bbox[3],
+                start=current_angle,
+                extent=extent,
+                fill=color,
+                outline="#ffffff",
+                width=1.5
+            )
+            current_angle += extent
+
+            pct = (count / total) * 100.0
+            row = tk.Frame(self.pie_legend_frame, bg="#ffffff")
+            row.pack(anchor="w", pady=1)
+            tk.Label(row, text="■", font=("Segoe UI", 9, "bold"), fg=color, bg="#ffffff").pack(side="left")
+            tk.Label(row, text=f"{label}: {count} ({pct:.0f}%)", font=("Segoe UI", 8, "bold" if label=="CRITICAL" else "normal"), fg="#0f172a", bg="#ffffff").pack(side="left", padx=2)
+
+    def _update_top_3_issues(self, findings: List[Dict[str, Any]]):
+        """Renders Top 3 Urgent Issues needing immediate remediation."""
+        for w in self.top3_container.winfo_children():
+            w.destroy()
+
+        non_pass = [f for f in findings if f.get("severity") != "PASS"]
+
+        if not non_pass:
+            empty_box = tk.Frame(self.top3_container, bg="#f0fdf4", highlightthickness=1, highlightbackground="#bbf7d0", padx=10, pady=8)
+            empty_box.pack(fill="x", pady=2)
+            tk.Label(empty_box, text="🎉 Outstanding Work! Zero Active Violations Detected.", font=("Segoe UI", 9, "bold"), fg="#166534", bg="#f0fdf4").pack(anchor="w")
+            tk.Label(empty_box, text="All monitored files pass GRC security and encryption baselines.", font=("Segoe UI", 8), fg="#15803d", bg="#f0fdf4").pack(anchor="w")
+            return
+
+        sev_rank = {"CRITICAL": 3, "HIGH": 2, "MEDIUM": 1}
+        sorted_issues = sorted(non_pass, key=lambda x: (sev_rank.get(x.get("severity", "LOW"), 0), x.get("rule_id", "")), reverse=True)
+        top_3 = sorted_issues[:3]
+
+        remediation_hints = {
+            "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE": "chmod 640 file",
+            "ERR-OCTAL-WORLD-WRITABLE": "chmod 640 file",
+            "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN": "Encrypt payload via GPG / AES-256-CBC",
+            "ERR-ENTROPY-PLAINTEXT-PII": "Encrypt payload via GPG / AES-256-CBC",
+            "INSECURE_SSH_TRANSMISSION_PROTOCOL": "Enforce SSH Protocol 2 & disable weak MACs",
+            "INSECURE_SYSTEM_TLS_POLICY": "Set MinProtocol = TLSv1.2 in OpenSSL/Nginx",
+            "INSECURE_PASSWORD_POLICY_MAX_DAYS": "Set PASS_MAX_DAYS <= 90 in login.defs",
+            "INSECURE_SYSTEM_ACCOUNT_HARDENING": "Set non-human shell to /sbin/nologin",
+            "INSECURE_AUDIT_LOG_PERMISSIONS": "chmod 600 /var/log/audit/audit.log",
+            "UNENCRYPTED_RAW_ZLIB_STREAM": "Encrypt zlib stream via AES-256-CBC",
+            "DECOMPRESSION_SAFETY_BOMB_TEST": "Verify zip decompression ratio < 100:1"
+        }
+
+        sev_colors = {
+            "CRITICAL": ("#fee2e2", "#991b1b", "#ef4444"),
+            "HIGH": ("#ffedd5", "#c2410c", "#f97316"),
+            "MEDIUM": ("#fef9c3", "#a16207", "#eab308")
+        }
+
+        for idx, item in enumerate(top_3, 1):
+            sev = item.get("severity", "MEDIUM")
+            bg_color, fg_color, border_color = sev_colors.get(sev, ("#f1f5f9", "#334155", "#cbd5e1"))
+
+            file_path = item.get("file_path", "N/A")
+            rel_file = Path(file_path).name
+            rule_id = item.get("rule_id", "N/A")
+            
+            advisory = item.get("rag_advisory", {})
+            rem_cmd = advisory.get("remediation_command", remediation_hints.get(rule_id, "Remediate finding"))
+
+            item_card = tk.Frame(self.top3_container, bg=bg_color, highlightthickness=1, highlightbackground=border_color, padx=8, pady=3)
+            item_card.pack(fill="x", pady=2)
+
+            top_row = tk.Frame(item_card, bg=bg_color)
+            top_row.pack(fill="x")
+
+            lbl_badge = tk.Label(top_row, text=f"#{idx} {sev}", font=("Segoe UI", 8, "bold"), fg="#ffffff", bg=border_color, padx=4, pady=1)
+            lbl_badge.pack(side="left", padx=(0, 6))
+
+            tk.Label(top_row, text=f"{rel_file}", font=("Segoe UI", 9, "bold"), fg=fg_color, bg=bg_color).pack(side="left")
+            tk.Label(top_row, text=f"({rule_id})", font=("Segoe UI", 8), fg="#64748b", bg=bg_color).pack(side="left", padx=4)
+
+            # Quick Action Button
+            btn_fix = ttk.Button(
+                top_row, text="📂 Reveal", style="Secondary.TButton",
+                command=lambda f=file_path: reveal_in_file_explorer(Path(self.target_dir_var.get()) / f if not Path(f).is_absolute() else Path(f))
+            )
+            btn_fix.pack(side="right")
+            ToolTip(btn_fix, f"Reveal {rel_file} in system Explorer/Finder.")
+
+            # Remediation hint line
+            bot_row = tk.Frame(item_card, bg=bg_color)
+            bot_row.pack(fill="x", pady=(1, 0))
+            tk.Label(bot_row, text=f"👉 Action: {rem_cmd[:60]}", font=("Consolas", 8), fg="#0f172a", bg=bg_color).pack(anchor="w")
 
     def _on_scan_error(self, err_msg: str):
         """Callback executed on GUI thread if scan errors out."""
