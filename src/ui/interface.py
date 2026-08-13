@@ -12,6 +12,7 @@ import subprocess
 import sys
 import threading
 from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 from src.dep_check import ensure_dependencies
 ensure_dependencies(["PyQt6", "PyQt6.QtCharts"])
 
@@ -91,9 +92,7 @@ SEV_BG = {
 }
 
 DOMAIN_NAMES = {
-    "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE": "🔑 Ref 01.02 / 01.c",
-    "ERR-OCTAL-WORLD-WRITABLE":                 "🔑 Ref 01.02 / 01.c",
-    "INSECURE_SYSTEM_ACCOUNT_HARDENING":         "🔑 Ref 01.02 / 01.c",
+    "INSECURE_SYSTEM_ACCOUNT_HARDENING":         "⚙️ Ref 10.06 / 10.m",
     "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN":        "🛡️ Ref 06.01 / 06.d",
     "ERR-ENTROPY-PLAINTEXT-PII":                 "🛡️ Ref 06.01 / 06.d",
     "ENCRYPTED_COMPLIANT_AES_256_CBC":           "🛡️ Ref 06.01 / 06.d",

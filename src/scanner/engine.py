@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from src.mapping.controls import ControlRegistry
-from src.scanner.access import IAMAuditor
 from src.scanner.audit import ScannerAuditLogger
 
 logger = logging.getLogger("kintsugi_scanner")
@@ -368,6 +367,36 @@ class ConfigAuditor:
             except Exception as e:
                 logger.debug(f"Error auditing {rel_path}: {e}")
 
+        # 8. Audit Subsystem Log Permissions (/var/log/audit/audit.log)
+        elif file_name == "audit.log":
+            try:
+                stat_info = file_path.stat()
+                mode = stat_info.st_mode
+                mode_octal = oct(mode & 0o777)
+                if (mode & 0o002) != 0:
+                    findings.append({
+                        "file_path": rel_path,
+                        "rule_id": "INSECURE_AUDIT_LOG_PERMISSIONS",
+                        "title": "Audit Log World-Writable Permission",
+                        "severity": "HIGH",
+                        "description": f"Audit subsystem log '{file_name}' permissions '{mode_octal}' allow non-privileged users to edit or erase logs.",
+                        "details": {
+                            "mode": mode_octal,
+                            "business_explanation": "Unprotected Audit Trail: Permission 0o666 allows low-privilege users or attackers to alter audit logs to erase evidence of security breaches. Changing to 0o600 restricts log access exclusively to system administrators."
+                        }
+                    })
+                else:
+                    findings.append({
+                        "file_path": rel_path,
+                        "rule_id": "INSECURE_AUDIT_LOG_PERMISSIONS",
+                        "title": "Compliant Audit Log Permissions",
+                        "severity": "PASS",
+                        "description": "Audit log permissions restricted to administrative custodians.",
+                        "details": {"mode": mode_octal}
+                    })
+            except Exception as e:
+                logger.debug(f"Error auditing {rel_path}: {e}")
+
         return findings
 
     def audit_target_configs(self) -> List[Dict[str, Any]]:
@@ -386,17 +415,27 @@ class ConfigAuditor:
 # MAIN SCANNER ENGINE
 # -----------------------------------------------------------------------------
 class ScannerEngine:
-    """Orchestrates file tree scanning, heuristic inspection, IAM auditing, and control mapping."""
+    """Orchestrates file tree scanning, heuristic inspection, and control mapping."""
     
     def __init__(self, target_dir: Path, control_reg: ControlRegistry, audit_logger: ScannerAuditLogger, industry: str = "All Industries"):
         self.target_dir = target_dir.resolve()
         self.control_reg = control_reg
         self.audit_logger = audit_logger
         self.industry = industry
-        self.iam_auditor = IAMAuditor(self.target_dir)
         self.config_auditor = ConfigAuditor(self.target_dir)
         self.findings: List[Dict[str, Any]] = []
         self.scanned_files_count = 0
+
+    def _add_finding(self, finding: Dict[str, Any], file_path: Optional[Path] = None):
+        """Adds a finding ensuring no duplicate (file_path, rule_id) exists."""
+        key = (finding.get("file_path"), finding.get("rule_id"))
+        if any((f.get("file_path"), f.get("rule_id")) == key for f in self.findings):
+            return
+        if "framework_mappings" not in finding or not finding["framework_mappings"]:
+            finding["framework_mappings"] = self.control_reg.map_rule_to_frameworks(finding["rule_id"], industry=self.industry)
+        self.findings.append(finding)
+        if file_path and self.audit_logger:
+            self.audit_logger.log_evaluation(file_path, finding["rule_id"], finding["severity"], finding.get("details", {}))
 
     def run_scan(self, industry: Optional[str] = None) -> Dict[str, Any]:
         """Executes full scan over target directory."""
@@ -404,17 +443,10 @@ class ScannerEngine:
             self.industry = industry
 
         logger.info(f"Starting Kintsugi-GRC scan over target: {self.target_dir.as_posix()} (Industry: {self.industry})")
-        self.iam_auditor.load_active_directory_maps()
+        self.findings = []
+        self.scanned_files_count = 0
 
-        # 1. Audit system configurations
-        config_findings = self.config_auditor.audit_target_configs()
-        for f in config_findings:
-            citations = self.control_reg.map_rule_to_frameworks(f["rule_id"], industry=self.industry)
-            f["framework_mappings"] = citations
-            self.findings.append(f)
-            self.audit_logger.log_evaluation(Path(f["file_path"]), f["rule_id"], f["severity"], f["details"])
-
-        # 2. Walk directory tree and scan files
+        # Walk directory tree and scan files (each file audited once)
         for root, _, files in os.walk(self.target_dir):
             root_path = Path(root)
             self.audit_logger.log_traverse(root_path, len(files))
@@ -497,7 +529,7 @@ class ScannerEngine:
         return self.get_summary()
 
     def scan_file(self, file_path: Path, rel_path: str):
-        """Scans an individual file against cryptographic, entropy, sensitive data, and IAM rules."""
+        """Scans an individual file against cryptographic, entropy, sensitive data, and system config rules."""
         try:
             stat = file_path.stat()
             file_bytes_size = stat.st_size
@@ -508,18 +540,8 @@ class ScannerEngine:
             config_findings = self.config_auditor.audit_single_file_config(file_path, rel_path)
             if config_findings:
                 for f in config_findings:
-                    f["framework_mappings"] = self.control_reg.map_rule_to_frameworks(f["rule_id"], industry=self.industry)
-                    self.findings.append(f)
-                    self.audit_logger.log_evaluation(file_path, f["rule_id"], f["severity"], f["details"])
+                    self._add_finding(f, file_path)
                 return
-
-            # IAM Permission Audit
-            iam_findings = self.iam_auditor.audit_file_permissions(file_path)
-            for f in iam_findings:
-                f["file_path"] = rel_path
-                f["framework_mappings"] = self.control_reg.map_rule_to_frameworks(f["rule_id"], industry=self.industry)
-                self.findings.append(f)
-                self.audit_logger.log_evaluation(file_path, f["rule_id"], f["severity"], f["details"])
 
             # Safety check: Zip Bomb
             zip_bomb_info = FileAnalyzer.check_zip_bomb(file_path)
@@ -531,10 +553,8 @@ class ScannerEngine:
                     "severity": "MEDIUM",
                     "description": f"ZIP archive exhibits high compression ratio ({zip_bomb_info['ratio']}:1). Decompression paused for safety.",
                     "details": zip_bomb_info,
-                    "framework_mappings": self.control_reg.map_rule_to_frameworks("DECOMPRESSION_SAFETY_BOMB_TEST", industry=self.industry)
                 }
-                self.findings.append(f)
-                self.audit_logger.log_evaluation(file_path, f["rule_id"], "MEDIUM", zip_bomb_info)
+                self._add_finding(f, file_path)
                 return
 
             # Read sample or full payload
@@ -555,10 +575,8 @@ class ScannerEngine:
                         "severity": "PASS",
                         "description": f"File uses compliant AES-256-CBC encryption with valid magic header (H={entropy:.3f}).",
                         "details": {"entropy": round(entropy, 3), "magic_bytes": "8501"},
-                        "framework_mappings": self.control_reg.map_rule_to_frameworks("ENCRYPTED_COMPLIANT_AES_256_CBC", industry=self.industry)
                     }
-                    self.findings.append(f)
-                    self.audit_logger.log_evaluation(file_path, f["rule_id"], "PASS", {"entropy": round(entropy, 3)})
+                    self._add_finding(f, file_path)
                     return
 
             # Rule 2: Unencrypted ZIP Archive containing cleartext sensitive CSVs
@@ -571,10 +589,8 @@ class ScannerEngine:
                     "severity": "CRITICAL",
                     "description": f"ZIP archive contains unencrypted sensitive files: {', '.join(cleartext_files)}.",
                     "details": {"contained_cleartext_files": cleartext_files},
-                    "framework_mappings": self.control_reg.map_rule_to_frameworks("UNENCRYPTED_SENSITIVE_DATA_PHI_PAN", industry=self.industry)
                 }
-                self.findings.append(f)
-                self.audit_logger.log_evaluation(file_path, f["rule_id"], "CRITICAL", {"files": cleartext_files})
+                self._add_finding(f, file_path)
                 return
 
             # Rule 3: Raw ZLib Compressed Stream (False Positive Check)
@@ -587,10 +603,8 @@ class ScannerEngine:
                     "severity": "HIGH",
                     "description": f"High entropy file (H={entropy:.3f}) is an unencrypted raw zlib compressed stream, not AES encryption.",
                     "details": {"entropy": round(entropy, 3)},
-                    "framework_mappings": self.control_reg.map_rule_to_frameworks("UNENCRYPTED_SENSITIVE_DATA_PHI_PAN", industry=self.industry)
                 }
-                self.findings.append(f)
-                self.audit_logger.log_evaluation(file_path, f["rule_id"], "HIGH", {"entropy": round(entropy, 3)})
+                self._add_finding(f, file_path)
                 return
 
             # Text content inspection (ASCII Armor, SSNs, PANs)
@@ -608,10 +622,8 @@ class ScannerEngine:
                         "severity": "PASS",
                         "description": f"Successfully decoded ASCII Armored ciphertext block (decoded H={entropy:.3f}).",
                         "details": {"decoded_entropy": round(entropy, 3)},
-                        "framework_mappings": self.control_reg.map_rule_to_frameworks("ENCRYPTED_COMPLIANT_AES_256_CBC", industry=self.industry)
                     }
-                    self.findings.append(f)
-                    self.audit_logger.log_evaluation(file_path, f["rule_id"], "PASS", {"decoded_entropy": round(entropy, 3)})
+                    self._add_finding(f, file_path)
                     return
 
                 # Rule 5: Hybrid File (512B Header + AES Body)
@@ -624,10 +636,8 @@ class ScannerEngine:
                         "severity": "PASS",
                         "description": f"File contains 512B metadata header with compliant AES encrypted body (body H={body_entropy:.3f}).",
                         "details": {"header_bytes": 512, "body_entropy": round(body_entropy, 3)},
-                        "framework_mappings": self.control_reg.map_rule_to_frameworks("ENCRYPTED_COMPLIANT_AES_256_CBC", industry=self.industry)
                     }
-                    self.findings.append(f)
-                    self.audit_logger.log_evaluation(file_path, f["rule_id"], "PASS", {"body_entropy": round(body_entropy, 3)})
+                    self._add_finding(f, file_path)
                     return
 
                 # Rule 6: Cleartext Sensitive Data Inspection (Luhn PANs & SSNs)
@@ -641,10 +651,8 @@ class ScannerEngine:
                         "severity": "CRITICAL",
                         "description": f"File contains unencrypted sensitive records ({len(pans)} Luhn PANs, {len(ssns)} SSNs).",
                         "details": {"luhn_pan_count": len(pans), "ssn_count": len(ssns)},
-                        "framework_mappings": self.control_reg.map_rule_to_frameworks("UNENCRYPTED_SENSITIVE_DATA_PHI_PAN", industry=self.industry)
                     }
-                    self.findings.append(f)
-                    self.audit_logger.log_evaluation(file_path, f["rule_id"], "CRITICAL", {"pans": len(pans), "ssns": len(ssns)})
+                    self._add_finding(f, file_path)
                     return
 
             except Exception as e:
@@ -660,10 +668,8 @@ class ScannerEngine:
                     "severity": "PASS",
                     "description": f"Micro 32-byte encrypted token payload (H={entropy:.3f}).",
                     "details": {"size": 32, "entropy": round(entropy, 3)},
-                    "framework_mappings": self.control_reg.map_rule_to_frameworks("ENCRYPTED_COMPLIANT_AES_256_CBC", industry=self.industry)
                 }
-                self.findings.append(f)
-                self.audit_logger.log_evaluation(file_path, f["rule_id"], "PASS", {"size": 32})
+                self._add_finding(f, file_path)
                 return
 
             # Rule 8: Insecure AES-ECB Block Pattern Leakage
@@ -680,10 +686,8 @@ class ScannerEngine:
                         "severity": "HIGH",
                         "description": f"File shows repeating 16-byte ciphertext block patterns characteristic of weak AES-ECB mode (unique blocks: {unique_blocks}/{len(blocks)}).",
                         "details": {"entropy": round(entropy, 3), "unique_blocks": unique_blocks, "total_blocks": len(blocks)},
-                        "framework_mappings": self.control_reg.map_rule_to_frameworks("INSECURE_AES_ECB_BLOCK_PATTERN_LEAK", industry=self.industry)
                     }
-                    self.findings.append(f)
-                    self.audit_logger.log_evaluation(file_path, f["rule_id"], "HIGH", {"unique_blocks": unique_blocks})
+                    self._add_finding(f, file_path)
                     return
 
             # Baseline Pass if no active violations found for file
@@ -696,10 +700,8 @@ class ScannerEngine:
                     "severity": "PASS",
                     "description": f"File permissions '{mode_octal}' and payload conform to security baseline.",
                     "details": {"mode": mode_octal},
-                    "framework_mappings": self.control_reg.map_rule_to_frameworks("COMPLIANT_SECURITY_BASELINE", industry=self.industry)
                 }
-                self.findings.append(f)
-                self.audit_logger.log_evaluation(file_path, f["rule_id"], "PASS", {"mode": mode_octal})
+                self._add_finding(f, file_path)
 
         except Exception as e:
             logger.debug(f"Error scanning file {rel_path}: {e}")

@@ -66,7 +66,7 @@ class ControlRegistry:
             "COMPLIANT_SECURITY_BASELINE": [
                 {"framework": "HIPAA", "control_id": "164.312(a)(1)", "title": "Technical Safeguards - Compliant Security Baseline", "status": "COMPLIANT"},
                 {"framework": "PCI DSS", "control_id": "Requirement 2.2", "title": "System components configured to baseline standards", "status": "COMPLIANT"},
-                {"framework": "HITRUST CSF", "control_id": "Ref 01.c (01.02)", "title": "Privilege Management & Baseline Security", "status": "COMPLIANT"},
+                {"framework": "HITRUST CSF", "control_id": "Ref 09.m (09.04)", "title": "Configuration Management & Baseline Security", "status": "COMPLIANT"},
                 {"framework": "NIST 800-53", "control_id": "CM-6", "title": "Configuration Settings Baseline", "status": "COMPLIANT"},
                 {"framework": "NIST CSF", "control_id": "PR.PS-01", "title": "Configuration management baseline applied", "status": "COMPLIANT"}
             ],
@@ -94,7 +94,7 @@ class ControlRegistry:
             "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE": [
                 {"framework": "HIPAA", "control_id": "164.312(a)(1)", "title": "Access control - Minimum Necessary & Least Privilege", "status": "VIOLATION"},
                 {"framework": "PCI DSS", "control_id": "Requirement 7.1", "title": "Restrict access to system components to least privilege", "status": "VIOLATION"},
-                {"framework": "HITRUST CSF", "control_id": "Ref 01.c (01.02)", "title": "Privilege Management (World-Writable 0o777 Access)", "status": "VIOLATION"},
+                {"framework": "HITRUST CSF", "control_id": "Ref 09.m (09.04)", "title": "System Configuration & Baseline Permissions", "status": "VIOLATION"},
                 {"framework": "NIST 800-53", "control_id": "AC-6", "title": "Least Privilege", "status": "VIOLATION"},
                 {"framework": "NIST CSF", "control_id": "PR.AA-05", "title": "Access permissions managed according to least privilege", "status": "VIOLATION"}
             ],
@@ -122,7 +122,7 @@ class ControlRegistry:
             "INSECURE_SYSTEM_ACCOUNT_HARDENING": [
                 {"framework": "HIPAA", "control_id": "164.312(a)(1)", "title": "Unique user identification & default account hardening", "status": "VIOLATION"},
                 {"framework": "PCI DSS", "control_id": "Requirement 8.2.1", "title": "Remove or disable unnecessary default accounts", "status": "VIOLATION"},
-                {"framework": "HITRUST CSF", "control_id": "Ref 01.c (01.02)", "title": "Privilege Management (Active Shells on Daemon Accounts)", "status": "VIOLATION"},
+                {"framework": "HITRUST CSF", "control_id": "Ref 10.m (10.06)", "title": "Control of Technical Vulnerabilities (Active Shells on Daemon Accounts)", "status": "VIOLATION"},
                 {"framework": "NIST 800-53", "control_id": "AC-2", "title": "Account Management", "status": "VIOLATION"},
                 {"framework": "NIST CSF", "control_id": "PR.AA-02", "title": "Identities authenticated", "status": "VIOLATION"}
             ],
