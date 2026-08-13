@@ -977,14 +977,14 @@ class KintsugiGRCApp(QMainWindow):
         self._target_edit.setPlaceholderText("/path/to/scan...")
         hl.addWidget(self._target_edit, 2)
 
-        btn_browse = QPushButton("📁")
-        btn_browse.setFixedWidth(36)
+        btn_browse = QPushButton("Browse...")
+        btn_browse.setMinimumWidth(100)
         btn_browse.setToolTip("Browse for target directory")
         btn_browse.clicked.connect(self._browse_target)
         hl.addWidget(btn_browse)
 
-        btn_open = QPushButton("📂")
-        btn_open.setFixedWidth(36)
+        btn_open = QPushButton("Open Folder")
+        btn_open.setMinimumWidth(110)
         btn_open.setToolTip("Open target folder in Finder/Explorer")
         btn_open.clicked.connect(self._open_target_in_explorer)
         hl.addWidget(btn_open)
@@ -1001,9 +1001,9 @@ class KintsugiGRCApp(QMainWindow):
         self._policy_edit.setMaximumWidth(220)
         hl.addWidget(self._policy_edit)
 
-        btn_policy = QPushButton("📄")
-        btn_policy.setFixedWidth(36)
-        btn_policy.setToolTip("Upload custom JSON policy")
+        btn_policy = QPushButton("Upload Policy")
+        btn_policy.setMinimumWidth(130)
+        btn_policy.setToolTip("Upload custom JSON/text policy file")
         btn_policy.clicked.connect(self._upload_policy)
         hl.addWidget(btn_policy)
 
@@ -1146,105 +1146,150 @@ class KintsugiGRCApp(QMainWindow):
 
         return panel
 
-    # ── Dashboard tab ──────────────────────────────────────────────────────────
+    # -- Dashboard tab -------------------------------------------------------
     def _build_dashboard_tab(self) -> QWidget:
         w = QWidget()
-        vl = QVBoxLayout(w)
-        vl.setContentsMargins(12, 12, 12, 12)
-        vl.setSpacing(10)
+        self._dash_vl = QVBoxLayout(w)
+        self._dash_vl.setContentsMargins(12, 12, 12, 12)
+        self._dash_vl.setSpacing(8)
 
-        # ── Executive summary row ────────────────────────────────────────────
-        exec_row = QHBoxLayout()
-
-        # Donut chart
-        chart_card = QFrame()
-        chart_card.setStyleSheet(
+        # --- Executive summary card -----------------------------------------
+        self._exec_card = QFrame()
+        self._exec_card.setStyleSheet(
             f"QFrame{{ background:{PALETTE['bg_card']};border:1px solid {PALETTE['border']};"
             f"border-radius:8px; }}"
         )
-        ccl = QHBoxLayout(chart_card)
-        ccl.setContentsMargins(12, 10, 12, 10)
+        # no height cap -- let the layout split determine size
+        exec_outer = QVBoxLayout(self._exec_card)
+        exec_outer.setContentsMargins(0, 0, 0, 0)
+        exec_outer.setSpacing(0)
 
+        exec_hdr = QFrame()
+        exec_hdr.setFixedHeight(30)
+        exec_hdr.setStyleSheet(
+            f"background:{PALETTE['bg_elevated']};border-bottom:1px solid {PALETTE['border']};"
+            f"border-radius:8px 8px 0 0;"
+        )
+        exec_hdr_l = QHBoxLayout(exec_hdr)
+        exec_hdr_l.setContentsMargins(12, 0, 8, 0)
+        exec_ttl = QLabel("Executive Summary")
+        exec_ttl.setStyleSheet(
+            f"font-size:11px;font-weight:bold;color:{PALETTE['text_secondary']};"
+        )
+        exec_hdr_l.addWidget(exec_ttl, 1)
+        self._btn_expand_exec = QPushButton("[+]")
+        self._btn_expand_exec.setFixedSize(QSize(32, 20))
+        self._btn_expand_exec.setToolTip("Expand / restore this section")
+        self._btn_expand_exec.setStyleSheet(
+            f"QPushButton{{background:transparent;color:{PALETTE['text_muted']};"
+            f"border:none;font-size:11px;font-weight:bold;}}"
+            f"QPushButton:hover{{color:{PALETTE['accent_blue']};}}"
+        )
+        self._btn_expand_exec.clicked.connect(self._toggle_exec_expand)
+        exec_hdr_l.addWidget(self._btn_expand_exec)
+        exec_outer.addWidget(exec_hdr)
+
+        exec_content = QHBoxLayout()
+        exec_content.setContentsMargins(10, 4, 10, 6)
+        exec_content.setSpacing(10)
+
+        chart_inner = QFrame()
+        chart_inner.setStyleSheet("QFrame{background:transparent;}")
+        ccl = QHBoxLayout(chart_inner)
+        ccl.setContentsMargins(0, 0, 0, 0)
+        ccl.setSpacing(8)
         self._donut = SeverityDonutChart()
+        self._donut.setMinimumSize(QSize(150, 140))
+        self._donut.setMaximumSize(QSize(190, 175))
         self._donut.slice_clicked.connect(self._on_severity_filter)
         ccl.addWidget(self._donut)
-
         self._legend = SeverityLegend()
         self._legend.filter_clicked.connect(self._on_severity_filter)
         ccl.addWidget(self._legend)
-        exec_row.addWidget(chart_card, 1)
+        exec_content.addWidget(chart_inner, 1)
 
-        # Top 3 issues
-        top3_card = QFrame()
-        top3_card.setStyleSheet(
-            f"QFrame{{ background:{PALETTE['bg_card']};border:1px solid {PALETTE['border']};"
-            f"border-radius:8px; }}"
-        )
-        t3cl = QVBoxLayout(top3_card)
-        t3cl.setContentsMargins(12, 10, 12, 10)
-        t3cl.setSpacing(6)
+        div = QFrame()
+        div.setFrameShape(QFrame.Shape.VLine)
+        div.setStyleSheet(f"color:{PALETTE['border']};")
+        exec_content.addWidget(div)
 
+        top3_inner = QFrame()
+        top3_inner.setStyleSheet("QFrame{background:transparent;}")
+        t3cl = QVBoxLayout(top3_inner)
+        t3cl.setContentsMargins(4, 0, 0, 0)
+        t3cl.setSpacing(4)
         t3_hdr = QHBoxLayout()
-        t3_title = QLabel("🔥  Top 3 Priority Issues")
-        t3_title.setStyleSheet(
-            f"font-size:13px;font-weight:bold;color:{PALETTE['red']};"
-        )
+        t3_title = QLabel("Top 3 Priority Issues")
+        t3_title.setStyleSheet(f"font-size:12px;font-weight:bold;color:{PALETTE['red']};")
         t3_hdr.addWidget(t3_title, 1)
-        self._btn_reset_filter = QPushButton("↺ All")
-        self._btn_reset_filter.setFixedHeight(22)
+        self._btn_reset_filter = QPushButton("Reset")
+        self._btn_reset_filter.setFixedHeight(20)
         self._btn_reset_filter.setStyleSheet(
             f"QPushButton{{background:{PALETTE['bg_elevated']};color:{PALETTE['accent_blue']};"
-            f"border:1px solid {PALETTE['border']};border-radius:4px;padding:0 8px;font-size:10px;}}"
+            f"border:1px solid {PALETTE['border']};border-radius:4px;padding:0 6px;font-size:10px;}}"
             f"QPushButton:hover{{border-color:{PALETTE['accent_blue']};}}"
         )
         self._btn_reset_filter.setVisible(False)
         self._btn_reset_filter.clicked.connect(lambda: self._on_severity_filter("ALL"))
         t3_hdr.addWidget(self._btn_reset_filter)
         t3cl.addLayout(t3_hdr)
-
         self._top3 = Top3Widget()
         self._top3.reveal_requested.connect(self._reveal_by_relpath)
         t3cl.addWidget(self._top3, 1)
-        exec_row.addWidget(top3_card, 2)
+        exec_content.addWidget(top3_inner, 2)
 
-        vl.addLayout(exec_row, 2)
+        exec_outer.addLayout(exec_content, 1)
+        self._dash_vl.addWidget(self._exec_card, 1)
 
-        # ── Findings table ───────────────────────────────────────────────────
-        table_card = QFrame()
-        table_card.setStyleSheet(
+        # --- Findings ledger card --------------------------------------------
+        self._table_card = QFrame()
+        self._table_card.setStyleSheet(
             f"QFrame{{ background:{PALETTE['bg_card']};border:1px solid {PALETTE['border']};"
             f"border-radius:8px; }}"
         )
-        tcl = QVBoxLayout(table_card)
-        tcl.setContentsMargins(12, 10, 12, 10)
-        tcl.setSpacing(8)
+        tcl = QVBoxLayout(self._table_card)
+        tcl.setContentsMargins(12, 0, 12, 10)
+        tcl.setSpacing(6)
 
-        # Toolbar row
-        tb_row = QHBoxLayout()
-        tbl_lbl = QLabel("📋  Live Findings Ledger")
-        tbl_lbl.setStyleSheet(f"font-size:13px;font-weight:bold;color:{PALETTE['accent_blue']};")
-        tb_row.addWidget(tbl_lbl)
+        tbl_hdr = QFrame()
+        tbl_hdr.setFixedHeight(34)
+        tbl_hdr.setStyleSheet(
+            f"background:{PALETTE['bg_elevated']};border-bottom:1px solid {PALETTE['border']};"
+            f"border-radius:8px 8px 0 0;"
+        )
+        tbl_hdr_l = QHBoxLayout(tbl_hdr)
+        tbl_hdr_l.setContentsMargins(12, 0, 8, 0)
+        tbl_hdr_l.setSpacing(8)
+        tbl_lbl = QLabel("Live Findings Ledger")
+        tbl_lbl.setStyleSheet(f"font-size:11px;font-weight:bold;color:{PALETTE['accent_blue']};")
+        tbl_hdr_l.addWidget(tbl_lbl)
+        tbl_hdr_l.addStretch()
 
-        tb_row.addStretch()
-
-        # Filter radio buttons
         self._rb_violations = QRadioButton("Violations Only")
         self._rb_violations.setChecked(True)
         self._rb_all = QRadioButton("All Findings")
         for rb in [self._rb_violations, self._rb_all]:
             rb.toggled.connect(self._update_findings_table)
-            tb_row.addWidget(rb)
+            tbl_hdr_l.addWidget(rb)
 
-        # Search bar
         self._table_search = QLineEdit()
-        self._table_search.setPlaceholderText("🔍 Search findings...")
-        self._table_search.setFixedWidth(200)
+        self._table_search.setPlaceholderText("Search findings...")
+        self._table_search.setFixedWidth(180)
         self._table_search.textChanged.connect(self._on_table_search)
-        tb_row.addWidget(self._table_search)
+        tbl_hdr_l.addWidget(self._table_search)
 
-        tcl.addLayout(tb_row)
+        self._btn_expand_table = QPushButton("[+]")
+        self._btn_expand_table.setFixedSize(QSize(32, 20))
+        self._btn_expand_table.setToolTip("Expand / restore this section")
+        self._btn_expand_table.setStyleSheet(
+            f"QPushButton{{background:transparent;color:{PALETTE['text_muted']};"
+            f"border:none;font-size:11px;font-weight:bold;}}"
+            f"QPushButton:hover{{color:{PALETTE['accent_blue']};}}"
+        )
+        self._btn_expand_table.clicked.connect(self._toggle_table_expand)
+        tbl_hdr_l.addWidget(self._btn_expand_table)
+        tcl.addWidget(tbl_hdr)
 
-        # Table
         cols = ["Severity", "Domain", "File Path", "Rule / Control Title", "Quick Remediation"]
         self._table = QTableWidget(0, len(cols))
         self._table.setHorizontalHeaderLabels(cols)
@@ -1264,7 +1309,9 @@ class KintsugiGRCApp(QMainWindow):
         self._table.itemDoubleClicked.connect(self._on_table_double_click)
         tcl.addWidget(self._table, 1)
 
-        vl.addWidget(table_card, 3)
+        self._dash_vl.addWidget(self._table_card, 1)
+        self._exec_expanded = False
+        self._table_expanded = False
         return w
 
     # ── File Detail tab ────────────────────────────────────────────────────────
@@ -1695,6 +1742,57 @@ class KintsugiGRCApp(QMainWindow):
             target  = Path(self._target_edit.text().strip()).resolve()
             dlg     = FindingDetailDialog(finding, target, self)
             dlg.exec()
+
+    # -------------------------------------------------------------------------
+    # EXPAND / COLLAPSE DASHBOARD SECTIONS
+    # -------------------------------------------------------------------------
+
+    def _toggle_exec_expand(self):
+        """Expand executive summary to fill the dashboard, or restore both sections."""
+        if self._exec_expanded:
+            # Restore both
+            self._exec_card.setVisible(True)
+            self._exec_card.setMaximumHeight(16777215)
+            self._table_card.setVisible(True)
+            self._dash_vl.setStretch(0, 1)
+            self._dash_vl.setStretch(1, 1)
+            self._btn_expand_exec.setText("[+]")
+            self._btn_expand_table.setText("[+]")
+            self._exec_expanded = False
+            self._table_expanded = False
+        else:
+            # Expand exec, collapse table
+            self._exec_card.setMaximumHeight(16777215)
+            self._table_card.setVisible(False)
+            self._dash_vl.setStretch(0, 1)
+            self._dash_vl.setStretch(1, 0)
+            self._btn_expand_exec.setText("[-]")
+            self._exec_expanded = True
+            self._table_expanded = False
+
+    def _toggle_table_expand(self):
+        """Expand findings ledger to fill the dashboard, or restore both sections."""
+        if self._table_expanded:
+            # Restore both
+            self._exec_card.setVisible(True)
+            self._exec_card.setMaximumHeight(16777215)
+            self._table_card.setVisible(True)
+            self._dash_vl.setStretch(0, 1)
+            self._dash_vl.setStretch(1, 1)
+            self._btn_expand_exec.setText("[+]")
+            self._btn_expand_table.setText("[+]")
+            self._exec_expanded = False
+            self._table_expanded = False
+        else:
+            # Expand table, collapse exec
+            self._exec_card.setVisible(False)
+            self._table_card.setVisible(True)
+            self._dash_vl.setStretch(0, 0)
+            self._dash_vl.setStretch(1, 1)
+            self._btn_expand_table.setText("[-]")
+            self._table_expanded = True
+            self._exec_expanded = False
+
 
     # ──────────────────────────────────────────────────────────────────────────
     # SEVERITY FILTER
