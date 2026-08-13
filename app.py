@@ -10,6 +10,9 @@ import sys
 import time
 from pathlib import Path
 
+from src.dep_check import ensure_dependencies
+ensure_dependencies()
+
 from src.mapping.controls import ControlRegistry
 from src.output.pdf_exporter import PDFComplianceExporter
 from src.output.reporter import ScanReporter

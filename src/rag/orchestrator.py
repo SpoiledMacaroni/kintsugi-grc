@@ -13,11 +13,14 @@ from src.database import DB_PATH, init_db
 logger = logging.getLogger("kintsugi_rag_orchestrator")
 
 try:
+    from src.dep_check import ensure_dependencies
+    ensure_dependencies(["numpy", "faiss", "sentence_transformers"])
     import faiss
     import numpy as np
     from sentence_transformers import SentenceTransformer
     HAS_ML_RAG = True
-except ImportError:
+except Exception as e:
+    logger.warning(f"ML RAG dependencies unavailable or failed to initialize: {e}")
     faiss = None
     np = None
     SentenceTransformer = None

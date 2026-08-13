@@ -12,7 +12,8 @@ import subprocess
 import sys
 import threading
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from src.dep_check import ensure_dependencies
+ensure_dependencies(["PyQt6", "PyQt6.QtCharts"])
 
 from PyQt6.QtCore import (
     Qt, QThread, pyqtSignal, QPropertyAnimation, QEasingCurve,

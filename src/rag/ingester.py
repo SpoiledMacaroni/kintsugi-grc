@@ -16,13 +16,18 @@ from src.database import DB_PATH, init_db
 logger = logging.getLogger("kintsugi_policy_ingester")
 
 try:
+    from src.dep_check import ensure_dependencies
+    ensure_dependencies(["numpy", "faiss", "sentence_transformers"])
     import faiss
     import numpy as np
     from sentence_transformers import SentenceTransformer
     HAS_ML_INGEST = True
-except ImportError:
+except Exception as e:
+    logger.warning(f"ML Ingest dependencies unavailable or failed to initialize: {e}")
     faiss = None
     np = None
+    SentenceTransformer = None
+    HAS_ML_INGEST = False
     SentenceTransformer = None
     HAS_ML_INGEST = False
 

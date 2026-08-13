@@ -37,12 +37,17 @@ from pathlib import Path
 import zipfile
 
 try:
+    try:
+        from src.dep_check import ensure_dependencies
+        ensure_dependencies(["cryptography"])
+    except ImportError:
+        pass
     from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
     from cryptography.hazmat.primitives import padding
     from cryptography.hazmat.backends import default_backend
 except ModuleNotFoundError:
     print("[Kintsugi-GRC] Missing required dependency 'cryptography'. Automatically installing via pip...")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "cryptography"])
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "cryptography>=42.0.0"])
     import site
     import importlib
     user_site = site.getusersitepackages()
