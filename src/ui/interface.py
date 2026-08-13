@@ -1,10 +1,8 @@
 """
-Kintsugi-GRC Native Desktop UI
-Provides a bright, modern, responsive security and compliance protection center interface.
-Prompts user for target directory monitoring with rich hover tooltips, highlights non-intrusive 
-GRC domain controls, compiles a running ledger of findings with interactive clickable file paths 
-that reveal files in native system Explorer/Finder, and runs a dynamic background watcher that 
-re-evaluates file edits and automatically revises risk scores and clears findings upon remediation.
+Kintsugi-GRC Native Desktop GUI — PyQt6 Edition
+Premium dark-mode compliance monitoring center with interactive file tree,
+donut severity chart, sortable findings ledger, file detail viewer, and
+real-time dynamic directory watcher integration.
 """
 
 import json
@@ -13,11 +11,30 @@ import os
 import subprocess
 import sys
 import threading
-import time
-import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+from PyQt6.QtCore import (
+    Qt, QThread, pyqtSignal, QPropertyAnimation, QEasingCurve,
+    QAbstractAnimation, QTimer, QSize, QPoint, QRect, QMargins,
+)
+from PyQt6.QtGui import (
+    QColor, QFont, QFontDatabase, QPalette, QBrush, QPainter,
+    QPen, QRadialGradient, QLinearGradient, QIcon, QPixmap,
+    QTextCharFormat, QTextCursor, QAction,
+)
+from PyQt6.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+    QSplitter, QTreeWidget, QTreeWidgetItem, QTableWidget, QTableWidgetItem,
+    QTabWidget, QLabel, QPushButton, QLineEdit, QComboBox, QProgressBar,
+    QTextEdit, QFileDialog, QMessageBox, QDialog, QDialogButtonBox,
+    QScrollArea, QFrame, QHeaderView, QAbstractItemView, QSizePolicy,
+    QStatusBar, QToolBar, QRadioButton, QButtonGroup, QGroupBox,
+    QStyleOptionViewItem, QGridLayout, QSpacerItem,
+)
+from PyQt6.QtCharts import (
+    QChart, QChartView, QPieSeries, QPieSlice,
+)
 
 from src.mapping.controls import ControlRegistry
 from src.output.pdf_exporter import PDFComplianceExporter
@@ -29,12 +46,91 @@ from src.scanner.watcher import DynamicDirectoryWatcher
 
 logger = logging.getLogger("kintsugi_ui")
 
+# ──────────────────────────────────────────────────────────────────────────────
+# COLOUR PALETTE
+# ──────────────────────────────────────────────────────────────────────────────
+PALETTE = {
+    "bg_base":        "#0d1117",
+    "bg_surface":     "#161b22",
+    "bg_elevated":    "#1c2128",
+    "bg_card":        "#21262d",
+    "border":         "#30363d",
+    "border_active":  "#58a6ff",
+    "text_primary":   "#e6edf3",
+    "text_secondary": "#8b949e",
+    "text_muted":     "#6e7681",
+    "accent_blue":    "#58a6ff",
+    "accent_cyan":    "#79c0ff",
+    "green":          "#3fb950",
+    "green_bg":       "#0f3a1f",
+    "yellow":         "#d29922",
+    "yellow_bg":      "#3a2a00",
+    "orange":         "#db6d28",
+    "orange_bg":      "#3a1a00",
+    "red":            "#f85149",
+    "red_bg":         "#3a0f0f",
+    "sev_critical":   "#f85149",
+    "sev_high":       "#db6d28",
+    "sev_medium":     "#d29922",
+    "sev_pass":       "#3fb950",
+}
+
+SEV_COLOR = {
+    "CRITICAL": PALETTE["sev_critical"],
+    "HIGH":     PALETTE["sev_high"],
+    "MEDIUM":   PALETTE["sev_medium"],
+    "PASS":     PALETTE["sev_pass"],
+}
+
+SEV_BG = {
+    "CRITICAL": PALETTE["red_bg"],
+    "HIGH":     PALETTE["orange_bg"],
+    "MEDIUM":   PALETTE["yellow_bg"],
+    "PASS":     PALETTE["green_bg"],
+}
+
+DOMAIN_NAMES = {
+    "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE": "🔑 Ref 01.02 / 01.c",
+    "ERR-OCTAL-WORLD-WRITABLE":                 "🔑 Ref 01.02 / 01.c",
+    "INSECURE_SYSTEM_ACCOUNT_HARDENING":         "🔑 Ref 01.02 / 01.c",
+    "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN":        "🛡️ Ref 06.01 / 06.d",
+    "ERR-ENTROPY-PLAINTEXT-PII":                 "🛡️ Ref 06.01 / 06.d",
+    "ENCRYPTED_COMPLIANT_AES_256_CBC":           "🛡️ Ref 06.01 / 06.d",
+    "INSECURE_SSH_TRANSMISSION_PROTOCOL":        "⚙️ Ref 10.06 / 10.m",
+    "INSECURE_SYSTEM_TLS_POLICY":                "⚙️ Ref 10.06 / 10.m",
+    "INSECURE_PASSWORD_POLICY_MAX_DAYS":         "⚙️ Ref 10.06 / 10.m",
+    "DECOMPRESSION_SAFETY_BOMB_TEST":            "⚙️ Ref 10.06 / 10.m",
+    "UNENCRYPTED_RAW_ZLIB_STREAM":               "📦 Ref 09.07 / 09.q",
+    "INSECURE_AES_ECB_BLOCK_PATTERN_LEAK":       "📦 Ref 09.07 / 09.q",
+    "INSECURE_AUDIT_LOG_PERMISSIONS":            "📋 Ref 09.10 / 10.aa",
+    "COMPLIANT_SECURITY_BASELINE":               "✅ Baseline",
+}
+
+REMEDIATION_HINTS = {
+    "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE": "chmod 0640 <file>",
+    "ERR-OCTAL-WORLD-WRITABLE":                 "chmod 0640 <file>",
+    "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN":        "gpg --symmetric --cipher-algo AES256 <file>",
+    "ERR-ENTROPY-PLAINTEXT-PII":                 "gpg --symmetric --cipher-algo AES256 <file>",
+    "INSECURE_SSH_TRANSMISSION_PROTOCOL":        "Set Protocol 2 in /etc/ssh/sshd_config",
+    "INSECURE_SYSTEM_TLS_POLICY":                "Set MinProtocol=TLSv1.2 in openssl.cnf",
+    "INSECURE_PASSWORD_POLICY_MAX_DAYS":         "Set PASS_MAX_DAYS 90 in /etc/login.defs",
+    "INSECURE_SYSTEM_ACCOUNT_HARDENING":         "usermod -s /sbin/nologin <daemon>",
+    "INSECURE_AUDIT_LOG_PERMISSIONS":            "chmod 0600 /var/log/audit/audit.log",
+    "UNENCRYPTED_RAW_ZLIB_STREAM":               "openssl enc -aes-256-cbc -in <file> -out <file>.enc",
+    "DECOMPRESSION_SAFETY_BOMB_TEST":            "Inspect archive decompression ratio (>100:1)",
+    "INSECURE_AES_ECB_BLOCK_PATTERN_LEAK":       "Re-encrypt with AES-CBC or AES-GCM mode",
+    "ENCRYPTED_COMPLIANT_AES_256_CBC":           "✅ Already encrypted — no action required.",
+    "COMPLIANT_SECURITY_BASELINE":               "✅ Compliant — no action required.",
+}
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# UTILITY
+# ──────────────────────────────────────────────────────────────────────────────
 
 def reveal_in_file_explorer(file_path: Path):
-    """Reveals the target file in native system file explorer (macOS Finder / Windows Explorer)."""
+    """Reveals file in native system explorer (Finder / Explorer)."""
     abs_path = file_path.resolve()
-    if not abs_path.exists():
-        return
     try:
         if sys.platform == "darwin":
             subprocess.run(["open", "-R", str(abs_path)])
@@ -46,1174 +142,1778 @@ def reveal_in_file_explorer(file_path: Path):
         logger.error(f"Failed to open file in system explorer: {e}")
 
 
-class ToolTip:
-    """Hover tooltip for Tkinter widgets."""
-
-    def __init__(self, widget, text: str):
-        self.widget = widget
-        self.text = text
-        self.tip_window = None
-        self.widget.bind("<Enter>", self.show_tip)
-        self.widget.bind("<Leave>", self.hide_tip)
-
-    def show_tip(self, event=None):
-        if self.tip_window or not self.text:
-            return
-        x = self.widget.winfo_rootx() + 20
-        y = self.widget.winfo_rooty() + 25
-        self.tip_window = tw = tk.Toplevel(self.widget)
-        tw.wm_overrideredirect(True)
-        tw.wm_geometry(f"+{x}+{y}")
-        label = tk.Label(
-            tw,
-            text=self.text,
-            justify="left",
-            background="#0f172a",
-            foreground="#f8fafc",
-            relief="solid",
-            borderwidth=1,
-            font=("Helvetica", 9, "normal"),
-            padx=10,
-            pady=8
-        )
-        label.pack(ipadx=1)
-
-    def hide_tip(self, event=None):
-        tw = self.tip_window
-        self.tip_window = None
-        if tw:
-            tw.destroy()
-
-
-class KintsugiAppTkinterGUI:
-    """Windows Security-like Native Desktop GUI Application."""
-
-    def __init__(self, root: tk.Tk):
-        self.root = root
-        self.root.title("Kintsugi GRC - Security & Compliance Monitoring Center")
-        self.root.geometry("1180x820")
-        self.root.minsize(920, 680)
-
-        # Main window background: Bright off-white / light slate (#f8fafc)
-        self.root.configure(background="#f8fafc")
-
-        self.target_dir_var = tk.StringVar(value=os.path.abspath("./synthetic_test_env"))
-        self.custom_policy_var = tk.StringVar(value="")
-        self.industry_var = tk.StringVar(value="All Industries")
-        self.filter_var = tk.StringVar(value="Violations Only")
-
-        self.scan_summary: Optional[Dict[str, Any]] = None
-        self.displayed_findings: List[Dict[str, Any]] = []
-        self.active_pie_severity_filter: Optional[str] = None
-        self.is_scanning = False
-        self.is_monitoring = False
-
-        self.active_engine: Optional[ScannerEngine] = None
-        self.active_watcher: Optional[DynamicDirectoryWatcher] = None
-        self.rag_client: Optional[RAGPipelineClient] = None
-
-        self._build_styles()
-        self._build_ui()
-
-    def _build_styles(self):
-        """Configures clean, bright Windows Security style typography and widgets."""
-        style = ttk.Style()
-        style.theme_use("clam")
-
-        # Base Palette
-        style.configure(".", background="#f8fafc", foreground="#0f172a", font=("Helvetica", 10))
-        style.configure("TFrame", background="#f8fafc")
-        style.configure("Card.TFrame", background="#ffffff", relief="solid", borderwidth=1)
-
-        # Buttons
-        style.configure("Primary.TButton", font=("Segoe UI", 9, "bold"), background="#0284c7", foreground="white", padding=(4, 2))
-        style.map("Primary.TButton", background=[("active", "#0369a1")])
-
-        style.configure("Secondary.TButton", font=("Segoe UI", 9), background="#e2e8f0", foreground="#0f172a", padding=(4, 2))
-        style.map("Secondary.TButton", background=[("active", "#cbd5e1")])
-
-        style.configure("Danger.TButton", font=("Segoe UI", 9, "bold"), background="#ef4444", foreground="white", padding=(4, 2))
-
-    def _build_ui(self):
-        """Constructs responsive Windows Security style dashboard layout using standard tk containers for colors."""
-        main_container = tk.Frame(self.root, bg="#f8fafc", padx=16, pady=16)
-        main_container.pack(fill="both", expand=True)
-
-        # ---------------------------------------------------------------------
-        # 1. WINDOWS SECURITY HERO HEADER CARD
-        # ---------------------------------------------------------------------
-        hero_card = tk.Frame(main_container, bg="#ffffff", highlightthickness=1, highlightbackground="#e2e8f0", padx=14, pady=14)
-        hero_card.pack(fill="x", pady=(0, 10))
-
-        hero_left = tk.Frame(hero_card, bg="#ffffff")
-        hero_left.pack(side="left", fill="both", expand=True)
-
-        lbl_shield = tk.Label(hero_left, text="🛡️", font=("Segoe UI Emoji", 28), bg="#ffffff")
-        lbl_shield.pack(side="left", padx=(0, 12))
-        ToolTip(lbl_shield, "Kintsugi GRC Dynamic Protection Engine actively monitoring directory security standards.")
-
-        title_box = tk.Frame(hero_left, bg="#ffffff")
-        title_box.pack(side="left", anchor="w")
-        tk.Label(title_box, text="Security & Compliance Protection", font=("Segoe UI", 16, "bold"), fg="#0f172a", bg="#ffffff").pack(anchor="w")
-        tk.Label(title_box, text="Dynamic File Watcher & Automated GRC Control Audit (HIPAA, PCI DSS, NIST)", font=("Segoe UI", 9), fg="#64748b", bg="#ffffff").pack(anchor="w")
-
-        # Security Status Badge Ring
-        self.hero_status_lbl = tk.Label(
-            hero_card,
-            text="🟢 Ready to Monitor",
-            font=("Segoe UI", 11, "bold"),
-            fg="#15803d",
-            bg="#dcfce7",
-            padx=10,
-            pady=6
-        )
-        self.hero_status_lbl.pack(side="right", padx=10)
-        ToolTip(self.hero_status_lbl, "Displays dynamic system security health. Green = Protection Active, Red/Orange = Action Required.")
-
-        # ---------------------------------------------------------------------
-        # 2. TARGET DIRECTORY SELECTION & CONTROL CONFIGURATION CARD
-        # ---------------------------------------------------------------------
-        config_card = tk.Frame(main_container, bg="#ffffff", highlightthickness=1, highlightbackground="#e2e8f0", padx=14, pady=14)
-        config_card.pack(fill="x", pady=(0, 10))
-
-        tk.Label(config_card, text="🎯 Monitoring Target & Industry Framework", font=("Segoe UI", 11, "bold"), fg="#0284c7", bg="#ffffff").pack(anchor="w", pady=(0, 8))
-
-        # Target Directory Selector Row
-        row_dir = tk.Frame(config_card, bg="#ffffff")
-        row_dir.pack(fill="x", pady=2)
-        tk.Label(row_dir, text="Target Directory to Monitor:", font=("Segoe UI", 9, "bold"), fg="#0f172a", bg="#ffffff", width=22, anchor="w").pack(side="left")
-        
-        ent_dir = ttk.Entry(row_dir, textvariable=self.target_dir_var, font=("Consolas", 9))
-        ent_dir.pack(side="left", fill="x", expand=True, padx=4)
-        ToolTip(ent_dir, "Select target codebase or environment directory to monitor.")
-
-        btn_browse = ttk.Button(row_dir, text="📁 Browse...", style="Secondary.TButton", command=self._browse_directory)
-        btn_browse.pack(side="left", padx=2)
-        ToolTip(btn_browse, "Browse system folders to pick target directory.")
-
-        btn_open_finder = ttk.Button(row_dir, text="📂 Open Folder", style="Secondary.TButton", command=self._open_target_in_explorer)
-        btn_open_finder.pack(side="left", padx=2)
-        ToolTip(btn_open_finder, "Opens target folder in native macOS Finder / Windows Explorer.")
-
-        # Custom JSON Policy File Selector Row
-        row_policy = tk.Frame(config_card, bg="#ffffff")
-        row_policy.pack(fill="x", pady=2)
-        tk.Label(row_policy, text="Custom Security Policy (JSON):", font=("Segoe UI", 9, "bold"), fg="#0f172a", bg="#ffffff", width=22, anchor="w").pack(side="left")
-
-        ent_policy = ttk.Entry(row_policy, textvariable=self.custom_policy_var, font=("Consolas", 9))
-        ent_policy.pack(side="left", fill="x", expand=True, padx=4)
-        ToolTip(ent_policy, "Upload a custom JSON company policy document into the vector engine.")
-
-        btn_upload_policy = ttk.Button(row_policy, text="📄 Upload...", style="Secondary.TButton", command=self._upload_custom_policy)
-        btn_upload_policy.pack(side="left", padx=2)
-        ToolTip(btn_upload_policy, "Browse and upload a custom JSON policy file.")
-
-        self.lbl_policy_status = tk.Label(row_policy, text="[No Custom Policy Loaded]", font=("Segoe UI", 8, "italic"), fg="#64748b", bg="#ffffff")
-        self.lbl_policy_status.pack(side="left", padx=4)
-
-        # Industry Dropdown & Action Controls Row
-        row_act = tk.Frame(config_card, bg="#ffffff")
-        row_act.pack(fill="x", pady=(4, 2))
-
-        tk.Label(row_act, text="Industry Citation Scope:", font=("Segoe UI", 9, "bold"), fg="#0f172a", bg="#ffffff", width=22, anchor="w").pack(side="left")
-        cb_ind = ttk.Combobox(
-            row_act,
-            textvariable=self.industry_var,
-            values=["All Industries", "Healthcare", "Merchant / E-Commerce", "Finance / Treasury", "Banking / SWIFT"],
-            state="readonly",
-            width=18
-        )
-        cb_ind.pack(side="left", padx=4)
-        ToolTip(cb_ind, "Filters reported framework citations. e.g. Healthcare reports HIPAA §164.312 only.")
-
-        # Start / Stop Monitoring Buttons
-        self.btn_start = ttk.Button(row_act, text="▶ Start Monitoring", style="Primary.TButton", command=self._toggle_monitoring)
-        self.btn_start.pack(side="right", padx=2)
-        ToolTip(self.btn_start, "Launches background watcher to actively monitor directory changes.")
-
-        self.btn_pdf = ttk.Button(row_act, text="📄 Export PDF", style="Secondary.TButton", command=self._export_pdf, state="disabled")
-        self.btn_pdf.pack(side="right", padx=2)
-
-        # ---------------------------------------------------------------------
-        # 3. NON-INTRUSIVE DOMAIN CONTROL BADGES
-        # ---------------------------------------------------------------------
-        domain_card = tk.Frame(config_card, bg="#ffffff")
-        domain_card.pack(fill="x", pady=(10, 0))
-
-        tk.Label(domain_card, text="Addressed Control Domains:", font=("Segoe UI", 9, "bold"), fg="#64748b", bg="#ffffff").pack(side="left", padx=(0, 8))
-
-        domains = [
-            (
-                "🔑 01.02 / 01.c: Privilege Management",
-                "HITRUST CSF Ref 01.02, 01.c (Access Control) - Governs identity-aware, least-privilege enforcement of access to systems and data, including authorization definition, user/group permission bitmasks, and periodic review."
-            ),
-            (
-                "🛡️ 06.01 / 06.d: Data Protection & Privacy",
-                "HITRUST CSF Ref 06.01, 06.d (Data Protection & Privacy) - Governs organizational compliance with privacy protocols and protection of sensitive data at rest (PHI, credit cards, SSNs) via strong AES-256 cryptography and secure media sanitization."
-            ),
-            (
-                "⚙️ 10.06 / 10.m: Tech Vulnerability Control",
-                "HITRUST CSF Ref 10.06, 10.m (Configuration & Vulnerability Management) - Governs secure configuration, system hardening, and control of technical vulnerabilities. Enforces strong SSH Protocol 2, TLS 1.2/1.3 encryption, and password rotation."
-            ),
-            (
-                "📦 09.07 / 09.q: Media & Info Handling",
-                "HITRUST CSF Ref 09.07, 09.q (Information Handling) - Governs information handling, raw compressed data streams, and media storage security procedures to safeguard sensitive data from unauthorized interception or block pattern leaks."
-            ),
-            (
-                "📋 09.10 / 10.aa: Monitoring & Audit Logging",
-                "HITRUST CSF Ref 09.10, 10.aa (Audit Logging and Monitoring) - Governs the generation, protection, and review of audit logs. Enforces strict file permission controls (0o600) on /var/log/audit trails to prevent log tampering or erasure."
-            )
-        ]
-        for name, tip in domains:
-            lbl_pill = tk.Label(domain_card, text=name, font=("Segoe UI", 8, "bold"), fg="#0369a1", bg="#e0f2fe", padx=6, pady=3)
-            lbl_pill.pack(side="left", padx=2)
-            ToolTip(lbl_pill, tip)
-
-        # ---------------------------------------------------------------------
-        # 3. EXECUTIVE DASHBOARD: PIE CHART & TOP 3 ACTIONABLE ISSUES
-        # ---------------------------------------------------------------------
-        exec_card = tk.Frame(main_container, bg="#ffffff", highlightthickness=1, highlightbackground="#e2e8f0", padx=14, pady=10)
-        exec_card.pack(fill="x", pady=(0, 10))
-
-        tk.Label(exec_card, text="📈 Executive Summary & Priority Action Dashboard", font=("Segoe UI", 11, "bold"), fg="#0284c7", bg="#ffffff").pack(anchor="w", pady=(0, 6))
-
-        exec_content = tk.Frame(exec_card, bg="#ffffff")
-        exec_content.pack(fill="x")
-
-        # Left Column: Pie Chart Canvas & Legend
-        pie_frame = tk.Frame(exec_content, bg="#ffffff")
-        pie_frame.pack(side="left", fill="y", padx=(0, 14))
-
-        self.canvas_pie = tk.Canvas(pie_frame, width=140, height=120, bg="#ffffff", highlightthickness=0)
-        self.canvas_pie.pack(side="left")
-
-        self.pie_legend_frame = tk.Frame(pie_frame, bg="#ffffff")
-        self.pie_legend_frame.pack(side="left", padx=(6, 0), fill="y")
-
-        # Right Column: Top 3 Actionable Urgent Issues
-        top3_frame = tk.Frame(exec_content, bg="#ffffff")
-        top3_frame.pack(side="left", fill="both", expand=True)
-
-        top3_hdr_row = tk.Frame(top3_frame, bg="#ffffff")
-        top3_hdr_row.pack(fill="x", pady=(0, 4))
-
-        self.lbl_top3_header = tk.Label(
-            top3_hdr_row,
-            text="🔥 Top 3 Priority Issues Requiring Remediation:",
-            font=("Segoe UI", 9, "bold"),
-            fg="#991b1b",
-            bg="#ffffff"
-        )
-        self.lbl_top3_header.pack(side="left")
-
-        self.btn_reset_pie_filter = ttk.Button(
-            top3_hdr_row,
-            text="🔄 Show All",
-            style="Secondary.TButton",
-            command=lambda: self._filter_top_3_by_severity("ALL")
-        )
-        ToolTip(self.btn_reset_pie_filter, "Reset pie chart filter to show overall top priority issues.")
-
-        self.top3_container = tk.Frame(top3_frame, bg="#ffffff")
-        self.top3_container.pack(fill="both", expand=True)
-
-        self._draw_pie_chart({})
-        self._update_top_3_issues([])
-
-        # Status / Progress Bar Line
-        self.progress_frame = tk.Frame(main_container, bg="#f8fafc")
-        self.progress_frame.pack(fill="x", pady=4)
-
-        self.lbl_progress = tk.Label(self.progress_frame, text="Ready. Select target directory and click START MONITORING.", font=("Segoe UI", 9, "italic"), fg="#475569", bg="#f8fafc")
-        self.lbl_progress.pack(anchor="w")
-
-        self.progress_bar = ttk.Progressbar(self.progress_frame, mode="determinate")
-        self.progress_bar.pack(fill="x", pady=2)
-
-        # ---------------------------------------------------------------------
-        # 4. RUNNING LEDGER OF FINDINGS (INTERACTIVE TREEVIEW)
-        # ---------------------------------------------------------------------
-        ledger_card = tk.Frame(main_container, bg="#ffffff", highlightthickness=1, highlightbackground="#e2e8f0", padx=12, pady=12)
-        ledger_card.pack(fill="both", expand=True, pady=(0, 10))
-
-        # Ledger Header Toolbar
-        ledger_tb = tk.Frame(ledger_card, bg="#ffffff")
-        ledger_tb.pack(fill="x", pady=(0, 8))
-
-        tk.Label(ledger_tb, text="📊 Live Interactive Findings Ledger", font=("Segoe UI", 11, "bold"), fg="#0284c7", bg="#ffffff").pack(side="left")
-
-        tk.Label(ledger_tb, text="View:", font=("Segoe UI", 9, "bold"), fg="#0f172a", bg="#ffffff").pack(side="left", padx=(20, 5))
-        tk.Radiobutton(ledger_tb, text="Violations Only", value="Violations Only", variable=self.filter_var, command=self._update_findings_table, bg="#ffffff", activebackground="#ffffff").pack(side="left", padx=4)
-        tk.Radiobutton(ledger_tb, text="All Findings", value="All Findings", variable=self.filter_var, command=self._update_findings_table, bg="#ffffff", activebackground="#ffffff").pack(side="left", padx=4)
-
-        # Risk Score Badge & Explanation Tooltip
-        self.lbl_score = tk.Label(ledger_tb, text="Health Score: --%", font=("Segoe UI", 12, "bold"), fg="#0284c7", bg="#ffffff")
-        self.lbl_score.pack(side="right", padx=(10, 0))
-
-        btn_score_info = ttk.Button(ledger_tb, text="❓", width=3, style="Secondary.TButton", command=self._show_score_modal)
-        btn_score_info.pack(side="right", padx=2)
-
-        ToolTip(self.lbl_score, "GRC Security Health Index (0-100%). Weighted formula: PASS=100%, MEDIUM=50%, HIGH=25%, CRITICAL=0%.")
-        ToolTip(btn_score_info, "Click to view full Risk Score calculation breakdown.")
-
-        # Interactive Treeview Table
-        tree_frame = tk.Frame(ledger_card, bg="#ffffff")
-        tree_frame.pack(fill="both", expand=True)
-
-        tree_scroll = ttk.Scrollbar(tree_frame)
-        tree_scroll.pack(side="right", fill="y")
-
-        columns = ("severity", "domain", "file_path", "rule_title", "remediation")
-        self.tree = ttk.Treeview(
-            tree_frame,
-            columns=columns,
-            show="headings",
-            yscrollcommand=tree_scroll.set,
-            selectmode="browse",
-            height=7
-        )
-        tree_scroll.config(command=self.tree.yview)
-
-        self.tree.heading("severity", text="Status / Severity")
-        self.tree.heading("domain", text="Control Domain")
-        self.tree.heading("file_path", text="File Path (Double-Click to Open)")
-        self.tree.heading("rule_title", text="Violated Control / Rule Title")
-        self.tree.heading("remediation", text="Easy Remediation Recommendation")
-
-        self.tree.column("severity", width=120, anchor="center")
-        self.tree.column("domain", width=150, anchor="w")
-        self.tree.column("file_path", width=320, anchor="w")
-        self.tree.column("rule_title", width=260, anchor="w")
-        self.tree.column("remediation", width=250, anchor="w")
-
-        self.tree.pack(fill="both", expand=True)
-
-        # Style Tags for Ledger Rows
-        self.tree.tag_configure("CRITICAL", foreground="#991b1b", font=("Segoe UI", 9, "bold"))
-        self.tree.tag_configure("HIGH", foreground="#c2410c", font=("Segoe UI", 9, "bold"))
-        self.tree.tag_configure("MEDIUM", foreground="#b45309", font=("Segoe UI", 9))
-        self.tree.tag_configure("PASS", foreground="#15803d", font=("Segoe UI", 9))
-
-        # Ledger Event Bindings
-        self.tree.bind("<<TreeviewSelect>>", self._on_tree_select)
-        self.tree.bind("<Double-1>", self._on_tree_double_click)
-
-        # ---------------------------------------------------------------------
-        # 5. EXPANDABLE FINDING DETAIL & REMEDIATION PANEL
-        # ---------------------------------------------------------------------
-        detail_card = tk.Frame(main_container, bg="#ffffff", highlightthickness=1, highlightbackground="#e2e8f0", padx=12, pady=12)
-        detail_card.pack(fill="both", expand=True)
-
-        detail_tb = tk.Frame(detail_card, bg="#ffffff")
-        detail_tb.pack(fill="x", pady=(0, 6))
-
-        tk.Label(detail_tb, text="🔍 Selected Finding Details & AI Remediation Advisory", font=("Segoe UI", 11, "bold"), fg="#0284c7", bg="#ffffff").pack(side="left")
-
-        self.btn_reveal_file = ttk.Button(detail_tb, text="📂 Reveal File in Explorer", style="Secondary.TButton", command=self._reveal_selected_file, state="disabled")
-        self.btn_reveal_file.pack(side="right")
-        ToolTip(self.btn_reveal_file, "Opens system Explorer / Finder focused directly on the selected file.")
-
-        detail_scroll = ttk.Scrollbar(detail_card)
-        detail_scroll.pack(side="right", fill="y")
-
-        self.txt_detail = tk.Text(
-            detail_card,
-            wrap="word",
-            height=6,
-            font=("Consolas", 9),
-            yscrollcommand=detail_scroll.set,
-            background="#ffffff",
-            foreground="#0f172a",
-            relief="solid",
-            borderwidth=1,
-            padx=10,
-            pady=10
-        )
-        detail_scroll.config(command=self.txt_detail.yview)
-        self.txt_detail.pack(fill="both", expand=True)
-
-        # Detail Text Formatting Tags
-        self.txt_detail.tag_configure("TITLE", font=("Segoe UI", 11, "bold"), foreground="#0284c7")
-        self.txt_detail.tag_configure("CRITICAL", font=("Segoe UI", 10, "bold"), foreground="#991b1b")
-        self.txt_detail.tag_configure("HIGH", font=("Segoe UI", 10, "bold"), foreground="#c2410c")
-        self.txt_detail.tag_configure("MEDIUM", font=("Segoe UI", 10, "bold"), foreground="#b45309")
-        self.txt_detail.tag_configure("PASS", font=("Segoe UI", 10, "bold"), foreground="#15803d")
-        self.txt_detail.tag_configure("LABEL", font=("Segoe UI", 9, "bold"), foreground="#475569")
-        self.txt_detail.tag_configure("VALUE", font=("Consolas", 9), foreground="#0f172a")
-        self.txt_detail.tag_configure("CMD", font=("Consolas", 9, "bold"), foreground="#0284c7", background="#f0f9ff")
-
-        self._set_detail_text("Select any finding row in the running ledger above to inspect un-truncated details, technical parameters, exact GRC framework clauses, and RAG AI remediation commands.")
-
-    # -------------------------------------------------------------------------
-    # HELPER METHODS & WORKERS
-    # -------------------------------------------------------------------------
-    def _set_detail_text(self, text: str):
-        """Sets formatted text in inspection panel."""
-        self.txt_detail.config(state="normal")
-        self.txt_detail.delete("1.0", "end")
-        self.txt_detail.insert("1.0", text)
-        self.txt_detail.config(state="disabled")
-
-    def _browse_directory(self):
-        """Opens native file directory chooser."""
-        chosen = filedialog.askdirectory(initialdir=self.target_dir_var.get())
-        if chosen:
-            self.target_dir_var.set(chosen)
-
-    def _open_target_in_explorer(self):
-        """Opens target directory in macOS Finder / Windows Explorer."""
-        target = Path(self.target_dir_var.get()).resolve()
-        if target.exists():
-            reveal_in_file_explorer(target)
-
-    def _reveal_selected_file(self):
-        """Reveals currently selected finding's file in macOS Finder / Explorer."""
-        selected = self.tree.selection()
-        if not selected:
-            return
-        index = self.tree.index(selected[0])
-        if 0 <= index < len(self.displayed_findings):
-            finding = self.displayed_findings[index]
-            rel_path = finding.get("file_path", "")
-            target_root = Path(self.target_dir_var.get()).resolve()
-            full_path = (target_root / rel_path).resolve()
-            if full_path.exists():
-                reveal_in_file_explorer(full_path)
-            else:
-                reveal_in_file_explorer(target_root)
-
-    def _show_score_modal(self):
-        """Displays modal explaining Risk Score calculation."""
-        messagebox.showinfo(
-            "GRC Security Health Index Explanation",
-            "GRC Security Health Index (Compliance Score):\n\n"
-            "Calculated as the weighted ratio of passing controls vs violations across all evaluated target files:\n\n"
-            "• PASS Findings    : 100% Credit (1.0)\n"
-            "• MEDIUM Findings  : 50% Credit (0.5)\n"
-            "• HIGH Findings    : 25% Credit (0.25)\n"
-            "• CRITICAL Findings: 0% Credit (0.0)\n\n"
-            "Formula:\n"
-            "Score = (PASS*1.0 + MEDIUM*0.5 + HIGH*0.25) / Total_Checks * 100%"
-        )
-
-    def _toggle_monitoring(self):
-        """Starts or stops dynamic background monitoring."""
-        if self.is_monitoring:
-            # Stop Monitoring
-            if self.active_watcher:
-                self.active_watcher.stop()
-                self.active_watcher = None
-            self.is_monitoring = False
-            self.btn_start.config(text="▶ START MONITORING", style="Primary.TButton")
-            self.hero_status_lbl.config(text="🟡 Monitoring Paused", fg="#b45309", bg="#fef3c7")
-            self.lbl_progress.config(text="Background monitoring paused.")
-        else:
-            # Start Monitoring
-            target = Path(self.target_dir_var.get()).resolve()
-            if not target.exists():
-                messagebox.showerror("Invalid Directory", f"Target directory '{target.as_posix()}' does not exist.")
-                return
-
-            self.is_monitoring = True
-            self.is_scanning = True
-            self.btn_start.config(text="⏹ STOP MONITORING", style="Danger.TButton")
-            self.btn_pdf.config(state="disabled")
-            self.progress_bar["value"] = 0
-            self.lbl_progress.config(text="Initializing scanner engine & compiling running ledger...")
-
-            threading.Thread(target=self._run_scan_worker, args=(target,), daemon=True).start()
-
-    def _run_scan_worker(self, target_dir: Path):
-        """Worker thread executing initial scan and starting dynamic watcher."""
+def apply_dark_palette(app: QApplication):
+    """Applies system-wide dark QPalette."""
+    palette = QPalette()
+    bg   = QColor(PALETTE["bg_base"])
+    surf = QColor(PALETTE["bg_surface"])
+    txt  = QColor(PALETTE["text_primary"])
+    dim  = QColor(PALETTE["text_secondary"])
+    acc  = QColor(PALETTE["accent_blue"])
+    palette.setColor(QPalette.ColorRole.Window,          bg)
+    palette.setColor(QPalette.ColorRole.WindowText,      txt)
+    palette.setColor(QPalette.ColorRole.Base,            surf)
+    palette.setColor(QPalette.ColorRole.AlternateBase,   QColor(PALETTE["bg_elevated"]))
+    palette.setColor(QPalette.ColorRole.Text,            txt)
+    palette.setColor(QPalette.ColorRole.BrightText,      QColor("#ffffff"))
+    palette.setColor(QPalette.ColorRole.Button,          QColor(PALETTE["bg_card"]))
+    palette.setColor(QPalette.ColorRole.ButtonText,      txt)
+    palette.setColor(QPalette.ColorRole.Highlight,       acc)
+    palette.setColor(QPalette.ColorRole.HighlightedText, QColor("#000000"))
+    palette.setColor(QPalette.ColorRole.Link,            acc)
+    palette.setColor(QPalette.ColorRole.PlaceholderText, dim)
+    app.setPalette(palette)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# BACKGROUND WORKER THREAD
+# ──────────────────────────────────────────────────────────────────────────────
+
+class ScanWorker(QThread):
+    """Runs the full scan + RAG advisory enrichment in a background thread."""
+    progress     = pyqtSignal(int, str)
+    scan_done    = pyqtSignal(dict)
+    scan_error   = pyqtSignal(str)
+    dynamic_done = pyqtSignal(dict, str)
+
+    def __init__(self, target_dir: Path, industry: str, custom_policy: str = ""):
+        super().__init__()
+        self.target_dir    = target_dir
+        self.industry      = industry
+        self.custom_policy = custom_policy
+        self.engine: Optional[ScannerEngine]          = None
+        self.watcher: Optional[DynamicDirectoryWatcher] = None
+        self.rag_client: Optional[RAGPipelineClient]  = None
+        self._stop_flag = False
+
+    def run(self):
         try:
-            for pct in range(5, 30, 5):
-                time.sleep(0.04)
-                self.root.after(0, self._update_progress, pct, f"Parsing controls & scanning target {target_dir.name}...")
-
-            audit_log = target_dir / "kintsugi_scanner_audit.log"
+            self.progress.emit(5,  "Initializing audit logger...")
+            audit_log = self.target_dir / "kintsugi_scanner_audit.log"
             audit_logger = ScannerAuditLogger(audit_log)
             audit_logger.initialize()
 
+            self.progress.emit(15, "Loading GRC control mappings...")
             control_reg = ControlRegistry()
             control_reg.load()
 
-            industry = self.industry_var.get()
-            self.active_engine = ScannerEngine(target_dir, control_reg, audit_logger, industry=industry)
-            summary = self.active_engine.run_scan()
+            self.progress.emit(25, f"Scanning target directory: {self.target_dir.name}...")
+            self.engine = ScannerEngine(self.target_dir, control_reg, audit_logger, industry=self.industry)
+            summary = self.engine.run_scan()
 
+            self.progress.emit(60, "Connecting RAG pipeline...")
             self.rag_client = RAGPipelineClient()
             self.rag_client.connect()
 
-            # Auto-vectorize custom policy if selected by user
-            custom_policy_str = self.custom_policy_var.get().strip()
-            if custom_policy_str and Path(custom_policy_str).exists():
-                self.rag_client.ingest_and_vectorize_policy(Path(custom_policy_str))
+            if self.custom_policy and Path(self.custom_policy).exists():
+                self.progress.emit(65, "Vectorizing custom policy...")
+                self.rag_client.ingest_and_vectorize_policy(Path(self.custom_policy))
 
-            industry = self.industry_var.get()
+            self.progress.emit(70, "Generating AI remediation advisories...")
             for f in summary.get("findings", []):
                 if f.get("severity") in ["CRITICAL", "HIGH", "MEDIUM"]:
-                    advisory = self.rag_client.generate_advisory(f, industry=industry)
+                    advisory = self.rag_client.generate_advisory(f, industry=self.industry)
                     f["rag_advisory"] = advisory
                     f["rag_ai_remediation"] = advisory.get("remediation_command", "")
 
             audit_logger.finalize(summary["total_files_scanned"], summary["total_findings"])
 
-            for pct in range(80, 101, 10):
-                time.sleep(0.02)
-                self.root.after(0, self._update_progress, pct, "Finalizing running ledger...")
-
-            # Start Dynamic Directory Watcher
-            self.active_watcher = DynamicDirectoryWatcher(
-                target_dir=target_dir,
-                on_file_changed=self._on_dynamic_file_changed,
-                on_file_deleted=self._on_dynamic_file_deleted
+            self.progress.emit(85, "Starting dynamic directory watcher...")
+            self.watcher = DynamicDirectoryWatcher(
+                target_dir=self.target_dir,
+                on_file_changed=self._on_file_changed,
+                on_file_deleted=self._on_file_deleted,
             )
-            self.active_watcher.start()
+            self.watcher.start()
 
-            self.root.after(0, self._on_scan_complete, summary)
+            self.progress.emit(100, "Scan complete.")
+            self.scan_done.emit(summary)
 
         except Exception as e:
-            logger.error(f"Scan worker failed: {e}")
-            self.root.after(0, self._on_scan_error, str(e))
+            logger.error(f"ScanWorker error: {e}", exc_info=True)
+            self.scan_error.emit(str(e))
 
-    def _on_dynamic_file_changed(self, abs_file_path: Path, event_type: str):
-        """Callback triggered when watcher detects file edit, creation, or remediation."""
-        if not self.active_engine:
+    def _on_file_changed(self, path: Path, event: str):
+        if not self.engine:
             return
-
-        updated_summary = self.active_engine.update_single_file(abs_file_path, event_type)
-
-        # Enrich any new findings with RAG advisory
+        updated = self.engine.update_single_file(path, event)
         if self.rag_client:
-            industry = self.industry_var.get()
-            for f in updated_summary.get("findings", []):
+            for f in updated.get("findings", []):
                 if f.get("severity") in ["CRITICAL", "HIGH", "MEDIUM"] and "rag_advisory" not in f:
-                    advisory = self.rag_client.generate_advisory(f, industry=industry)
+                    advisory = self.rag_client.generate_advisory(f, industry=self.industry)
                     f["rag_advisory"] = advisory
                     f["rag_ai_remediation"] = advisory.get("remediation_command", "")
-
-        rel_name = abs_file_path.name
-        score = updated_summary.get("compliance_score", 0)
-
-        # Check if file remediation resolved findings to PASS/None
-        remaining = [f for f in updated_summary.get("findings", []) if abs_file_path.name in f.get("file_path", "") and f.get("severity") in ["CRITICAL", "HIGH"]]
-        if len(remaining) == 0:
-            status_text = f"✅ File Remediated: {rel_name} is now compliant! Health Score updated to {score}%."
-        else:
-            status_text = f"⚡ Dynamic Re-Scan ({event_type}): Updated {rel_name} (Health Score: {score}%)"
-
-        self.root.after(0, self._apply_dynamic_update, updated_summary, status_text)
-
-    def _on_dynamic_file_deleted(self, abs_file_path: Path, event_type: str):
-        """Callback triggered when watcher detects file deletion."""
-        if not self.active_engine:
-            return
-
-        updated_summary = self.active_engine.update_single_file(abs_file_path, event_type)
-        score = updated_summary.get("compliance_score", 0)
-        status_text = f"⚡ File Removed: Cleared findings for {abs_file_path.name} (Health Score: {score}%)"
-        self.root.after(0, self._apply_dynamic_update, updated_summary, status_text)
-
-    def _apply_dynamic_update(self, summary: Dict[str, Any], status_msg: str):
-        """Updates GUI running ledger, risk score, and status badge dynamically."""
-        self.scan_summary = summary
-        score = summary.get("compliance_score", 0)
-        self.lbl_score.config(text=f"Health Score: {score}%")
-        self.lbl_progress.config(text=status_msg)
-
-        # Update Hero Status Badge
-        crits = summary.get("severity_counts", {}).get("CRITICAL", 0)
-        highs = summary.get("severity_counts", {}).get("HIGH", 0)
-        total_viols = crits + highs
-
-        if total_viols == 0:
-            self.hero_status_lbl.config(text="🟢 Protection Active - 100% Compliant", fg="#15803d", bg="#dcfce7")
-        else:
-            self.hero_status_lbl.config(text=f"⚠️ Action Required - {total_viols} Active Violations", fg="#b91c1c", bg="#fee2e2")
-
-        self._draw_pie_chart(summary.get("severity_counts", {}))
-        self._update_top_3_issues(summary.get("findings", []))
-        self._update_findings_table()
-
-    def _update_progress(self, val: int, msg: str):
-        """Updates progress bar value and status text on GUI thread."""
-        self.progress_bar["value"] = val
-        self.lbl_progress.config(text=f"{val}% - {msg}")
-
-    def _on_scan_complete(self, summary: Dict[str, Any]):
-        """Callback executed on GUI thread when initial scan finishes."""
-        self.scan_summary = summary
-        self.is_scanning = False
-        self.btn_pdf.config(state="normal")
-
-        score = summary.get("compliance_score", 0)
-        self.lbl_score.config(text=f"Health Score: {score}%")
-        self.lbl_progress.config(text=f"Protection Active! Monitoring {summary['total_files_scanned']} files in {summary['target_directory']}")
-
-        crits = summary.get("severity_counts", {}).get("CRITICAL", 0)
-        highs = summary.get("severity_counts", {}).get("HIGH", 0)
-        total_viols = crits + highs
-
-        if total_viols == 0:
-            self.hero_status_lbl.config(text="🟢 Protection Active - 100% Compliant", fg="#15803d", bg="#dcfce7")
-        else:
-            self.hero_status_lbl.config(text=f"⚠️ Action Required - {total_viols} Active Violations", fg="#b91c1c", bg="#fee2e2")
-
-        self._draw_pie_chart(summary.get("severity_counts", {}))
-        self._update_top_3_issues(summary.get("findings", []))
-        self._update_findings_table()
-
-    def _draw_pie_chart(self, sev_counts: Dict[str, int]):
-        """Draws dynamic Tkinter pie chart of scan severities."""
-        self.canvas_pie.delete("all")
-        for w in self.pie_legend_frame.winfo_children():
-            w.destroy()
-
-        crits = sev_counts.get("CRITICAL", 0)
-        highs = sev_counts.get("HIGH", 0)
-        meds = sev_counts.get("MEDIUM", 0)
-        passes = sev_counts.get("PASS", 0)
-        total = crits + highs + meds + passes
-
-        if total == 0:
-            # Draw placeholder circle
-            self.canvas_pie.create_oval(15, 10, 125, 110, fill="#f1f5f9", outline="#cbd5e1", width=2)
-            self.canvas_pie.create_text(70, 60, text="No Scan\nData", font=("Segoe UI", 8, "bold"), fill="#64748b", justify="center")
-            tk.Label(self.pie_legend_frame, text="Run scan to view\nseverity pie chart", font=("Segoe UI", 8, "italic"), fg="#64748b", bg="#ffffff").pack(anchor="w")
-            return
-
-        slice_data = [
-            ("CRITICAL", crits, "#ef4444"),
-            ("HIGH", highs, "#f97316"),
-            ("MEDIUM", meds, "#eab308"),
-            ("PASS", passes, "#22c55e"),
+        score = updated.get("compliance_score", 0)
+        remaining = [
+            f for f in updated.get("findings", [])
+            if path.name in f.get("file_path", "") and f.get("severity") in ["CRITICAL", "HIGH"]
         ]
+        msg = (
+            f"✅ Remediated: {path.name} is now compliant! Score: {score}%"
+            if not remaining
+            else f"⚡ Re-scanned ({event}): {path.name} — Score: {score}%"
+        )
+        self.dynamic_done.emit(updated, msg)
 
-        current_angle = 90.0
-        bbox = (10, 5, 125, 115)
+    def _on_file_deleted(self, path: Path, event: str):
+        if not self.engine:
+            return
+        updated = self.engine.update_single_file(path, event)
+        score = updated.get("compliance_score", 0)
+        self.dynamic_done.emit(updated, f"🗑️ Removed: {path.name} — Score: {score}%")
 
-        for label, count, color in slice_data:
+    def stop_watcher(self):
+        if self.watcher:
+            self.watcher.stop()
+            self.watcher = None
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# FINDING DETAIL MODAL
+# ──────────────────────────────────────────────────────────────────────────────
+
+class FindingDetailDialog(QDialog):
+    """Rich modal showing full finding details with file hyperlink."""
+
+    def __init__(self, finding: Dict[str, Any], target_root: Path, parent=None):
+        super().__init__(parent)
+        self.finding     = finding
+        self.target_root = target_root
+        self.setWindowTitle("Finding Inspection — Kintsugi-GRC")
+        self.setMinimumSize(860, 620)
+        self.setStyleSheet(self._dialog_css())
+        self._build()
+
+    # ------------------------------------------------------------------
+    def _dialog_css(self) -> str:
+        return f"""
+        QDialog {{
+            background: {PALETTE['bg_base']};
+            color: {PALETTE['text_primary']};
+            font-family: 'Segoe UI', 'Inter', sans-serif;
+        }}
+        QLabel {{ color: {PALETTE['text_primary']}; }}
+        QPushButton {{
+            background: {PALETTE['bg_card']};
+            color: {PALETTE['text_primary']};
+            border: 1px solid {PALETTE['border']};
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-weight: bold;
+        }}
+        QPushButton:hover {{ background: {PALETTE['bg_elevated']}; border-color: {PALETTE['accent_blue']}; }}
+        QPushButton#primary {{
+            background: {PALETTE['accent_blue']};
+            color: #000;
+            border: none;
+        }}
+        QPushButton#primary:hover {{ background: {PALETTE['accent_cyan']}; }}
+        QTextEdit {{
+            background: {PALETTE['bg_surface']};
+            color: {PALETTE['text_primary']};
+            border: 1px solid {PALETTE['border']};
+            border-radius: 6px;
+            font-family: 'Consolas', 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }}
+        QFrame#headerCard {{
+            background: {PALETTE['bg_card']};
+            border: 1px solid {PALETTE['border']};
+            border-radius: 8px;
+        }}
+        QFrame#linkCard {{
+            background: {PALETTE['bg_surface']};
+            border: 1px solid {PALETTE['border_active']};
+            border-radius: 6px;
+        }}
+        """
+
+    def _build(self):
+        f          = self.finding
+        severity   = f.get("severity", "INFO")
+        title      = f.get("title", "Security Finding")
+        rule_id    = f.get("rule_id", "N/A")
+        rel_path   = f.get("file_path", "N/A")
+        desc       = f.get("description", "No description.")
+        details    = f.get("details", {})
+        mappings   = f.get("framework_mappings", [])
+        advisory   = f.get("rag_advisory", {})
+        full_path  = (self.target_root / rel_path).resolve()
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(12)
+
+        # ── Header card ──────────────────────────────────────────────
+        header = QFrame(objectName="headerCard")
+        hl = QHBoxLayout(header)
+        hl.setContentsMargins(14, 12, 14, 12)
+
+        sev_lbl = QLabel(f" {severity} ")
+        sev_lbl.setStyleSheet(
+            f"background:{SEV_COLOR.get(severity,'#8b949e')};"
+            f"color:#000;font-weight:bold;font-size:11px;"
+            f"border-radius:4px;padding:3px 8px;"
+        )
+        hl.addWidget(sev_lbl)
+
+        txt_col = QVBoxLayout()
+        t = QLabel(title)
+        t.setStyleSheet(f"font-size:16px;font-weight:bold;color:{PALETTE['text_primary']};")
+        r = QLabel(f"Rule ID: {rule_id}")
+        r.setStyleSheet(f"font-size:11px;color:{PALETTE['text_muted']};font-family:monospace;")
+        txt_col.addWidget(t)
+        txt_col.addWidget(r)
+        hl.addLayout(txt_col, 1)
+
+        reveal_btn = QPushButton("📂  Reveal in Explorer")
+        reveal_btn.setObjectName("primary")
+        reveal_btn.clicked.connect(lambda: reveal_in_file_explorer(full_path))
+        hl.addWidget(reveal_btn)
+        layout.addWidget(header)
+
+        # ── File path card ───────────────────────────────────────────
+        link_card = QFrame(objectName="linkCard")
+        ll = QHBoxLayout(link_card)
+        ll.setContentsMargins(12, 8, 12, 8)
+        path_lbl = QLabel(f"📁 <a style='color:{PALETTE['accent_blue']};' href='#'>{full_path}</a>")
+        path_lbl.setStyleSheet("font-family:monospace;font-size:11px;")
+        path_lbl.setWordWrap(True)
+        path_lbl.linkActivated.connect(lambda: reveal_in_file_explorer(full_path))
+        ll.addWidget(path_lbl)
+        layout.addWidget(link_card)
+
+        # ── Detail text ───────────────────────────────────────────────
+        txt = QTextEdit()
+        txt.setReadOnly(True)
+        txt.setAcceptRichText(True)
+        html = self._build_html(desc, details, mappings, advisory)
+        txt.setHtml(html)
+        layout.addWidget(txt, 1)
+
+        # ── Bottom bar ────────────────────────────────────────────────
+        close_btn = QPushButton("✕  Close Inspection")
+        close_btn.clicked.connect(self.accept)
+        bb = QHBoxLayout()
+        bb.addStretch()
+        bb.addWidget(close_btn)
+        layout.addLayout(bb)
+
+    def _build_html(self, desc, details, mappings, advisory) -> str:
+        bg   = PALETTE["bg_surface"]
+        txt  = PALETTE["text_primary"]
+        dim  = PALETTE["text_secondary"]
+        acc  = PALETTE["accent_blue"]
+        code = PALETTE["bg_elevated"]
+
+        def section(icon, heading):
+            return f"<p style='margin-top:12px;margin-bottom:4px;'><span style='color:{acc};font-weight:bold;font-size:13px;'>{icon} {heading}</span></p>"
+
+        def row(label, value, mono=False):
+            vf = f"<code style='background:{code};padding:1px 4px;border-radius:3px;color:{acc};'>{value}</code>" if mono else f"<span style='color:{txt};'>{value}</span>"
+            return f"<p style='margin:2px 0;'><span style='color:{dim};font-weight:bold;'>{label}:</span> {vf}</p>"
+
+        parts = [f"<div style='font-family:\"Segoe UI\",sans-serif;font-size:12px;color:{txt};'>"]
+
+        parts.append(section("📌", "Finding Description"))
+        parts.append(f"<p style='color:{txt};'>{desc}</p>")
+
+        biz = details.get("business_explanation") or advisory.get("business_explanation", "")
+        if biz:
+            parts.append(section("🛡️", "Business Risk & Operational Impact"))
+            parts.append(f"<p style='color:{txt};'>{biz}</p>")
+
+        tech = {k: v for k, v in details.items() if k != "business_explanation"}
+        if tech:
+            parts.append(section("⚙️", "Technical Scan Parameters"))
+            parts.append(
+                f"<pre style='background:{code};border-radius:6px;padding:8px 12px;"
+                f"color:{acc};font-size:11px;white-space:pre-wrap;'>{json.dumps(tech, indent=2)}</pre>"
+            )
+
+        if mappings:
+            parts.append(section("📜", "Addressed GRC Framework Citations"))
+            for m in mappings:
+                fw    = m.get("framework", "GRC")
+                cid   = m.get("control_id", "N/A")
+                ctit  = m.get("title", "Requirement")
+                st    = m.get("status", "REVIEW")
+                parts.append(f"<p style='margin:2px 0;'>• <span style='color:{acc};font-weight:bold;'>[{fw}] {cid}</span>: {ctit} <span style='color:{dim};'>({st})</span></p>")
+
+        if advisory:
+            parts.append(section("🤖", "RAG AI Remediation Advisory"))
+            parts.append(row("Mapped Clause ID",    advisory.get("clause_id", "—")))
+            parts.append(row("Standards Involved",  advisory.get("standard",  "—")))
+            parts.append(row("Technical Risk",      advisory.get("risk_statement", "—")))
+            cmd = advisory.get("remediation_command", "")
+            if cmd:
+                parts.append(f"<p style='margin:4px 0;'><span style='color:{dim};font-weight:bold;'>Recommended Command:</span><br><code style='background:{code};border-radius:4px;padding:4px 8px;color:{acc};font-size:11px;'>{cmd}</code></p>")
+            if advisory.get("rationale"):
+                parts.append(row("Context Rationale", advisory.get("rationale", "")))
+
+        parts.append("</div>")
+        return "".join(parts)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# SEVERITY DONUT CHART WIDGET
+# ──────────────────────────────────────────────────────────────────────────────
+
+class SeverityDonutChart(QChartView):
+    """Qt Charts donut chart — clickable slices filter the findings table."""
+    slice_clicked = pyqtSignal(str)   # emits severity string or "ALL"
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setRenderHint(QPainter.RenderHint.Antialiasing)
+        self.setMinimumSize(QSize(220, 200))
+        self._active_filter: Optional[str] = None
+        self._build_empty()
+
+    def _build_empty(self):
+        chart = QChart()
+        chart.setBackgroundBrush(QBrush(QColor(PALETTE["bg_card"])))
+        chart.setBackgroundRoundness(8)
+        chart.legend().setVisible(False)
+        chart.setMargins(QMargins(2, 2, 2, 2))
+        ph = QLabel("Run scan\nto view chart", alignment=Qt.AlignmentFlag.AlignCenter)
+        self.setChart(chart)
+
+    def update_data(self, sev_counts: Dict[str, int], active_filter: Optional[str] = None):
+        self._active_filter = active_filter
+        total = sum(sev_counts.values())
+        if total == 0:
+            self._build_empty()
+            return
+
+        series = QPieSeries()
+        series.setHoleSize(0.52)
+        series.setPieSize(0.85)
+
+        order = [("CRITICAL", PALETTE["sev_critical"]),
+                 ("HIGH",     PALETTE["sev_high"]),
+                 ("MEDIUM",   PALETTE["sev_medium"]),
+                 ("PASS",     PALETTE["sev_pass"])]
+
+        for sev, color in order:
+            count = sev_counts.get(sev, 0)
             if count == 0:
                 continue
-            extent = (count / total) * 360.0
-            arc_id = self.canvas_pie.create_arc(
-                bbox[0], bbox[1], bbox[2], bbox[3],
-                start=current_angle,
-                extent=extent,
-                fill=color,
-                outline="#ffffff",
-                width=1.5
-            )
-            self.canvas_pie.tag_bind(arc_id, "<Button-1>", lambda e, s=label: self._filter_top_3_by_severity(s))
-            current_angle += extent
+            sl = QPieSlice(f"{sev}\n{count}", count)
+            sl.setColor(QColor(color))
+            sl.setBorderColor(QColor(PALETTE["bg_card"]))
+            sl.setBorderWidth(2)
+            if active_filter == sev:
+                sl.setExploded(True)
+                sl.setExplodeDistanceFactor(0.08)
+            sl.clicked.connect(lambda checked=False, s=sev: self._on_slice_clicked(s))
+            series.append(sl)
 
-            pct = (count / total) * 100.0
-            is_active = (self.active_pie_severity_filter == label)
+        chart = QChart()
+        chart.addSeries(series)
+        chart.setBackgroundBrush(QBrush(QColor(PALETTE["bg_card"])))
+        chart.setBackgroundRoundness(8)
+        chart.legend().setVisible(False)
+        chart.setMargins(QMargins(4, 4, 4, 4))
+        chart.setAnimationOptions(QChart.AnimationOption.SeriesAnimations)
+        self.setChart(chart)
 
-            row = tk.Frame(self.pie_legend_frame, bg="#f0f9ff" if is_active else "#ffffff", cursor="hand2")
-            row.pack(anchor="w", pady=1, fill="x")
-            row.bind("<Button-1>", lambda e, s=label: self._filter_top_3_by_severity(s))
-
-            lbl_sq = tk.Label(row, text="■", font=("Segoe UI", 9, "bold"), fg=color, bg="#f0f9ff" if is_active else "#ffffff", cursor="hand2")
-            lbl_sq.pack(side="left")
-            lbl_sq.bind("<Button-1>", lambda e, s=label: self._filter_top_3_by_severity(s))
-
-            lbl_txt = tk.Label(
-                row,
-                text=f"{label}: {count} ({pct:.0f}%){' 👈' if is_active else ''}",
-                font=("Segoe UI", 8, "bold" if (label=="CRITICAL" or is_active) else "normal"),
-                fg="#0284c7" if is_active else "#0f172a",
-                bg="#f0f9ff" if is_active else "#ffffff",
-                cursor="hand2"
-            )
-            lbl_txt.pack(side="left", padx=2)
-            lbl_txt.bind("<Button-1>", lambda e, s=label: self._filter_top_3_by_severity(s))
-            ToolTip(row, f"Click to view Top 3 {label} priority issues.")
-
-    def _filter_top_3_by_severity(self, severity: str):
-        """Filters Top 3 Urgent Issues panel when clicking a pie chart slice or legend item."""
-        if severity == "ALL" or self.active_pie_severity_filter == severity:
-            self.active_pie_severity_filter = None
+    def _on_slice_clicked(self, severity: str):
+        if self._active_filter == severity:
+            self.slice_clicked.emit("ALL")
         else:
-            self.active_pie_severity_filter = severity
+            self.slice_clicked.emit(severity)
 
-        if self.scan_summary:
-            sev_counts = self.scan_summary.get("severity_counts", {})
-            findings = self.scan_summary.get("findings", [])
-            self._draw_pie_chart(sev_counts)
-            self._update_top_3_issues(findings, target_severity=self.active_pie_severity_filter)
 
-    def _update_top_3_issues(self, findings: List[Dict[str, Any]], target_severity: Optional[str] = None):
-        """Renders Top 3 Urgent Issues needing immediate remediation, optionally filtered by severity."""
-        for w in self.top3_container.winfo_children():
-            w.destroy()
+# ──────────────────────────────────────────────────────────────────────────────
+# LEGEND WIDGET FOR DONUT
+# ──────────────────────────────────────────────────────────────────────────────
 
-        if target_severity is None:
-            target_severity = self.active_pie_severity_filter
+class SeverityLegend(QWidget):
+    filter_clicked = pyqtSignal(str)
 
-        if target_severity:
-            self.lbl_top3_header.config(text=f"🔥 Top 3 Issues [{target_severity} Priority Filter]:", fg="#0284c7")
-            self.btn_reset_pie_filter.pack(side="right")
-        else:
-            self.lbl_top3_header.config(text="🔥 Top 3 Priority Issues Requiring Remediation:", fg="#991b1b")
-            self.btn_reset_pie_filter.pack_forget()
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._layout = QVBoxLayout(self)
+        self._layout.setContentsMargins(0, 0, 0, 0)
+        self._layout.setSpacing(4)
+        self._active: Optional[str] = None
 
-        if target_severity:
-            filtered = [f for f in findings if f.get("severity") == target_severity]
-        else:
-            filtered = [f for f in findings if f.get("severity") != "PASS"]
+    def update_data(self, sev_counts: Dict[str, int], active: Optional[str] = None):
+        self._active = active
+        for i in reversed(range(self._layout.count())):
+            w = self._layout.itemAt(i).widget()
+            if w:
+                w.deleteLater()
 
-        if not filtered:
-            empty_box = tk.Frame(self.top3_container, bg="#f0fdf4", highlightthickness=1, highlightbackground="#bbf7d0", padx=10, pady=8)
-            empty_box.pack(fill="x", pady=2)
-            msg = f"No active {target_severity} findings detected." if target_severity else "Zero Active Violations Detected."
-            tk.Label(empty_box, text=f"🎉 {msg}", font=("Segoe UI", 9, "bold"), fg="#166534", bg="#f0fdf4").pack(anchor="w")
-            tk.Label(empty_box, text="All monitored files pass GRC security and encryption baselines.", font=("Segoe UI", 8), fg="#15803d", bg="#f0fdf4").pack(anchor="w")
+        total = sum(sev_counts.values())
+        if total == 0:
+            lbl = QLabel("No scan data")
+            lbl.setStyleSheet(f"color:{PALETTE['text_muted']};font-style:italic;font-size:11px;")
+            self._layout.addWidget(lbl)
             return
 
-        sev_rank = {"CRITICAL": 3, "HIGH": 2, "MEDIUM": 1, "PASS": 0}
-        sorted_issues = sorted(filtered, key=lambda x: (sev_rank.get(x.get("severity", "LOW"), 0), x.get("rule_id", "")), reverse=True)
-        top_3 = sorted_issues[:3]
+        order = [("CRITICAL", PALETTE["sev_critical"]),
+                 ("HIGH",     PALETTE["sev_high"]),
+                 ("MEDIUM",   PALETTE["sev_medium"]),
+                 ("PASS",     PALETTE["sev_pass"])]
 
-        remediation_hints = {
-            "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE": "🔒 Restrict Access: Lock file permissions so only owner can read/write (chmod 0640).",
-            "ERR-OCTAL-WORLD-WRITABLE": "🔒 Restrict Access: Lock file permissions so only owner can read/write (chmod 0640).",
-            "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN": "🛡️ Encrypt Sensitive Data: Secure SSN / credit card records using AES-256 or GPG encryption.",
-            "ERR-ENTROPY-PLAINTEXT-PII": "🛡️ Encrypt Sensitive Data: Secure unencrypted data records using AES-256 or GPG encryption.",
-            "INSECURE_SSH_TRANSMISSION_PROTOCOL": "⚙️ Harden Transmission: Disable weak SSH Protocol 1 & obsolete ciphers in sshd_config.",
-            "INSECURE_SYSTEM_TLS_POLICY": "🌐 Upgrade Encryption: Require TLS 1.2 or TLS 1.3 minimum in system web/SSL policies.",
-            "INSECURE_PASSWORD_POLICY_MAX_DAYS": "🔑 Enforce Password Rotation: Update policy to require password change every 90 days (login.defs).",
-            "INSECURE_SYSTEM_ACCOUNT_HARDENING": "🚫 Disable Service Logins: Set system service account shells to /sbin/nologin.",
-            "INSECURE_AUDIT_LOG_PERMISSIONS": "📋 Protect Audit Trails: Restrict /var/log/audit access exclusively to administrators (chmod 0600).",
-            "UNENCRYPTED_RAW_ZLIB_STREAM": "🔐 Secure Archives: Encrypt compressed file streams with AES-256-CBC.",
-            "DECOMPRESSION_SAFETY_BOMB_TEST": "⚠️ Inspect Compression: Check archive decompression ratio for safety boundary anomalies."
-        }
+        for sev, color in order:
+            count = sev_counts.get(sev, 0)
+            if count == 0:
+                continue
+            pct = (count / total) * 100
+            is_active = (active == sev)
 
-        sev_colors = {
-            "CRITICAL": ("#fee2e2", "#991b1b", "#ef4444"),
-            "HIGH": ("#ffedd5", "#c2410c", "#f97316"),
-            "MEDIUM": ("#fef9c3", "#a16207", "#eab308")
-        }
+            row_w = QWidget()
+            row_w.setCursor(Qt.CursorShape.PointingHandCursor)
+            bg = f"background:{PALETTE['bg_elevated']};border-radius:4px;" if is_active else ""
+            row_w.setStyleSheet(f"QWidget {{ {bg} }}")
 
-        for idx, item in enumerate(top_3, 1):
-            sev = item.get("severity", "MEDIUM")
-            bg_color, fg_color, border_color = sev_colors.get(sev, ("#f1f5f9", "#334155", "#cbd5e1"))
+            rl = QHBoxLayout(row_w)
+            rl.setContentsMargins(4, 2, 4, 2)
 
-            file_path = item.get("file_path", "N/A")
-            rel_file = Path(file_path).name
-            rule_id = item.get("rule_id", "N/A")
-            
-            advisory = item.get("rag_advisory", {})
-            rem_cmd = advisory.get("remediation_command", remediation_hints.get(rule_id, "Remediate finding"))
+            dot = QLabel("●")
+            dot.setStyleSheet(f"color:{color};font-size:14px;")
+            rl.addWidget(dot)
 
-            item_card = tk.Frame(self.top3_container, bg=bg_color, highlightthickness=1, highlightbackground=border_color, padx=8, pady=3)
-            item_card.pack(fill="x", pady=2)
-
-            top_row = tk.Frame(item_card, bg=bg_color)
-            top_row.pack(fill="x")
-
-            lbl_badge = tk.Label(top_row, text=f"#{idx} {sev}", font=("Segoe UI", 8, "bold"), fg="#ffffff", bg=border_color, padx=4, pady=1)
-            lbl_badge.pack(side="left", padx=(0, 6))
-
-            tk.Label(top_row, text=f"{rel_file}", font=("Segoe UI", 9, "bold"), fg=fg_color, bg=bg_color).pack(side="left")
-            tk.Label(top_row, text=f"({rule_id})", font=("Segoe UI", 8), fg="#64748b", bg=bg_color).pack(side="left", padx=4)
-
-            # Quick Action Button
-            btn_fix = ttk.Button(
-                top_row, text="📂 Reveal", style="Secondary.TButton",
-                command=lambda f=file_path: reveal_in_file_explorer(Path(self.target_dir_var.get()) / f if not Path(f).is_absolute() else Path(f))
+            lbl = QLabel(f"{sev}: {count}  ({pct:.0f}%)" + (" ◀" if is_active else ""))
+            lbl.setStyleSheet(
+                f"color:{PALETTE['accent_blue'] if is_active else PALETTE['text_primary']};"
+                f"font-size:11px;font-weight:{'bold' if is_active else 'normal'};"
             )
-            btn_fix.pack(side="right")
-            ToolTip(btn_fix, f"Reveal {rel_file} in system Explorer/Finder.")
+            rl.addWidget(lbl, 1)
 
-            # Remediation hint line
-            bot_row = tk.Frame(item_card, bg=bg_color)
-            bot_row.pack(fill="x", pady=(1, 0))
-            tk.Label(bot_row, text=f"👉 Action: {rem_cmd[:60]}", font=("Consolas", 8), fg="#0f172a", bg=bg_color).pack(anchor="w")
+            row_w.mousePressEvent = (lambda e, s=sev: self.filter_clicked.emit(s))
+            self._layout.addWidget(row_w)
 
-    def _on_scan_error(self, err_msg: str):
-        """Callback executed on GUI thread if scan errors out."""
-        self.is_scanning = False
-        self.is_monitoring = False
-        self.btn_start.config(text="▶ START MONITORING", style="Primary.TButton")
-        self.lbl_progress.config(text="Scan failed.")
-        self.hero_status_lbl.config(text="🔴 Protection Error", fg="#b91c1c", bg="#fee2e2")
-        messagebox.showerror("Scan Error", f"An error occurred during scan: {err_msg}")
+
+# ──────────────────────────────────────────────────────────────────────────────
+# TOP-3 ISSUES WIDGET
+# ──────────────────────────────────────────────────────────────────────────────
+
+class Top3Widget(QWidget):
+    reveal_requested = pyqtSignal(str)   # rel_path
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._layout = QVBoxLayout(self)
+        self._layout.setContentsMargins(0, 0, 0, 0)
+        self._layout.setSpacing(6)
+
+    def update_issues(self, findings: List[Dict], severity_filter: Optional[str] = None):
+        for i in reversed(range(self._layout.count())):
+            w = self._layout.itemAt(i).widget()
+            if w:
+                w.deleteLater()
+
+        if severity_filter:
+            candidates = [f for f in findings if f.get("severity") == severity_filter]
+        else:
+            candidates = [f for f in findings if f.get("severity") != "PASS"]
+
+        if not candidates:
+            lbl = QLabel("🎉  Zero active violations — all files compliant!")
+            lbl.setStyleSheet(
+                f"color:{PALETTE['green']};font-weight:bold;font-size:12px;"
+                f"background:{PALETTE['green_bg']};border-radius:6px;padding:8px;"
+            )
+            lbl.setWordWrap(True)
+            self._layout.addWidget(lbl)
+            return
+
+        sev_rank = {"CRITICAL": 3, "HIGH": 2, "MEDIUM": 1}
+        top3 = sorted(candidates, key=lambda x: (sev_rank.get(x.get("severity", ""), 0)), reverse=True)[:3]
+
+        for idx, item in enumerate(top3, 1):
+            sev     = item.get("severity", "MEDIUM")
+            color   = SEV_COLOR.get(sev, PALETTE["text_secondary"])
+            bgc     = SEV_BG.get(sev,   PALETTE["bg_elevated"])
+            rule_id = item.get("rule_id", "")
+            fname   = Path(item.get("file_path", "N/A")).name
+            rem_cmd = REMEDIATION_HINTS.get(rule_id, "Review finding")
+
+            card = QFrame()
+            card.setStyleSheet(
+                f"QFrame {{ background:{bgc};border:1px solid {color}40;"
+                f"border-radius:6px;padding:2px; }}"
+            )
+            cl = QVBoxLayout(card)
+            cl.setContentsMargins(10, 6, 10, 6)
+            cl.setSpacing(2)
+
+            top_row = QHBoxLayout()
+            badge = QLabel(f" #{idx} {sev} ")
+            badge.setStyleSheet(
+                f"background:{color};color:#000;font-weight:bold;"
+                f"font-size:10px;border-radius:3px;padding:2px 6px;"
+            )
+            top_row.addWidget(badge)
+            file_lbl = QLabel(fname)
+            file_lbl.setStyleSheet(f"color:{color};font-weight:bold;font-size:12px;")
+            top_row.addWidget(file_lbl, 1)
+
+            reveal_btn = QPushButton("📂")
+            reveal_btn.setFixedSize(QSize(28, 24))
+            reveal_btn.setStyleSheet(
+                f"QPushButton{{background:{PALETTE['bg_card']};color:{PALETTE['text_primary']};"
+                f"border:1px solid {PALETTE['border']};border-radius:4px;font-size:11px;}}"
+                f"QPushButton:hover{{background:{PALETTE['bg_elevated']};}}"
+            )
+            rel_path = item.get("file_path", "")
+            reveal_btn.clicked.connect(lambda _, p=rel_path: self.reveal_requested.emit(p))
+            top_row.addWidget(reveal_btn)
+            cl.addLayout(top_row)
+
+            action_lbl = QLabel(f"👉  {rem_cmd[:80]}")
+            action_lbl.setStyleSheet(
+                f"color:{PALETTE['text_secondary']};font-family:monospace;font-size:10px;"
+            )
+            action_lbl.setWordWrap(True)
+            cl.addWidget(action_lbl)
+            self._layout.addWidget(card)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# MAIN APPLICATION WINDOW
+# ──────────────────────────────────────────────────────────────────────────────
+
+class KintsugiGRCApp(QMainWindow):
+    """Premium dark-mode PyQt6 Compliance Monitoring Center."""
+
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Kintsugi GRC — Security & Compliance Monitoring Center")
+        self.setMinimumSize(1280, 820)
+        self.resize(1440, 900)
+
+        self.scan_summary: Optional[Dict[str, Any]] = None
+        self.displayed_findings: List[Dict[str, Any]] = []
+        self._filter_severity: Optional[str]          = None
+        self._filter_text: str                         = ""
+        self._filter_mode: str                         = "Violations Only"
+        self._is_monitoring: bool                      = False
+        self._worker: Optional[ScanWorker]             = None
+        self._selected_finding: Optional[Dict]         = None
+
+        self._apply_stylesheet()
+        self._build_ui()
+
+    # ── Stylesheet ─────────────────────────────────────────────────────────────
+    def _apply_stylesheet(self):
+        self.setStyleSheet(f"""
+        QMainWindow, QWidget {{
+            background: {PALETTE['bg_base']};
+            color: {PALETTE['text_primary']};
+            font-family: 'Segoe UI', 'Inter', 'SF Pro Display', sans-serif;
+            font-size: 13px;
+        }}
+        QSplitter::handle {{
+            background: {PALETTE['border']};
+            width: 1px;
+        }}
+        QLabel {{ color: {PALETTE['text_primary']}; }}
+        QLineEdit {{
+            background: {PALETTE['bg_surface']};
+            color: {PALETTE['text_primary']};
+            border: 1px solid {PALETTE['border']};
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 12px;
+        }}
+        QLineEdit:focus {{ border-color: {PALETTE['accent_blue']}; }}
+        QComboBox {{
+            background: {PALETTE['bg_surface']};
+            color: {PALETTE['text_primary']};
+            border: 1px solid {PALETTE['border']};
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 12px;
+        }}
+        QComboBox::drop-down {{ border: none; }}
+        QComboBox QAbstractItemView {{
+            background: {PALETTE['bg_card']};
+            color: {PALETTE['text_primary']};
+            selection-background-color: {PALETTE['accent_blue']};
+        }}
+        QPushButton {{
+            background: {PALETTE['bg_card']};
+            color: {PALETTE['text_primary']};
+            border: 1px solid {PALETTE['border']};
+            border-radius: 6px;
+            padding: 6px 16px;
+            font-weight: 600;
+            font-size: 12px;
+        }}
+        QPushButton:hover {{
+            background: {PALETTE['bg_elevated']};
+            border-color: {PALETTE['accent_blue']};
+        }}
+        QPushButton:pressed {{ background: {PALETTE['bg_surface']}; }}
+        QPushButton#btnPrimary {{
+            background: {PALETTE['accent_blue']};
+            color: #0d1117;
+            border: none;
+        }}
+        QPushButton#btnPrimary:hover {{ background: {PALETTE['accent_cyan']}; }}
+        QPushButton#btnDanger {{
+            background: {PALETTE['red']};
+            color: #fff;
+            border: none;
+        }}
+        QPushButton#btnDanger:hover {{ background: #ff6b6b; }}
+        QPushButton:disabled {{
+            background: {PALETTE['bg_surface']};
+            color: {PALETTE['text_muted']};
+            border-color: {PALETTE['border']};
+        }}
+        QProgressBar {{
+            background: {PALETTE['bg_surface']};
+            border: 1px solid {PALETTE['border']};
+            border-radius: 4px;
+            height: 8px;
+            text-align: center;
+            color: transparent;
+        }}
+        QProgressBar::chunk {{
+            background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
+                stop:0 {PALETTE['accent_blue']}, stop:1 {PALETTE['green']});
+            border-radius: 4px;
+        }}
+        QTableWidget {{
+            background: {PALETTE['bg_surface']};
+            color: {PALETTE['text_primary']};
+            gridline-color: {PALETTE['border']};
+            border: 1px solid {PALETTE['border']};
+            border-radius: 6px;
+            selection-background-color: {PALETTE['bg_elevated']};
+            alternate-background-color: {PALETTE['bg_card']};
+        }}
+        QHeaderView::section {{
+            background: {PALETTE['bg_card']};
+            color: {PALETTE['text_secondary']};
+            border: none;
+            border-bottom: 1px solid {PALETTE['border']};
+            padding: 6px 8px;
+            font-weight: bold;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+        QTableWidget::item {{ padding: 4px 8px; }}
+        QTableWidget::item:selected {{
+            background: {PALETTE['bg_elevated']};
+            color: {PALETTE['text_primary']};
+        }}
+        QTreeWidget {{
+            background: {PALETTE['bg_surface']};
+            color: {PALETTE['text_primary']};
+            border: none;
+            border-radius: 0;
+            font-size: 12px;
+        }}
+        QTreeWidget::item {{ padding: 3px 4px; }}
+        QTreeWidget::item:selected {{
+            background: {PALETTE['bg_elevated']};
+            color: {PALETTE['accent_blue']};
+        }}
+        QTreeWidget::item:hover {{ background: {PALETTE['bg_card']}; }}
+        QScrollBar:vertical {{
+            background: {PALETTE['bg_surface']};
+            width: 8px;
+            border-radius: 4px;
+        }}
+        QScrollBar::handle:vertical {{
+            background: {PALETTE['border']};
+            border-radius: 4px;
+            min-height: 20px;
+        }}
+        QScrollBar::handle:vertical:hover {{ background: {PALETTE['text_muted']}; }}
+        QScrollBar::add-line, QScrollBar::sub-line {{ height: 0; }}
+        QTabWidget::pane {{
+            border: 1px solid {PALETTE['border']};
+            border-radius: 0 6px 6px 6px;
+            background: {PALETTE['bg_surface']};
+        }}
+        QTabBar::tab {{
+            background: {PALETTE['bg_card']};
+            color: {PALETTE['text_secondary']};
+            border: 1px solid {PALETTE['border']};
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            padding: 7px 18px;
+            font-weight: bold;
+            font-size: 12px;
+        }}
+        QTabBar::tab:selected {{
+            background: {PALETTE['bg_surface']};
+            color: {PALETTE['accent_blue']};
+            border-color: {PALETTE['accent_blue']};
+        }}
+        QTabBar::tab:hover {{ color: {PALETTE['text_primary']}; }}
+        QTextEdit {{
+            background: {PALETTE['bg_surface']};
+            color: {PALETTE['text_primary']};
+            border: none;
+            font-family: 'Consolas', 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 12px;
+        }}
+        QRadioButton {{ color: {PALETTE['text_primary']}; }}
+        QRadioButton::indicator {{
+            width: 14px; height: 14px;
+            border-radius: 7px;
+            border: 2px solid {PALETTE['border']};
+            background: {PALETTE['bg_surface']};
+        }}
+        QRadioButton::indicator:checked {{
+            background: {PALETTE['accent_blue']};
+            border-color: {PALETTE['accent_blue']};
+        }}
+        """)
+
+    # ── Build UI ───────────────────────────────────────────────────────────────
+    def _build_ui(self):
+        central = QWidget()
+        self.setCentralWidget(central)
+        root_layout = QVBoxLayout(central)
+        root_layout.setContentsMargins(0, 0, 0, 0)
+        root_layout.setSpacing(0)
+
+        root_layout.addWidget(self._build_header())
+        root_layout.addWidget(self._build_config_bar())
+        root_layout.addWidget(self._build_progress_bar_row())
+
+        # Main splitter
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+        splitter.setHandleWidth(1)
+        splitter.addWidget(self._build_file_tree_panel())
+        splitter.addWidget(self._build_right_panel())
+        splitter.setSizes([280, 1100])
+        splitter.setStretchFactor(0, 0)
+        splitter.setStretchFactor(1, 1)
+        root_layout.addWidget(splitter, 1)
+
+        root_layout.addWidget(self._build_status_bar())
+
+    # ── Header ─────────────────────────────────────────────────────────────────
+    def _build_header(self) -> QWidget:
+        header = QFrame()
+        header.setFixedHeight(70)
+        header.setStyleSheet(
+            f"QFrame {{ background: {PALETTE['bg_surface']};"
+            f"border-bottom: 1px solid {PALETTE['border']}; }}"
+        )
+        hl = QHBoxLayout(header)
+        hl.setContentsMargins(20, 0, 20, 0)
+
+        # Shield + title
+        shield = QLabel("🛡️")
+        shield.setStyleSheet("font-size: 28px;")
+        hl.addWidget(shield)
+
+        title_col = QVBoxLayout()
+        title_col.setSpacing(1)
+        t1 = QLabel("Security & Compliance Protection Center")
+        t1.setStyleSheet(f"font-size:18px;font-weight:bold;color:{PALETTE['text_primary']};")
+        t2 = QLabel("Dynamic File Watcher · Automated GRC Control Audit (HIPAA · PCI DSS · NIST)")
+        t2.setStyleSheet(f"font-size:11px;color:{PALETTE['text_secondary']};")
+        title_col.addWidget(t1)
+        title_col.addWidget(t2)
+        hl.addLayout(title_col, 1)
+
+        # Health score ring label
+        self._score_lbl = QLabel("—%")
+        self._score_lbl.setStyleSheet(
+            f"font-size:28px;font-weight:bold;color:{PALETTE['accent_blue']};"
+        )
+        self._score_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        score_sub = QLabel("Health Score")
+        score_sub.setStyleSheet(f"font-size:10px;color:{PALETTE['text_muted']};")
+        score_sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        sc = QVBoxLayout()
+        sc.setSpacing(0)
+        sc.addWidget(self._score_lbl)
+        sc.addWidget(score_sub)
+        hl.addLayout(sc)
+
+        hl.addSpacing(20)
+
+        # Status badge
+        self._status_badge = QLabel("  🟢  Ready  ")
+        self._status_badge.setStyleSheet(
+            f"background:{PALETTE['green_bg']};color:{PALETTE['green']};"
+            f"font-weight:bold;font-size:12px;border-radius:16px;padding:6px 14px;"
+        )
+        hl.addWidget(self._status_badge)
+
+        hl.addSpacing(16)
+
+        # PDF button
+        self._btn_pdf = QPushButton("📄  Export PDF")
+        self._btn_pdf.setEnabled(False)
+        self._btn_pdf.clicked.connect(self._export_pdf)
+        hl.addWidget(self._btn_pdf)
+
+        return header
+
+    # ── Config bar ─────────────────────────────────────────────────────────────
+    def _build_config_bar(self) -> QWidget:
+        bar = QFrame()
+        bar.setStyleSheet(
+            f"QFrame {{ background:{PALETTE['bg_card']};"
+            f"border-bottom:1px solid {PALETTE['border']}; }}"
+        )
+        hl = QHBoxLayout(bar)
+        hl.setContentsMargins(16, 8, 16, 8)
+        hl.setSpacing(10)
+
+        # Target dir
+        target_lbl = QLabel("Target Directory:")
+        target_lbl.setStyleSheet(f"color:{PALETTE['text_secondary']};font-weight:bold;font-size:11px;")
+        hl.addWidget(target_lbl)
+
+        self._target_edit = QLineEdit()
+        self._target_edit.setText(os.path.abspath("./synthetic_test_env"))
+        self._target_edit.setPlaceholderText("/path/to/scan...")
+        hl.addWidget(self._target_edit, 2)
+
+        btn_browse = QPushButton("📁")
+        btn_browse.setFixedWidth(36)
+        btn_browse.setToolTip("Browse for target directory")
+        btn_browse.clicked.connect(self._browse_target)
+        hl.addWidget(btn_browse)
+
+        btn_open = QPushButton("📂")
+        btn_open.setFixedWidth(36)
+        btn_open.setToolTip("Open target folder in Finder/Explorer")
+        btn_open.clicked.connect(self._open_target_in_explorer)
+        hl.addWidget(btn_open)
+
+        hl.addSpacing(12)
+
+        # Policy
+        policy_lbl = QLabel("Policy:")
+        policy_lbl.setStyleSheet(f"color:{PALETTE['text_secondary']};font-weight:bold;font-size:11px;")
+        hl.addWidget(policy_lbl)
+
+        self._policy_edit = QLineEdit()
+        self._policy_edit.setPlaceholderText("Custom policy.json (optional)")
+        self._policy_edit.setMaximumWidth(220)
+        hl.addWidget(self._policy_edit)
+
+        btn_policy = QPushButton("📄")
+        btn_policy.setFixedWidth(36)
+        btn_policy.setToolTip("Upload custom JSON policy")
+        btn_policy.clicked.connect(self._upload_policy)
+        hl.addWidget(btn_policy)
+
+        hl.addSpacing(12)
+
+        # Industry
+        ind_lbl = QLabel("Industry:")
+        ind_lbl.setStyleSheet(f"color:{PALETTE['text_secondary']};font-weight:bold;font-size:11px;")
+        hl.addWidget(ind_lbl)
+
+        self._industry_cb = QComboBox()
+        self._industry_cb.addItems([
+            "All Industries", "Healthcare",
+            "Merchant / E-Commerce", "Finance / Treasury", "Banking / SWIFT",
+        ])
+        self._industry_cb.setMinimumWidth(160)
+        hl.addWidget(self._industry_cb)
+
+        hl.addStretch()
+
+        # Start / Stop button
+        self._btn_monitor = QPushButton("▶  Start Monitoring")
+        self._btn_monitor.setObjectName("btnPrimary")
+        self._btn_monitor.setMinimumWidth(160)
+        self._btn_monitor.clicked.connect(self._toggle_monitoring)
+        hl.addWidget(self._btn_monitor)
+
+        return bar
+
+    # ── Progress bar row ────────────────────────────────────────────────────────
+    def _build_progress_bar_row(self) -> QWidget:
+        frame = QFrame()
+        frame.setFixedHeight(36)
+        frame.setStyleSheet(f"background:{PALETTE['bg_base']};border-bottom:1px solid {PALETTE['border']};")
+        hl = QHBoxLayout(frame)
+        hl.setContentsMargins(16, 4, 16, 4)
+        hl.setSpacing(12)
+
+        self._progress_lbl = QLabel("Ready — select a target directory and click Start Monitoring.")
+        self._progress_lbl.setStyleSheet(f"font-size:11px;color:{PALETTE['text_secondary']};font-style:italic;")
+        hl.addWidget(self._progress_lbl, 1)
+
+        self._progress_bar = QProgressBar()
+        self._progress_bar.setRange(0, 100)
+        self._progress_bar.setValue(0)
+        self._progress_bar.setFixedWidth(200)
+        self._progress_bar.setTextVisible(False)
+        hl.addWidget(self._progress_bar)
+
+        return frame
+
+    # ── File tree (left panel) ─────────────────────────────────────────────────
+    def _build_file_tree_panel(self) -> QWidget:
+        panel = QWidget()
+        panel.setMinimumWidth(220)
+        panel.setMaximumWidth(380)
+        vl = QVBoxLayout(panel)
+        vl.setContentsMargins(0, 0, 0, 0)
+        vl.setSpacing(0)
+
+        # Panel header
+        hdr = QFrame()
+        hdr.setFixedHeight(36)
+        hdr.setStyleSheet(
+            f"background:{PALETTE['bg_card']};border-right:1px solid {PALETTE['border']};"
+            f"border-bottom:1px solid {PALETTE['border']};"
+        )
+        hhl = QHBoxLayout(hdr)
+        hhl.setContentsMargins(12, 0, 8, 0)
+        hl = QLabel("📁  File Tree")
+        hl.setStyleSheet(f"font-weight:bold;font-size:12px;color:{PALETTE['text_secondary']};")
+        hhl.addWidget(hl)
+        hhl.addStretch()
+
+        collapse_btn = QPushButton("⊟")
+        collapse_btn.setFixedSize(QSize(24, 20))
+        collapse_btn.setStyleSheet(
+            f"QPushButton{{background:transparent;color:{PALETTE['text_muted']};"
+            f"border:none;font-size:14px;}}"
+            f"QPushButton:hover{{color:{PALETTE['text_primary']};}}"
+        )
+        collapse_btn.setToolTip("Collapse all tree nodes")
+        collapse_btn.clicked.connect(lambda: self._file_tree.collapseAll())
+        hhl.addWidget(collapse_btn)
+        vl.addWidget(hdr)
+
+        # Filter search inside tree
+        self._tree_search = QLineEdit()
+        self._tree_search.setPlaceholderText("🔍 Filter files...")
+        self._tree_search.setStyleSheet(
+            f"background:{PALETTE['bg_surface']};border:none;"
+            f"border-bottom:1px solid {PALETTE['border']};"
+            f"border-radius:0;padding:6px 12px;font-size:11px;"
+        )
+        self._tree_search.textChanged.connect(self._filter_file_tree)
+        vl.addWidget(self._tree_search)
+
+        # Tree widget
+        self._file_tree = QTreeWidget()
+        self._file_tree.setHeaderHidden(True)
+        self._file_tree.setAnimated(True)
+        self._file_tree.setStyleSheet(
+            f"QTreeWidget {{ border-right:1px solid {PALETTE['border']}; }}"
+        )
+        self._file_tree.itemClicked.connect(self._on_tree_item_clicked)
+        vl.addWidget(self._file_tree, 1)
+
+        # Legend
+        legend_frame = QFrame()
+        legend_frame.setStyleSheet(
+            f"background:{PALETTE['bg_card']};border-top:1px solid {PALETTE['border']};"
+            f"border-right:1px solid {PALETTE['border']};"
+        )
+        lfl = QVBoxLayout(legend_frame)
+        lfl.setContentsMargins(10, 6, 10, 6)
+        lfl.setSpacing(2)
+        leg_title = QLabel("SEVERITY LEGEND")
+        leg_title.setStyleSheet(f"font-size:9px;color:{PALETTE['text_muted']};font-weight:bold;letter-spacing:1px;")
+        lfl.addWidget(leg_title)
+        for sev, color in [("CRITICAL", PALETTE["sev_critical"]), ("HIGH", PALETTE["sev_high"]),
+                            ("MEDIUM", PALETTE["sev_medium"]), ("PASS", PALETTE["sev_pass"])]:
+            r = QLabel(f"● {sev}")
+            r.setStyleSheet(f"color:{color};font-size:10px;")
+            lfl.addWidget(r)
+        vl.addWidget(legend_frame)
+
+        return panel
+
+    # ── Right panel (tabs) ─────────────────────────────────────────────────────
+    def _build_right_panel(self) -> QWidget:
+        panel = QWidget()
+        vl = QVBoxLayout(panel)
+        vl.setContentsMargins(0, 0, 0, 0)
+        vl.setSpacing(0)
+
+        self._tabs = QTabWidget()
+        self._tabs.addTab(self._build_dashboard_tab(), "  📊  Dashboard  ")
+        self._tabs.addTab(self._build_file_detail_tab(), "  🔍  File Detail  ")
+        vl.addWidget(self._tabs, 1)
+
+        return panel
+
+    # ── Dashboard tab ──────────────────────────────────────────────────────────
+    def _build_dashboard_tab(self) -> QWidget:
+        w = QWidget()
+        vl = QVBoxLayout(w)
+        vl.setContentsMargins(12, 12, 12, 12)
+        vl.setSpacing(10)
+
+        # ── Executive summary row ────────────────────────────────────────────
+        exec_row = QHBoxLayout()
+
+        # Donut chart
+        chart_card = QFrame()
+        chart_card.setStyleSheet(
+            f"QFrame{{ background:{PALETTE['bg_card']};border:1px solid {PALETTE['border']};"
+            f"border-radius:8px; }}"
+        )
+        ccl = QHBoxLayout(chart_card)
+        ccl.setContentsMargins(12, 10, 12, 10)
+
+        self._donut = SeverityDonutChart()
+        self._donut.slice_clicked.connect(self._on_severity_filter)
+        ccl.addWidget(self._donut)
+
+        self._legend = SeverityLegend()
+        self._legend.filter_clicked.connect(self._on_severity_filter)
+        ccl.addWidget(self._legend)
+        exec_row.addWidget(chart_card, 1)
+
+        # Top 3 issues
+        top3_card = QFrame()
+        top3_card.setStyleSheet(
+            f"QFrame{{ background:{PALETTE['bg_card']};border:1px solid {PALETTE['border']};"
+            f"border-radius:8px; }}"
+        )
+        t3cl = QVBoxLayout(top3_card)
+        t3cl.setContentsMargins(12, 10, 12, 10)
+        t3cl.setSpacing(6)
+
+        t3_hdr = QHBoxLayout()
+        t3_title = QLabel("🔥  Top 3 Priority Issues")
+        t3_title.setStyleSheet(
+            f"font-size:13px;font-weight:bold;color:{PALETTE['red']};"
+        )
+        t3_hdr.addWidget(t3_title, 1)
+        self._btn_reset_filter = QPushButton("↺ All")
+        self._btn_reset_filter.setFixedHeight(22)
+        self._btn_reset_filter.setStyleSheet(
+            f"QPushButton{{background:{PALETTE['bg_elevated']};color:{PALETTE['accent_blue']};"
+            f"border:1px solid {PALETTE['border']};border-radius:4px;padding:0 8px;font-size:10px;}}"
+            f"QPushButton:hover{{border-color:{PALETTE['accent_blue']};}}"
+        )
+        self._btn_reset_filter.setVisible(False)
+        self._btn_reset_filter.clicked.connect(lambda: self._on_severity_filter("ALL"))
+        t3_hdr.addWidget(self._btn_reset_filter)
+        t3cl.addLayout(t3_hdr)
+
+        self._top3 = Top3Widget()
+        self._top3.reveal_requested.connect(self._reveal_by_relpath)
+        t3cl.addWidget(self._top3, 1)
+        exec_row.addWidget(top3_card, 2)
+
+        vl.addLayout(exec_row, 2)
+
+        # ── Findings table ───────────────────────────────────────────────────
+        table_card = QFrame()
+        table_card.setStyleSheet(
+            f"QFrame{{ background:{PALETTE['bg_card']};border:1px solid {PALETTE['border']};"
+            f"border-radius:8px; }}"
+        )
+        tcl = QVBoxLayout(table_card)
+        tcl.setContentsMargins(12, 10, 12, 10)
+        tcl.setSpacing(8)
+
+        # Toolbar row
+        tb_row = QHBoxLayout()
+        tbl_lbl = QLabel("📋  Live Findings Ledger")
+        tbl_lbl.setStyleSheet(f"font-size:13px;font-weight:bold;color:{PALETTE['accent_blue']};")
+        tb_row.addWidget(tbl_lbl)
+
+        tb_row.addStretch()
+
+        # Filter radio buttons
+        self._rb_violations = QRadioButton("Violations Only")
+        self._rb_violations.setChecked(True)
+        self._rb_all = QRadioButton("All Findings")
+        for rb in [self._rb_violations, self._rb_all]:
+            rb.toggled.connect(self._update_findings_table)
+            tb_row.addWidget(rb)
+
+        # Search bar
+        self._table_search = QLineEdit()
+        self._table_search.setPlaceholderText("🔍 Search findings...")
+        self._table_search.setFixedWidth(200)
+        self._table_search.textChanged.connect(self._on_table_search)
+        tb_row.addWidget(self._table_search)
+
+        tcl.addLayout(tb_row)
+
+        # Table
+        cols = ["Severity", "Domain", "File Path", "Rule / Control Title", "Quick Remediation"]
+        self._table = QTableWidget(0, len(cols))
+        self._table.setHorizontalHeaderLabels(cols)
+        self._table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        self._table.horizontalHeader().setStretchLastSection(True)
+        self._table.verticalHeader().setVisible(False)
+        self._table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self._table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self._table.setAlternatingRowColors(True)
+        self._table.setSortingEnabled(True)
+        self._table.setWordWrap(False)
+        self._table.setColumnWidth(0, 100)
+        self._table.setColumnWidth(1, 140)
+        self._table.setColumnWidth(2, 300)
+        self._table.setColumnWidth(3, 240)
+        self._table.itemSelectionChanged.connect(self._on_table_selection_changed)
+        self._table.itemDoubleClicked.connect(self._on_table_double_click)
+        tcl.addWidget(self._table, 1)
+
+        vl.addWidget(table_card, 3)
+        return w
+
+    # ── File Detail tab ────────────────────────────────────────────────────────
+    def _build_file_detail_tab(self) -> QWidget:
+        w = QWidget()
+        vl = QVBoxLayout(w)
+        vl.setContentsMargins(0, 0, 0, 0)
+        vl.setSpacing(0)
+
+        splitter = QSplitter(Qt.Orientation.Vertical)
+
+        # Top: file content viewer
+        content_frame = QFrame()
+        content_frame.setStyleSheet(
+            f"QFrame{{ background:{PALETTE['bg_surface']};"
+            f"border-bottom:1px solid {PALETTE['border']}; }}"
+        )
+        cfl = QVBoxLayout(content_frame)
+        cfl.setContentsMargins(0, 0, 0, 0)
+        cfl.setSpacing(0)
+
+        file_hdr = QFrame()
+        file_hdr.setFixedHeight(36)
+        file_hdr.setStyleSheet(
+            f"background:{PALETTE['bg_card']};border-bottom:1px solid {PALETTE['border']};"
+        )
+        fhhl = QHBoxLayout(file_hdr)
+        fhhl.setContentsMargins(12, 0, 12, 0)
+        self._file_path_lbl = QLabel("No file selected")
+        self._file_path_lbl.setStyleSheet(
+            f"font-family:monospace;font-size:11px;color:{PALETTE['text_secondary']};"
+        )
+        fhhl.addWidget(self._file_path_lbl, 1)
+        self._btn_reveal_file = QPushButton("📂  Reveal in Explorer")
+        self._btn_reveal_file.setEnabled(False)
+        self._btn_reveal_file.clicked.connect(self._reveal_selected_file)
+        fhhl.addWidget(self._btn_reveal_file)
+        cfl.addWidget(file_hdr)
+
+        self._file_content_viewer = QTextEdit()
+        self._file_content_viewer.setReadOnly(True)
+        self._file_content_viewer.setStyleSheet(
+            f"font-family:'Consolas','JetBrains Mono',monospace;font-size:12px;"
+            f"background:{PALETTE['bg_surface']};color:{PALETTE['text_primary']};"
+        )
+        self._file_content_viewer.setPlaceholderText(
+            "Click a file in the tree or a row in the findings table to preview file content here."
+        )
+        cfl.addWidget(self._file_content_viewer, 1)
+        splitter.addWidget(content_frame)
+
+        # Bottom: finding detail panel
+        detail_frame = QFrame()
+        detail_frame.setStyleSheet(f"background:{PALETTE['bg_surface']};")
+        dfl = QVBoxLayout(detail_frame)
+        dfl.setContentsMargins(0, 0, 0, 0)
+        dfl.setSpacing(0)
+
+        detail_hdr = QFrame()
+        detail_hdr.setFixedHeight(36)
+        detail_hdr.setStyleSheet(
+            f"background:{PALETTE['bg_card']};border-top:1px solid {PALETTE['border']};"
+            f"border-bottom:1px solid {PALETTE['border']};"
+        )
+        dhhl = QHBoxLayout(detail_hdr)
+        dhhl.setContentsMargins(12, 0, 12, 0)
+        det_lbl = QLabel("🔍  Finding Detail & AI Remediation Advisory")
+        det_lbl.setStyleSheet(f"font-weight:bold;font-size:12px;color:{PALETTE['accent_blue']};")
+        dhhl.addWidget(det_lbl)
+        dfl.addWidget(detail_hdr)
+
+        self._detail_viewer = QTextEdit()
+        self._detail_viewer.setReadOnly(True)
+        self._detail_viewer.setAcceptRichText(True)
+        self._detail_viewer.setPlaceholderText(
+            "Select a finding row in the ledger to view full details and AI remediation advisory here."
+        )
+        dfl.addWidget(self._detail_viewer, 1)
+        splitter.addWidget(detail_frame)
+
+        splitter.setSizes([350, 280])
+        vl.addWidget(splitter, 1)
+        return w
+
+    # ── Status bar ─────────────────────────────────────────────────────────────
+    def _build_status_bar(self) -> QFrame:
+        bar = QFrame()
+        bar.setFixedHeight(26)
+        bar.setStyleSheet(
+            f"background:{PALETTE['bg_card']};border-top:1px solid {PALETTE['border']};"
+        )
+        hl = QHBoxLayout(bar)
+        hl.setContentsMargins(16, 0, 16, 0)
+
+        self._statusbar_lbl = QLabel("Kintsugi-GRC v2.0 — PyQt6 Edition")
+        self._statusbar_lbl.setStyleSheet(f"font-size:10px;color:{PALETTE['text_muted']};")
+        hl.addWidget(self._statusbar_lbl)
+        hl.addStretch()
+
+        domains = [
+            "🔑 Privilege Mgmt", "🛡️ Data Protection",
+            "⚙️ Vuln Control", "📦 Media Handling", "📋 Audit Logging"
+        ]
+        for d in domains:
+            p = QLabel(f" {d} ")
+            p.setStyleSheet(
+                f"background:{PALETTE['bg_elevated']};color:{PALETTE['accent_cyan']};"
+                f"font-size:9px;border-radius:3px;padding:2px 4px;"
+            )
+            hl.addWidget(p)
+
+        return bar
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # MONITORING CONTROL
+    # ──────────────────────────────────────────────────────────────────────────
+
+    def _toggle_monitoring(self):
+        if self._is_monitoring:
+            self._stop_monitoring()
+        else:
+            self._start_monitoring()
+
+    def _start_monitoring(self):
+        target = Path(self._target_edit.text().strip()).resolve()
+        if not target.exists():
+            QMessageBox.critical(self, "Invalid Directory",
+                                 f"Target directory does not exist:\n{target}")
+            return
+
+        self._is_monitoring = True
+        self._btn_monitor.setText("⏹  Stop Monitoring")
+        self._btn_monitor.setObjectName("btnDanger")
+        self._btn_monitor.setStyleSheet(
+            f"QPushButton{{background:{PALETTE['red']};color:#fff;border:none;"
+            f"border-radius:6px;padding:6px 16px;font-weight:bold;}}"
+            f"QPushButton:hover{{background:#ff6b6b;}}"
+        )
+        self._btn_pdf.setEnabled(False)
+        self._progress_bar.setValue(0)
+        self._set_status_badge("scanning")
+
+        self._worker = ScanWorker(
+            target_dir=target,
+            industry=self._industry_cb.currentText(),
+            custom_policy=self._policy_edit.text().strip(),
+        )
+        self._worker.progress.connect(self._on_progress)
+        self._worker.scan_done.connect(self._on_scan_done)
+        self._worker.scan_error.connect(self._on_scan_error)
+        self._worker.dynamic_done.connect(self._on_dynamic_update)
+        self._worker.start()
+
+    def _stop_monitoring(self):
+        if self._worker:
+            self._worker.stop_watcher()
+        self._is_monitoring = False
+        self._btn_monitor.setText("▶  Start Monitoring")
+        self._btn_monitor.setObjectName("btnPrimary")
+        self._btn_monitor.setStyleSheet("")   # re-apply from stylesheet
+        self._apply_stylesheet()
+        self._set_status_badge("paused")
+        self._progress_lbl.setText("Monitoring paused.")
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # WORKER CALLBACKS
+    # ──────────────────────────────────────────────────────────────────────────
+
+    def _on_progress(self, pct: int, msg: str):
+        self._progress_bar.setValue(pct)
+        self._progress_lbl.setText(f"{pct}%  —  {msg}")
+
+    def _on_scan_done(self, summary: Dict):
+        self.scan_summary = summary
+        self._btn_pdf.setEnabled(True)
+        score = summary.get("compliance_score", 0)
+        self._score_lbl.setText(f"{score}%")
+        files = summary.get("total_files_scanned", 0)
+        target = summary.get("target_directory", "")
+        self._progress_lbl.setText(
+            f"✅  Monitoring {files} files in {target} — Score: {score}%"
+        )
+        crits = summary.get("severity_counts", {}).get("CRITICAL", 0)
+        highs = summary.get("severity_counts", {}).get("HIGH", 0)
+        if crits + highs == 0:
+            self._set_status_badge("ok")
+        else:
+            self._set_status_badge("alert", crits + highs)
+
+        self._refresh_all(summary)
+
+    def _on_scan_error(self, err: str):
+        self._is_monitoring = False
+        self._btn_monitor.setText("▶  Start Monitoring")
+        self._apply_stylesheet()
+        self._set_status_badge("error")
+        QMessageBox.critical(self, "Scan Error", f"An error occurred during scan:\n{err}")
+
+    def _on_dynamic_update(self, summary: Dict, msg: str):
+        self.scan_summary = summary
+        score = summary.get("compliance_score", 0)
+        self._score_lbl.setText(f"{score}%")
+        self._progress_lbl.setText(msg)
+        crits = summary.get("severity_counts", {}).get("CRITICAL", 0)
+        highs = summary.get("severity_counts", {}).get("HIGH", 0)
+        if crits + highs == 0:
+            self._set_status_badge("ok")
+        else:
+            self._set_status_badge("alert", crits + highs)
+        self._refresh_all(summary)
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # STATUS BADGE
+    # ──────────────────────────────────────────────────────────────────────────
+
+    def _set_status_badge(self, state: str, count: int = 0):
+        styles = {
+            "ok":       (f"background:{PALETTE['green_bg']};color:{PALETTE['green']};",
+                         "  🟢  Protection Active  "),
+            "alert":    (f"background:{PALETTE['red_bg']};color:{PALETTE['red']};",
+                         f"  ⚠️  {count} Active Violations  "),
+            "scanning": (f"background:{PALETTE['yellow_bg']};color:{PALETTE['yellow']};",
+                         "  🔄  Scanning...  "),
+            "paused":   (f"background:{PALETTE['bg_elevated']};color:{PALETTE['text_secondary']};",
+                         "  🟡  Monitoring Paused  "),
+            "error":    (f"background:{PALETTE['red_bg']};color:{PALETTE['red']};",
+                         "  🔴  Protection Error  "),
+        }
+        style, text = styles.get(state, styles["paused"])
+        self._status_badge.setStyleSheet(
+            style + "font-weight:bold;font-size:12px;border-radius:16px;padding:6px 14px;"
+        )
+        self._status_badge.setText(text)
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # REFRESH ALL UI COMPONENTS
+    # ──────────────────────────────────────────────────────────────────────────
+
+    def _refresh_all(self, summary: Dict):
+        sev_counts = summary.get("severity_counts", {})
+        findings   = summary.get("findings", [])
+
+        self._donut.update_data(sev_counts, self._filter_severity)
+        self._legend.update_data(sev_counts, self._filter_severity)
+        self._top3.update_issues(findings, self._filter_severity)
+        self._rebuild_file_tree(findings)
+        self._update_findings_table()
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # FILE TREE
+    # ──────────────────────────────────────────────────────────────────────────
+
+    def _rebuild_file_tree(self, findings: List[Dict]):
+        self._file_tree.clear()
+        if not findings:
+            return
+
+        # Build a nested severity map: dir → file → [severities]
+        tree_map: Dict[str, Dict[str, List[str]]] = {}
+        for f in findings:
+            rel = f.get("file_path", "unknown")
+            p   = Path(rel)
+            folder = p.parent.as_posix() if p.parent.as_posix() != "." else "(root)"
+            fname  = p.name
+            tree_map.setdefault(folder, {}).setdefault(fname, [])
+            tree_map[folder][fname].append(f.get("severity", "PASS"))
+
+        sev_rank = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "PASS": 1}
+
+        def worst(sevs):
+            return max(sevs, key=lambda s: sev_rank.get(s, 0))
+
+        def color_for(sev):
+            return SEV_COLOR.get(sev, PALETTE["text_secondary"])
+
+        for folder, files in sorted(tree_map.items()):
+            folder_worst = worst([worst(s) for s in files.values()])
+            folder_item  = QTreeWidgetItem([f"📁  {folder}"])
+            folder_item.setForeground(0, QBrush(QColor(color_for(folder_worst))))
+            folder_item.setFont(0, QFont("Segoe UI", 11, QFont.Weight.Bold))
+            folder_item.setData(0, Qt.ItemDataRole.UserRole, {"type": "folder", "path": folder})
+
+            for fname, sevs in sorted(files.items()):
+                w_sev  = worst(sevs)
+                icons  = {"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "PASS": "🟢"}
+                icon   = icons.get(w_sev, "⚪")
+                file_item = QTreeWidgetItem([f"{icon}  {fname}"])
+                file_item.setForeground(0, QBrush(QColor(color_for(w_sev))))
+                file_item.setFont(0, QFont("Segoe UI", 10))
+                # Attach data so we can filter findings on click
+                rel_paths = [
+                    f["file_path"] for f in findings
+                    if Path(f["file_path"]).name == fname
+                ]
+                file_item.setData(
+                    0, Qt.ItemDataRole.UserRole,
+                    {"type": "file", "name": fname, "rel_paths": rel_paths}
+                )
+                folder_item.addChild(file_item)
+
+            self._file_tree.addTopLevelItem(folder_item)
+
+        self._file_tree.expandAll()
+
+    def _filter_file_tree(self, text: str):
+        """Show/hide tree items based on search text."""
+        text = text.lower()
+        for i in range(self._file_tree.topLevelItemCount()):
+            folder_item = self._file_tree.topLevelItem(i)
+            any_visible = False
+            for j in range(folder_item.childCount()):
+                child = folder_item.child(j)
+                match = text in child.text(0).lower()
+                child.setHidden(not match)
+                if match:
+                    any_visible = True
+            folder_item.setHidden(not any_visible and bool(text))
+
+    def _on_tree_item_clicked(self, item: QTreeWidgetItem, col: int):
+        data = item.data(0, Qt.ItemDataRole.UserRole)
+        if not data or not self.scan_summary:
+            return
+
+        if data.get("type") == "file":
+            # Show findings for this file and load content
+            rel_paths = data.get("rel_paths", [])
+            file_findings = [
+                f for f in self.scan_summary.get("findings", [])
+                if f.get("file_path") in rel_paths
+            ]
+            if file_findings:
+                self._load_file_detail(file_findings[0], auto_switch_tab=True)
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # FINDINGS TABLE
+    # ──────────────────────────────────────────────────────────────────────────
 
     def _update_findings_table(self):
-        """Populates running ledger table based on selected filter (Violations Only vs All)."""
-        for item in self.tree.get_children():
-            self.tree.delete(item)
-
-        self.displayed_findings.clear()
         if not self.scan_summary:
             return
-
         findings = self.scan_summary.get("findings", [])
-        filter_mode = self.filter_var.get()
+        violations_only = self._rb_violations.isChecked()
+        search = self._table_search.text().lower()
 
-        domain_names = {
-            "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE": "🔑 Ref 01.02 / 01.c",
-            "ERR-OCTAL-WORLD-WRITABLE": "🔑 Ref 01.02 / 01.c",
-            "INSECURE_SYSTEM_ACCOUNT_HARDENING": "🔑 Ref 01.02 / 01.c",
-            "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN": "🛡️ Ref 06.01 / 06.d",
-            "ERR-ENTROPY-PLAINTEXT-PII": "🛡️ Ref 06.01 / 06.d",
-            "ENCRYPTED_COMPLIANT_AES_256_CBC": "🛡️ Ref 06.01 / 06.d",
-            "INSECURE_SSH_TRANSMISSION_PROTOCOL": "⚙️ Ref 10.06 / 10.m",
-            "INSECURE_SYSTEM_TLS_POLICY": "⚙️ Ref 10.06 / 10.m",
-            "INSECURE_PASSWORD_POLICY_MAX_DAYS": "⚙️ Ref 10.06 / 10.m",
-            "DECOMPRESSION_SAFETY_BOMB_TEST": "⚙️ Ref 10.06 / 10.m",
-            "UNENCRYPTED_RAW_ZLIB_STREAM": "📦 Ref 09.07 / 09.q",
-            "INSECURE_AES_ECB_BLOCK_PATTERN_LEAK": "📦 Ref 09.07 / 09.q",
-            "INSECURE_AUDIT_LOG_PERMISSIONS": "📋 Ref 09.10 / 10.aa"
-        }
-
-        remediation_hints = {
-            "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE": "🔒 Restrict Access: Lock file permissions so only owner can read/write (chmod 0640).",
-            "ERR-OCTAL-WORLD-WRITABLE": "🔒 Restrict Access: Lock file permissions so only owner can read/write (chmod 0640).",
-            "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN": "🛡️ Encrypt Sensitive Data: Secure SSN / credit card records using AES-256 or GPG encryption.",
-            "ERR-ENTROPY-PLAINTEXT-PII": "🛡️ Encrypt Sensitive Data: Secure unencrypted data records using AES-256 or GPG encryption.",
-            "ENCRYPTED_COMPLIANT_AES_256_CBC": "✅ Compliant: Verified AES-256-CBC payload encryption.",
-            "INSECURE_SSH_TRANSMISSION_PROTOCOL": "⚙️ Harden Transmission: Disable weak SSH Protocol 1 & obsolete ciphers in sshd_config.",
-            "INSECURE_SYSTEM_TLS_POLICY": "🌐 Upgrade Encryption: Require TLS 1.2 or TLS 1.3 minimum in system web/SSL policies.",
-            "INSECURE_PASSWORD_POLICY_MAX_DAYS": "🔑 Enforce Password Rotation: Update policy to require password change every 90 days (login.defs).",
-            "INSECURE_SYSTEM_ACCOUNT_HARDENING": "🚫 Disable Service Logins: Set system service account shells to /sbin/nologin.",
-            "INSECURE_AUDIT_LOG_PERMISSIONS": "📋 Protect Audit Trails: Restrict /var/log/audit access exclusively to administrators (chmod 0600).",
-            "UNENCRYPTED_RAW_ZLIB_STREAM": "🔐 Secure Archives: Encrypt compressed file streams with AES-256-CBC.",
-            "DECOMPRESSION_SAFETY_BOMB_TEST": "⚠️ Inspect Compression: Check archive decompression ratio for safety boundary anomalies."
-        }
+        self._table.setSortingEnabled(False)
+        self._table.setRowCount(0)
+        self.displayed_findings.clear()
 
         for f in findings:
-            severity = f.get("severity", "INFO")
+            sev = f.get("severity", "PASS")
+            if violations_only and sev == "PASS":
+                continue
+            if self._filter_severity and sev != self._filter_severity:
+                continue
 
-            if filter_mode == "Violations Only" and severity == "PASS":
+            rule_id  = f.get("rule_id", "")
+            title    = f.get("title", "")
+            fp       = f.get("file_path", "")
+            domain   = DOMAIN_NAMES.get(rule_id, "⚙️ System Config")
+            advisory = f.get("rag_advisory", {})
+            rem      = advisory.get("remediation_command", REMEDIATION_HINTS.get(rule_id, "Review finding"))
+
+            # Text search
+            searchable = f"{sev} {fp} {title} {domain} {rem}".lower()
+            if search and search not in searchable:
                 continue
 
             self.displayed_findings.append(f)
-            rule_id = f.get("rule_id", "N/A")
-            title = f.get("title", "Finding")
-            file_path = f.get("file_path", "N/A")
-            domain = domain_names.get(rule_id, "⚙️ System Config")
+            row_i = self._table.rowCount()
+            self._table.insertRow(row_i)
 
-            advisory = f.get("rag_advisory", {})
-            rem_cmd = advisory.get("remediation_command", remediation_hints.get(rule_id, "Align file controls with GRC standard"))
-            rem_clean = rem_cmd.replace("{filepath}", Path(file_path).name).replace("{file}", Path(file_path).name)
+            # Severity cell
+            sev_item = QTableWidgetItem(sev)
+            sev_item.setForeground(QBrush(QColor(SEV_COLOR.get(sev, PALETTE["text_secondary"]))))
+            sev_item.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+            sev_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+            self._table.setItem(row_i, 0, sev_item)
 
-            self.tree.insert(
-                "",
-                "end",
-                values=(severity, domain, file_path, title, rem_clean),
-                tags=(severity,)
-            )
+            # Domain
+            dom_item = QTableWidgetItem(domain)
+            dom_item.setForeground(QBrush(QColor(PALETTE["text_secondary"])))
+            dom_item.setFont(QFont("Segoe UI", 10))
+            self._table.setItem(row_i, 1, dom_item)
 
-    def _on_tree_select(self, event=None):
-        """Populates expandable detail panel when user selects a finding row."""
-        selected = self.tree.selection()
-        if not selected:
-            self.btn_reveal_file.config(state="disabled")
+            # File path
+            fp_item = QTableWidgetItem(fp)
+            fp_item.setForeground(QBrush(QColor(PALETTE["accent_cyan"])))
+            fp_item.setFont(QFont("Consolas", 10))
+            self._table.setItem(row_i, 2, fp_item)
+
+            # Title
+            title_item = QTableWidgetItem(title)
+            title_item.setForeground(QBrush(QColor(PALETTE["text_primary"])))
+            self._table.setItem(row_i, 3, title_item)
+
+            # Remediation
+            rem_item = QTableWidgetItem(rem)
+            rem_item.setForeground(QBrush(QColor(PALETTE["text_secondary"])))
+            rem_item.setFont(QFont("Consolas", 10))
+            self._table.setItem(row_i, 4, rem_item)
+
+            # Row background tint
+            bg = QColor(SEV_BG.get(sev, PALETTE["bg_surface"]))
+            for ci in range(5):
+                it = self._table.item(row_i, ci)
+                if it:
+                    it.setBackground(QBrush(bg))
+
+        self._table.setSortingEnabled(True)
+        self._table.resizeRowsToContents()
+
+    def _on_table_search(self, text: str):
+        self._filter_text = text
+        self._update_findings_table()
+
+    def _on_table_selection_changed(self):
+        rows = self._table.selectedItems()
+        if not rows:
             return
+        row_i = self._table.currentRow()
+        if 0 <= row_i < len(self.displayed_findings):
+            self._load_file_detail(self.displayed_findings[row_i])
 
-        self.btn_reveal_file.config(state="normal")
-        index = self.tree.index(selected[0])
-        if index < 0 or index >= len(self.displayed_findings):
-            return
+    def _on_table_double_click(self, item: QTableWidgetItem):
+        row_i = item.row()
+        if 0 <= row_i < len(self.displayed_findings):
+            finding = self.displayed_findings[row_i]
+            target  = Path(self._target_edit.text().strip()).resolve()
+            dlg     = FindingDetailDialog(finding, target, self)
+            dlg.exec()
 
-        finding = self.displayed_findings[index]
-        self._populate_detail_panel(finding)
+    # ──────────────────────────────────────────────────────────────────────────
+    # SEVERITY FILTER
+    # ──────────────────────────────────────────────────────────────────────────
 
-    def _on_tree_double_click(self, event=None):
-        """Pops out detailed inspection modal view when user double-clicks a finding row."""
-        selected = self.tree.selection()
-        if not selected:
-            return
-        index = self.tree.index(selected[0])
-        if 0 <= index < len(self.displayed_findings):
-            finding = self.displayed_findings[index]
-            self._open_finding_detail_modal(finding)
-
-    def _open_finding_detail_modal(self, f: Dict[str, Any]):
-        """Pops out a rich detailed inspection modal window with interactive file hyperlink."""
-        severity = f.get("severity", "INFO")
-        title = f.get("title", "Security Finding")
-        rule_id = f.get("rule_id", "N/A")
-        rel_path = f.get("file_path", "N/A")
-        desc = f.get("description", "No description available.")
-        details = f.get("details", {})
-        mappings = f.get("framework_mappings", [])
-        advisory = f.get("rag_advisory", {})
-
-        target_root = Path(self.target_dir_var.get()).resolve()
-        full_path = (target_root / rel_path).resolve() if not Path(rel_path).is_absolute() else Path(rel_path).resolve()
-
-        modal = tk.Toplevel(self.root)
-        modal.title(f"Finding Inspection - {title}")
-        modal.geometry("840x650")
-        modal.minsize(700, 500)
-        modal.configure(background="#f8fafc")
-        modal.transient(self.root)
-        modal.grab_set()
-
-        # Modal Header Banner
-        header = tk.Frame(modal, bg="#ffffff", highlightthickness=1, highlightbackground="#e2e8f0", padx=16, pady=12)
-        header.pack(fill="x", padx=14, pady=(14, 10))
-
-        sev_colors = {
-            "CRITICAL": ("#fee2e2", "#991b1b", "🔴"),
-            "HIGH": ("#ffedd5", "#c2410c", "🟠"),
-            "MEDIUM": ("#fef9c3", "#a16207", "🟡"),
-            "PASS": ("#dcfce7", "#15803d", "🟢")
-        }
-        bg_color, fg_color, icon = sev_colors.get(severity, ("#f1f5f9", "#334155", "ℹ️"))
-
-        badge = tk.Label(header, text=f"{icon} {severity}", font=("Segoe UI", 10, "bold"), fg=fg_color, bg=bg_color, padx=8, pady=4)
-        badge.pack(side="left", padx=(0, 10))
-
-        h_text_box = tk.Frame(header, bg="#ffffff")
-        h_text_box.pack(side="left", fill="both", expand=True)
-        tk.Label(h_text_box, text=title, font=("Segoe UI", 12, "bold"), fg="#0f172a", bg="#ffffff", anchor="w").pack(fill="x")
-        tk.Label(h_text_box, text=f"Rule ID: {rule_id}", font=("Consolas", 9), fg="#64748b", bg="#ffffff", anchor="w").pack(fill="x")
-
-        # Clickable Hyperlink Card
-        link_card = tk.Frame(modal, bg="#f0f9ff", highlightthickness=1, highlightbackground="#bae6fd", padx=14, pady=10)
-        link_card.pack(fill="x", padx=14, pady=(0, 10))
-
-        tk.Label(link_card, text="📁 Target File Location (Click link to follow path in Finder/Explorer):", font=("Segoe UI", 9, "bold"), fg="#0369a1", bg="#f0f9ff").pack(anchor="w")
-        
-        link_row = tk.Frame(link_card, bg="#f0f9ff")
-        link_row.pack(fill="x", pady=(4, 0))
-
-        # Styled Hyperlink Label
-        file_url_text = full_path.as_uri() if full_path.exists() else str(full_path)
-        lbl_link = tk.Label(
-            link_row,
-            text=file_url_text,
-            font=("Consolas", 9, "underline"),
-            fg="#0284c7",
-            bg="#f0f9ff",
-            cursor="hand2",
-            anchor="w"
-        )
-        lbl_link.pack(side="left", fill="x", expand=True)
-        ToolTip(lbl_link, f"Click to open '{full_path.name}' in native macOS Finder / Windows Explorer.")
-        lbl_link.bind("<Button-1>", lambda e, p=full_path: reveal_in_file_explorer(p))
-
-        btn_follow = ttk.Button(
-            link_row,
-            text="📂 Follow Path in Explorer",
-            style="Primary.TButton",
-            command=lambda p=full_path: reveal_in_file_explorer(p)
-        )
-        btn_follow.pack(side="right", padx=(8, 0))
-
-        # Scrollable Detailed Content Text Area
-        content_frame = tk.Frame(modal, bg="#ffffff", highlightthickness=1, highlightbackground="#e2e8f0", padx=12, pady=12)
-        content_frame.pack(fill="both", expand=True, padx=14, pady=(0, 10))
-
-        scroll = ttk.Scrollbar(content_frame)
-        scroll.pack(side="right", fill="y")
-
-        txt = tk.Text(
-            content_frame,
-            wrap="word",
-            font=("Consolas", 9),
-            yscrollcommand=scroll.set,
-            bg="#ffffff",
-            fg="#0f172a",
-            relief="flat",
-            padx=8,
-            pady=8
-        )
-        scroll.config(command=txt.yview)
-        txt.pack(fill="both", expand=True)
-
-        txt.tag_configure("SECTION", font=("Segoe UI", 10, "bold"), foreground="#0284c7")
-        txt.tag_configure("LABEL", font=("Segoe UI", 9, "bold"), foreground="#475569")
-        txt.tag_configure("VALUE", font=("Consolas", 9), foreground="#0f172a")
-        txt.tag_configure("CMD", font=("Consolas", 9, "bold"), foreground="#0284c7", background="#f0f9ff")
-
-        # Populate Text
-        txt.insert("end", "📌 FINDING DESCRIPTION & AUDIT FINDINGS\n", "SECTION")
-        txt.insert("end", f"{desc}\n\n", "VALUE")
-
-        biz_explanation = details.get("business_explanation") or advisory.get("business_explanation", "")
-        if biz_explanation:
-            txt.insert("end", "🛡️ BUSINESS RISK & OPERATIONAL IMPACT\n", "SECTION")
-            txt.insert("end", f"{biz_explanation}\n\n", "VALUE")
-
-        if details:
-            tech_details = {k: v for k, v in details.items() if k != "business_explanation"}
-            if tech_details:
-                txt.insert("end", "⚙️ TECHNICAL SCAN PARAMETERS\n", "SECTION")
-                txt.insert("end", f"{json.dumps(tech_details, indent=2)}\n\n", "VALUE")
-
-        if mappings:
-            txt.insert("end", "📜 ADDRESSED GRC FRAMEWORK CITATIONS\n", "SECTION")
-            for m in mappings:
-                fw = m.get("framework", "GRC")
-                cid = m.get("control_id", "N/A")
-                ctitle = m.get("title", "Requirement")
-                st = m.get("status", "REVIEW")
-                txt.insert("end", f"  • [{fw}] {cid}: {ctitle} (Status: {st})\n", "VALUE")
-            txt.insert("end", "\n")
-
-        if advisory:
-            txt.insert("end", "🤖 RAG AI REMEDIATION ADVISORY CARD\n", "SECTION")
-            txt.insert("end", f"  • Mapped Clause ID     : {advisory.get('clause_id')}\n", "VALUE")
-            txt.insert("end", f"  • Standards Involved   : {advisory.get('standard')}\n", "VALUE")
-            txt.insert("end", f"  • Technical Risk       : {advisory.get('risk_statement')}\n", "VALUE")
-            txt.insert("end", f"  • Recommended Command  : ", "LABEL")
-            txt.insert("end", f"{advisory.get('remediation_command')}\n", "CMD")
-            if advisory.get("rationale"):
-                txt.insert("end", f"  • Context Rationale    : {advisory.get('rationale')}\n", "VALUE")
-
-        txt.config(state="disabled")
-
-        # Bottom Toolbar
-        bottom = tk.Frame(modal, bg="#f8fafc", padx=14, pady=8)
-        bottom.pack(fill="x")
-
-        btn_close = ttk.Button(bottom, text="❌ Close Inspection", style="Secondary.TButton", command=modal.destroy)
-        btn_close.pack(side="right")
-
-    def _populate_detail_panel(self, f: Dict[str, Any]):
-        """Renders rich formatted un-truncated finding details in lower card."""
-        self.txt_detail.config(state="normal")
-        self.txt_detail.delete("1.0", "end")
-
-        severity = f.get("severity", "INFO")
-        title = f.get("title", "Security Finding")
-        rule_id = f.get("rule_id", "N/A")
-        file_path = f.get("file_path", "N/A")
-        desc = f.get("description", "No description available.")
-        details = f.get("details", {})
-        mappings = f.get("framework_mappings", [])
-
-        self.txt_detail.insert("end", f"[{severity}] ", severity)
-        self.txt_detail.insert("end", f"{title}\n", "TITLE")
-        self.txt_detail.insert("end", f"{'─'*80}\n")
-
-        self.txt_detail.insert("end", "• File Path              : ", "LABEL")
-        self.txt_detail.insert("end", f"{file_path}\n", "VALUE")
-
-        self.txt_detail.insert("end", "• Rule Identifier        : ", "LABEL")
-        self.txt_detail.insert("end", f"{rule_id}\n", "VALUE")
-
-        self.txt_detail.insert("end", "• Finding Description    : ", "LABEL")
-        self.txt_detail.insert("end", f"{desc}\n", "VALUE")
-
-        advisory = f.get("rag_advisory", {})
-        biz_explanation = details.get("business_explanation") or advisory.get("business_explanation", "")
-
-        if biz_explanation:
-            self.txt_detail.insert("end", "• Business Risk & Meaning: ", "LABEL")
-            self.txt_detail.insert("end", f"{biz_explanation}\n", "VALUE")
-
-        if details:
-            tech_details = {k: v for k, v in details.items() if k != "business_explanation"}
-            if tech_details:
-                self.txt_detail.insert("end", "• Technical Parameters   : ", "LABEL")
-                self.txt_detail.insert("end", f"{json.dumps(tech_details)}\n", "VALUE")
-
-        if mappings:
-            self.txt_detail.insert("end", "\n• Addressed GRC Framework Controls:\n", "LABEL")
-            for m in mappings:
-                fw = m.get("framework", "GRC")
-                cid = m.get("control_id", "N/A")
-                ctitle = m.get("title", "Requirement")
-                st = m.get("status", "REVIEW")
-                self.txt_detail.insert("end", f"   - [{fw}] {cid}: {ctitle} ({st})\n", "TITLE")
-
-        if advisory:
-            self.txt_detail.insert("end", "\n• RAG AI Remediation Card:\n", "LABEL")
-            self.txt_detail.insert("end", f"   - Mapped Clause ID     : {advisory.get('clause_id')}\n", "VALUE")
-            self.txt_detail.insert("end", f"   - Standards Involved   : {advisory.get('standard')}\n", "VALUE")
-            self.txt_detail.insert("end", f"   - Technical Risk       : {advisory.get('risk_statement')}\n", "VALUE")
-            if advisory.get("business_explanation") and not details.get("business_explanation"):
-                self.txt_detail.insert("end", f"   - Business Explanation : {advisory.get('business_explanation')}\n", "VALUE")
-            self.txt_detail.insert("end", f"   - Recommended Command  : ", "LABEL")
-            self.txt_detail.insert("end", f"{advisory.get('remediation_command')}\n", "CMD")
-            if advisory.get("rationale"):
-                self.txt_detail.insert("end", f"   - Context Rationale    : {advisory.get('rationale')}\n", "VALUE")
-
-        self.txt_detail.config(state="disabled")
-
-    def _browse_directory(self):
-        """Browses system folders to select target directory to monitor."""
-        folder = filedialog.askdirectory(title="Select Target Directory to Monitor")
-        if folder:
-            self.target_dir_var.set(folder)
-
-    def _upload_custom_policy(self):
-        """Allows the user to upload a reasonably sized JSON or text policy file into the policy ingester."""
-        file_path = filedialog.askopenfilename(
-            title="Upload Custom Company Policy Document",
-            filetypes=[
-                ("JSON Policy & Text Files", "*.json *.txt *.md"),
-                ("JSON Files (*.json)", "*.json"),
-                ("Text Files (*.txt)", "*.txt"),
-                ("All Files", "*.*")
-            ]
-        )
-        if not file_path:
-            return
-
-        path_obj = Path(file_path)
-
-        # Enforce max 10MB size limit
-        if path_obj.stat().st_size > 10 * 1024 * 1024:
-            messagebox.showerror(
-                "File Too Large",
-                f"Selected policy file '{path_obj.name}' is {path_obj.stat().st_size / (1024*1024):.1f} MB.\n"
-                "Please upload a reasonably sized policy file (under 10 MB)."
-            )
-            return
-
-        self.custom_policy_var.set(file_path)
-
-        if not self.rag_client:
-            self.rag_client = RAGPipelineClient()
-            self.rag_client.connect()
-
-        self.lbl_policy_status.config(text="⏳ Vectorizing policy...", fg="#0284c7")
-        self.root.update_idletasks()
-
-        res = self.rag_client.ingest_and_vectorize_policy(path_obj)
-        if res.get("status") in ["VECTORIZED", "SUCCESS"]:
-            vector_cnt = res.get("vector_count", 0)
-            self.lbl_policy_status.config(
-                text=f"🟢 Policy Active: {path_obj.name} ({vector_cnt} rules vectorized)",
-                fg="#15803d"
-            )
-            messagebox.showinfo(
-                "Policy Vectorized Successfully",
-                f"Custom policy '{path_obj.name}' successfully ingested!\n"
-                f"• Rules/Chunks Vectorized: {vector_cnt}\n"
-                f"• Storage: Vector FAISS index & SQLite compliance database."
-            )
+    def _on_severity_filter(self, severity: str):
+        if severity == "ALL" or self._filter_severity == severity:
+            self._filter_severity = None
+            self._btn_reset_filter.setVisible(False)
         else:
-            err_msg = res.get("message", "Unknown error during policy ingestion.")
-            self.lbl_policy_status.config(text=f"❌ Ingestion Failed: {err_msg}", fg="#dc2626")
-            messagebox.showerror("Policy Ingestion Error", f"Failed to ingest custom policy:\n{err_msg}")
+            self._filter_severity = severity
+            self._btn_reset_filter.setVisible(True)
+
+        if self.scan_summary:
+            self._refresh_all(self.scan_summary)
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # FILE DETAIL VIEWER
+    # ──────────────────────────────────────────────────────────────────────────
+
+    def _load_file_detail(self, finding: Dict, auto_switch_tab: bool = False):
+        self._selected_finding = finding
+        rel_path   = finding.get("file_path", "")
+        target_dir = Path(self._target_edit.text().strip()).resolve()
+        full_path  = (target_dir / rel_path).resolve()
+
+        # Update path label
+        self._file_path_lbl.setText(str(full_path))
+        self._btn_reveal_file.setEnabled(True)
+
+        # Load file content (first 1000 lines or 100KB)
+        self._file_content_viewer.clear()
+        if full_path.exists() and full_path.is_file():
+            try:
+                size = full_path.stat().st_size
+                if size > 200 * 1024:
+                    self._file_content_viewer.setPlainText(
+                        f"[File too large to preview — {size/1024:.0f} KB]\n"
+                        f"Click '📂 Reveal in Explorer' to open externally."
+                    )
+                else:
+                    content = full_path.read_text(encoding="utf-8", errors="replace")
+                    lines   = content.splitlines()[:1000]
+                    self._file_content_viewer.setPlainText("\n".join(lines))
+            except Exception as e:
+                self._file_content_viewer.setPlainText(f"[Unable to read file: {e}]")
+        else:
+            self._file_content_viewer.setPlainText(
+                f"[File not found on disk: {full_path}]\n\n"
+                "The file may have been deleted or moved since scanning."
+            )
+
+        # Populate detail panel with rich HTML
+        self._populate_detail_html(finding)
+
+        if auto_switch_tab:
+            self._tabs.setCurrentIndex(1)
+
+    def _populate_detail_html(self, f: Dict):
+        sev      = f.get("severity", "INFO")
+        title    = f.get("title", "Security Finding")
+        rule_id  = f.get("rule_id", "N/A")
+        fp       = f.get("file_path", "N/A")
+        desc     = f.get("description", "No description.")
+        details  = f.get("details", {})
+        mappings = f.get("framework_mappings", [])
+        advisory = f.get("rag_advisory", {})
+
+        color  = SEV_COLOR.get(sev, PALETTE["text_secondary"])
+        bgc    = SEV_BG.get(sev, PALETTE["bg_surface"])
+        acc    = PALETTE["accent_blue"]
+        dim    = PALETTE["text_secondary"]
+        code   = PALETTE["bg_elevated"]
+        txt    = PALETTE["text_primary"]
+
+        html_parts = [
+            f"<div style='font-family:\"Segoe UI\",sans-serif;font-size:12px;color:{txt};'>",
+            # Severity badge + title
+            f"<p style='margin:0 0 4px 0;'>"
+            f"<span style='background:{color};color:#000;padding:2px 8px;border-radius:4px;"
+            f"font-weight:bold;font-size:11px;'>{sev}</span>"
+            f"&nbsp;&nbsp;<span style='font-weight:bold;font-size:14px;'>{title}</span></p>",
+            f"<p style='margin:0 0 8px 0;color:{dim};font-size:10px;font-family:monospace;'>"
+            f"Rule: {rule_id} &nbsp;|&nbsp; {fp}</p>",
+            f"<hr style='border:none;border-top:1px solid {PALETTE['border']};margin:8px 0;'>",
+            # Description
+            f"<p style='color:{acc};font-weight:bold;margin:6px 0 2px;'>📌 Finding Description</p>",
+            f"<p style='color:{txt};margin:0 0 8px;'>{desc}</p>",
+        ]
+
+        biz = details.get("business_explanation") or advisory.get("business_explanation", "")
+        if biz:
+            html_parts += [
+                f"<p style='color:{acc};font-weight:bold;margin:6px 0 2px;'>🛡️ Business Risk</p>",
+                f"<p style='color:{txt};margin:0 0 8px;'>{biz}</p>",
+            ]
+
+        tech = {k: v for k, v in details.items() if k != "business_explanation"}
+        if tech:
+            html_parts += [
+                f"<p style='color:{acc};font-weight:bold;margin:6px 0 2px;'>⚙️ Technical Parameters</p>",
+                f"<pre style='background:{code};border-radius:5px;padding:6px 10px;"
+                f"font-size:11px;color:{acc};white-space:pre-wrap;margin:0 0 8px;'>"
+                f"{json.dumps(tech, indent=2)}</pre>",
+            ]
+
+        if mappings:
+            html_parts.append(
+                f"<p style='color:{acc};font-weight:bold;margin:6px 0 2px;'>📜 GRC Framework Citations</p>"
+            )
+            for m in mappings:
+                fw   = m.get("framework", "GRC")
+                cid  = m.get("control_id", "N/A")
+                ctit = m.get("title", "Requirement")
+                st   = m.get("status", "REVIEW")
+                html_parts.append(
+                    f"<p style='margin:2px 0;'>• <b style='color:{acc};'>[{fw}] {cid}</b>:"
+                    f" {ctit} <span style='color:{dim};'>({st})</span></p>"
+                )
+            html_parts.append("<br>")
+
+        if advisory:
+            cmd = advisory.get("remediation_command", "")
+            html_parts += [
+                f"<p style='color:{acc};font-weight:bold;margin:6px 0 2px;'>🤖 RAG AI Remediation Advisory</p>",
+                f"<p style='margin:2px 0;'><span style='color:{dim};'>Clause ID:</span> {advisory.get('clause_id','—')}</p>",
+                f"<p style='margin:2px 0;'><span style='color:{dim};'>Standard:</span>  {advisory.get('standard','—')}</p>",
+                f"<p style='margin:2px 0;'><span style='color:{dim};'>Risk:</span>      {advisory.get('risk_statement','—')}</p>",
+            ]
+            if cmd:
+                html_parts.append(
+                    f"<p style='margin:4px 0;'><span style='color:{dim};'>Command:</span><br>"
+                    f"<code style='background:{code};padding:4px 8px;border-radius:4px;"
+                    f"color:{acc};font-size:11px;'>{cmd}</code></p>"
+                )
+            if advisory.get("rationale"):
+                html_parts.append(
+                    f"<p style='margin:2px 0;'><span style='color:{dim};'>Rationale:</span> {advisory['rationale']}</p>"
+                )
+
+        html_parts.append("</div>")
+        self._detail_viewer.setHtml("".join(html_parts))
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # FILE EXPLORER HELPERS
+    # ──────────────────────────────────────────────────────────────────────────
+
+    def _reveal_selected_file(self):
+        if self._selected_finding:
+            rel  = self._selected_finding.get("file_path", "")
+            root = Path(self._target_edit.text().strip()).resolve()
+            full = (root / rel).resolve()
+            reveal_in_file_explorer(full if full.exists() else root)
+
+    def _reveal_by_relpath(self, rel_path: str):
+        root = Path(self._target_edit.text().strip()).resolve()
+        full = (root / rel_path).resolve()
+        reveal_in_file_explorer(full if full.exists() else root)
+
+    def _browse_target(self):
+        folder = QFileDialog.getExistingDirectory(
+            self, "Select Target Directory to Monitor",
+            self._target_edit.text()
+        )
+        if folder:
+            self._target_edit.setText(folder)
+
+    def _open_target_in_explorer(self):
+        target = Path(self._target_edit.text().strip()).resolve()
+        reveal_in_file_explorer(target)
+
+    def _upload_policy(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Upload Custom Policy Document", "",
+            "Policy Files (*.json *.txt *.md);;All Files (*.*)"
+        )
+        if path:
+            if Path(path).stat().st_size > 10 * 1024 * 1024:
+                QMessageBox.warning(self, "File Too Large",
+                                    "Policy file must be under 10 MB.")
+                return
+            self._policy_edit.setText(path)
 
     def _export_pdf(self):
-        """Triggers PDF export of current scan summary."""
         if not self.scan_summary:
-            messagebox.showwarning("No Data", "Please run monitoring first before exporting PDF.")
+            QMessageBox.warning(self, "No Data",
+                                "Run a scan first before exporting PDF.")
             return
-
-        save_path = filedialog.asksaveasfilename(
-            defaultextension=".pdf",
-            filetypes=[("PDF Documents", "*.pdf")],
-            initialfile="scan_report.pdf"
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save PDF Report", "scan_report.pdf",
+            "PDF Documents (*.pdf)"
         )
-        if save_path:
-            out_pdf = Path(save_path)
-            PDFComplianceExporter.generate_pdf_report(self.scan_summary, out_pdf)
-            messagebox.showinfo("PDF Exported", f"Successfully generated compliance PDF report:\n{out_pdf.as_posix()}")
+        if path:
+            out = Path(path)
+            PDFComplianceExporter.generate_pdf_report(self.scan_summary, out)
+            QMessageBox.information(self, "PDF Exported",
+                                    f"Compliance report saved:\n{out}")
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # CLOSE EVENT
+    # ──────────────────────────────────────────────────────────────────────────
+    def closeEvent(self, event):
+        if self._worker:
+            self._worker.stop_watcher()
+        event.accept()
 
 
-def launch_tkinter_gui():
-    """Launches Windows Security style native Tkinter Desktop GUI application."""
-    root = tk.Tk()
-    app = KintsugiAppTkinterGUI(root)
-    root.mainloop()
+# ──────────────────────────────────────────────────────────────────────────────
+# ENTRY POINT
+# ──────────────────────────────────────────────────────────────────────────────
+
+def launch_pyqt_gui():
+    """Launches Kintsugi-GRC PyQt6 desktop application."""
+    app = QApplication.instance() or QApplication(sys.argv)
+    app.setApplicationName("Kintsugi-GRC")
+    app.setApplicationVersion("2.0")
+    app.setStyle("Fusion")
+    apply_dark_palette(app)
+
+    window = KintsugiGRCApp()
+    window.show()
+    sys.exit(app.exec())

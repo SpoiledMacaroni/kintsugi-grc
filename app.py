@@ -17,7 +17,7 @@ from src.storage.framework_storage import FrameworkStorageClient
 from src.rag.pipeline import RAGPipelineClient
 from src.scanner.audit import ScannerAuditLogger
 from src.scanner.engine import ScannerEngine
-from src.ui.interface import launch_tkinter_gui
+from src.ui.interface import launch_pyqt_gui
 
 
 def main():
@@ -118,8 +118,8 @@ def main():
             args.verbose = False
 
     if args.command == "gui":
-        print("Launching Kintsugi-GRC Desktop GUI Application...")
-        launch_tkinter_gui()
+        print("Launching Kintsugi-GRC Desktop GUI Application (PyQt6)...")
+        launch_pyqt_gui()
 
     elif args.command == "scan":
         target_dir = Path(args.target).resolve()
