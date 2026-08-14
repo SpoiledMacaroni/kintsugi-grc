@@ -59,90 +59,115 @@ class RelationalRAGOrchestrator:
 
         # Domain Rule Topic Map for precision keyword vector filtering
         self.rule_topic_keywords = {
-            "INSECURE_SYSTEM_TLS_POLICY": ["tls", "ssl", "cipher", "ciphers", "protocol", "transmission", "openssl", "crypto-policy", "schannel", "rc4", "3des"],
-            "INSECURE_SSH_TRANSMISSION_PROTOCOL": ["ssh", "sshd", "protocol", "cipher", "ciphers", "blowfish", "3des", "hmac", "transmission"],
-            "INSECURE_PASSWORD_POLICY_MAX_DAYS": ["password", "expiry", "pass_max_days", "login.defs", "rotation", "credential"],
-            "INSECURE_SYSTEM_ACCOUNT_HARDENING": ["daemon", "shell", "passwd", "nologin", "account", "user", "hardening"],
-            "INSECURE_AUDIT_LOG_PERMISSIONS": ["audit", "log", "audit.log", "tamper", "permissions", "0o666", "integrity"],
-            "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE": ["writable", "permissions", "0o777", "chmod", "least privilege", "access control"],
-            "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN": ["unencrypted", "cleartext", "phi", "pan", "ssn", "luhn", "gpg", "aes", "credit card"],
-            "INSECURE_AES_ECB_BLOCK_PATTERN_LEAK": ["ecb", "aes", "cipher", "block", "entropy", "pattern"],
-            "DECOMPRESSION_SAFETY_BOMB_TEST": ["zip", "decompression", "ratio", "bomb", "safety"]
+            "INSECURE_SYSTEM_TLS_POLICY": ["tls", "ssl", "cipher", "ciphers", "protocol", "transmission", "openssl", "crypto-policy", "schannel", "rc4", "3des", "minprotocol", "seclevel"],
+            "INSECURE_SSH_TRANSMISSION_PROTOCOL": ["ssh", "sshd", "protocol", "cipher", "ciphers", "blowfish", "3des", "hmac", "transmission", "sshd_config"],
+            "INSECURE_PASSWORD_POLICY_MAX_DAYS": ["password", "expiry", "pass_max_days", "login.defs", "rotation", "credential", "authentication", "days"],
+            "INSECURE_SYSTEM_ACCOUNT_HARDENING": ["daemon", "shell", "passwd", "nologin", "account", "user", "hardening", "service account"],
+            "INSECURE_AUDIT_LOG_PERMISSIONS": ["audit", "log", "audit.log", "tamper", "permissions", "0o666", "integrity", "var/log/audit"],
+            "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE": ["writable", "permissions", "0o777", "chmod", "least privilege", "access control", "world-writable"],
+            "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN": ["unencrypted", "cleartext", "phi", "pan", "ssn", "luhn", "gpg", "aes", "credit card", "sensitive"],
+            "UNENCRYPTED_RAW_ZLIB_STREAM": ["zlib", "compress", "deflate", "raw stream", "unencrypted", "compression", "entropy"],
+            "INSECURE_AES_ECB_BLOCK_PATTERN_LEAK": ["ecb", "aes", "cipher", "block", "entropy", "pattern", "sp800-38a"],
+            "DECOMPRESSION_SAFETY_BOMB_TEST": ["zip", "decompression", "ratio", "bomb", "safety", "exhaustion", "denial of service"]
         }
 
         # Fallback dictionary mapped by rule ID
         self.fallback_dictionary = {
             "ERR-OCTAL-WORLD-WRITABLE": {
-                "clause_id": "HIPAA-164-312-A1 / PCI-DSS-V4-REQ-7-2-1",
-                "standard": "HIPAA §164.312(a)(1) & PCI-DSS v4.0.1 Req 7.2",
+                "clause_id": "HIPAA-164-312-A1 / PCI-DSS-V4-REQ-7-2-1 / NIST-800-53-AC-6",
+                "standard": "HIPAA §164.312(a)(1) & PCI-DSS v4.0.1 Req 7.2.1 & NIST SP 800-53 AC-6",
                 "risk_statement": "System file contains world-writable permissions (0o777), violating access controls.",
                 "business_explanation": "Full Unrestricted Access: Permission 0o777 means any user, guest account, or process on the machine has write access to modify or delete this file. Changing to 0o640 restricts modification strictly to the file owner.",
                 "remediation_command": "chmod 640 {filepath}",
-                "rationale": "Restrict file permissions using owner/group boundaries."
+                "rationale": "Restrict file permissions using owner/group boundaries per HIPAA §164.312(a)(1) and PCI-DSS Requirement 7.2.1."
             },
             "ERR-ENTROPY-PLAINTEXT-PII": {
-                "clause_id": "HIPAA-164-312-A2-IV / PCI-DSS-V4-REQ-3-5-1",
-                "standard": "HIPAA §164.312(a)(2)(iv) & PCI-DSS v4.0.1 Req 3.5.1",
+                "clause_id": "HIPAA-164-312-A2-IV / PCI-DSS-V4-REQ-3-5-1 / NIST-800-53-SC-28",
+                "standard": "HIPAA §164.312(a)(2)(iv) & PCI-DSS v4.0.1 Req 3.5.1 & NIST SP 800-53 SC-28",
                 "risk_statement": "Cleartext sensitive records detected in unencrypted file payload.",
-                "business_explanation": "Unencrypted Sensitive Data Exposure: Customer identifiers or medical records are stored in plain text. Encrypting with AES-256 renders data unreadable to unauthorized parties if stolen.",
-                "remediation_command": "gpg --symmetric --cipher-algo AES256 {filepath}",
-                "rationale": "Encrypt file using GPG/AES symmetric encryption."
+                "business_explanation": "Unencrypted Sensitive Data Exposure: Customer identifiers or medical records are stored in plain text. Encrypting with AES-256 and securely removing plaintext renders data unreadable if stolen.",
+                "remediation_command": "gpg --symmetric --cipher-algo AES256 {filepath} && shred -u {filepath}",
+                "rationale": "Encrypt file using GPG/AES symmetric encryption and destroy unencrypted source."
             },
             "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE": {
-                "clause_id": "HIPAA-164-312-A1 / PCI-DSS-V4-REQ-7-2-1",
-                "standard": "HIPAA §164.312(a)(1) & PCI-DSS v4.0.1 Req 7.2.1",
+                "clause_id": "HIPAA-164-312-A1 / PCI-DSS-V4-REQ-7-2-1 / NIST-800-53-AC-6",
+                "standard": "HIPAA §164.312(a)(1) & PCI-DSS v4.0.1 Req 7.2.1 & NIST SP 800-53 AC-6",
                 "risk_statement": "File permissions '0o777' allow world-writable access to sensitive payloads, violating Least Privilege.",
                 "business_explanation": "Full Unrestricted Public Access (0o777): Permission 0o777 means any user or process on the machine can read, edit, or delete this file. Running 'chmod 640' restricts write permissions exclusively to the owner and read access to authorized group members.",
                 "remediation_command": "chmod 640 {filepath}",
-                "rationale": "Restrict file permissions using owner/group boundaries per HIPAA §164.312(a)(1) and PCI-DSS Requirement 7.2.1."
+                "rationale": "Restrict file permissions using owner/group boundaries per HIPAA §164.312(a)(1), PCI-DSS Requirement 7.2.1, and NIST SP 800-53 AC-6."
             },
             "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN": {
-                "clause_id": "HIPAA-164-312-A2-IV / PCI-DSS-V4-REQ-3-5-1",
-                "standard": "HIPAA §164.312(a)(2)(iv) & PCI-DSS v4.0.1 Req 3.5.1",
+                "clause_id": "HIPAA-164-312-A2-IV / PCI-DSS-V4-REQ-3-5-1 / NIST-800-53-SC-28",
+                "standard": "HIPAA §164.312(a)(2)(iv) & PCI-DSS v4.0.1 Req 3.5.1 & NIST SP 800-53 SC-28",
                 "risk_statement": "File contains unencrypted cleartext sensitive records (Luhn PAN credit cards or SSNs).",
-                "business_explanation": "Cleartext Sensitive Records: File contains raw unencrypted credit card numbers or SSNs. Encrypting with GPG AES-256 protects stored data against theft or unauthorized inspection.",
-                "remediation_command": "gpg --symmetric --cipher-algo AES256 {filepath}",
-                "rationale": "Encrypt stored sensitive records using AES-256 with OpenSSL magic header formatting."
+                "business_explanation": "Cleartext Sensitive Records: File contains raw unencrypted credit card numbers or SSNs. Encrypting with GPG AES-256 and securely removing the plaintext original protects stored data against theft or unauthorized inspection.",
+                "remediation_command": "gpg --symmetric --cipher-algo AES256 {filepath} && shred -u {filepath}",
+                "rationale": "Encrypt stored sensitive records using AES-256 with OpenSSL magic header formatting and purge plaintext files per HIPAA §164.312(a)(2)(iv) and PCI-DSS Requirement 3.5.1."
+            },
+            "UNENCRYPTED_RAW_ZLIB_STREAM": {
+                "clause_id": "HIPAA-164-312-E1 / PCI-DSS-V4-REQ-4-2-1 / NIST-800-53-SC-8",
+                "standard": "HIPAA §164.312(e)(1) & PCI-DSS v4.0.1 Req 4.2.1 & NIST SP 800-53 SC-8",
+                "risk_statement": "Raw zlib compressed stream stored without cryptographic encryption.",
+                "business_explanation": "Compression Is Not Encryption: Compressing a file (zlib/gzip) reduces size and raises entropy, but leaves data trivially decompressed by an attacker. Encrypting with AES-256-CBC guarantees true cryptographic confidentiality.",
+                "remediation_command": "openssl enc -aes-256-cbc -salt -pbkdf2 -in {filepath} -out {filepath}.enc && rm -f {filepath}",
+                "rationale": "Wrap compressed streams in an authenticated AES-256 container to satisfy HIPAA §164.312(e)(1) and PCI-DSS Requirement 4.2."
+            },
+            "INSECURE_AES_ECB_BLOCK_PATTERN_LEAK": {
+                "clause_id": "HIPAA-164-312-A2-IV / PCI-DSS-V4-REQ-3-5-1 / NIST-800-53-SC-13",
+                "standard": "HIPAA §164.312(a)(2)(iv) & PCI-DSS v4.0.1 Req 3.5.1 & NIST SP 800-53 SC-13",
+                "risk_statement": "Insecure AES-ECB cipher mode leaks plaintext data structure through repetitive ciphertext blocks.",
+                "business_explanation": "Cryptographic Block Leakage (AES-ECB): In ECB mode, identical 16-byte plaintext blocks produce identical ciphertext blocks, allowing eavesdroppers to discern data structure, headers, and repetitive records. Migrating to CBC or GCM with unique IVs ensures semantic security.",
+                "remediation_command": "openssl enc -aes-256-cbc -salt -pbkdf2 -in {filepath} -out {filepath}.cbc && mv {filepath}.cbc {filepath}",
+                "rationale": "Migrate from ECB mode to AES-256-CBC or AES-256-GCM with randomized Initialization Vectors (IV) per NIST SP 800-38A and PCI-DSS Requirement 3.5.1."
+            },
+            "DECOMPRESSION_SAFETY_BOMB_TEST": {
+                "clause_id": "HIPAA-164-312-C1 / PCI-DSS-V4-REQ-10-6 / NIST-800-53-SI-4",
+                "standard": "HIPAA §164.312(c)(1) & PCI-DSS v4.0.1 Req 10.6 & NIST SP 800-53 SI-4",
+                "risk_statement": "Archive exhibits extreme compression ratio (>100:1) indicating a potential decompression bomb.",
+                "business_explanation": "Decompression Bomb / Denial of Service: This archive expands to hundreds of times its compressed size, creating a risk of crashing backend processors or exhausting storage partitions. Inspect archive headers and enforce byte expansion quotas prior to decompression.",
+                "remediation_command": "unzip -l {filepath} && echo 'Review uncompressed payload size; enforce 50MB extraction limit.'",
+                "rationale": "Enforce decompression size and ratio thresholds before expanding untrusted archives to prevent resource exhaustion per NIST SP 800-53 SI-4."
             },
             "INSECURE_SSH_TRANSMISSION_PROTOCOL": {
                 "clause_id": "HIPAA-164-312-E1 / PCI-DSS-V4-REQ-2-2-4 / NIST-800-53-CM-6",
-                "standard": "HIPAA §164.312(e)(1) & PCI-DSS v4.0.1 Req 2.2.4",
-                "risk_statement": "SSH server configuration allows legacy Protocol 1 or weak ciphers (Blowfish/3DES).",
-                "business_explanation": "Legacy Management Connection Risk: Remote SSH login permits Protocol 1 or weak ciphers (3DES/Blowfish), allowing eavesdroppers to intercept administrative sessions. Enforcing Protocol 2 and AES-CTR requires modern cryptographic protection.",
-                "remediation_command": "sed -i 's/Protocol 1/Protocol 2/' {filepath} && systemctl restart sshd",
-                "rationale": "Enforce SSH Protocol 2 and mandate strong AES/CTR cipher suites."
+                "standard": "HIPAA §164.312(e)(1) & PCI-DSS v4.0.1 Req 2.2.4 & NIST SP 800-53 CM-6",
+                "risk_statement": "SSH server configuration allows legacy Protocol 1, weak ciphers (Blowfish/3DES), or broken MACs (MD5).",
+                "business_explanation": "Legacy Management Connection Risk: Remote SSH login permits Protocol 1, weak 64-bit ciphers (3DES/Blowfish), or broken MD5 hashing, allowing eavesdroppers to intercept administrative sessions. Enforcing Protocol 2, ChaCha20/AES-GCM, and SHA-2 MACs mandates strong encryption.",
+                "remediation_command": "sed -i 's/Protocol 1/Protocol 2/g; s/Ciphers .*/Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes256-ctr/g; s/MACs .*/MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,hmac-sha2-512,hmac-sha2-256/g' {filepath} && systemctl restart sshd",
+                "rationale": "Enforce SSH Protocol 2, mandate modern authenticated ciphers (AES-GCM / ChaCha20-Poly1305), and disable broken MACs (MD5/SHA1) per PCI-DSS Req 2.2.4 and NIST SP 800-53 CM-6."
             },
             "INSECURE_SYSTEM_TLS_POLICY": {
                 "clause_id": "HIPAA-164-312-E1 / PCI-DSS-V4-REQ-4-2-1 / NIST-800-53-SC-8",
-                "standard": "HIPAA Technical Safeguards §164.312(e)(1) & PCI-DSS v4.0.1 Req 4.2.1",
+                "standard": "HIPAA Technical Safeguards §164.312(e)(1) & PCI-DSS v4.0.1 Req 4.2.1 & NIST SP 800-53 SC-8",
                 "risk_statement": "System crypto-policy permits legacy TLS 1.0 / TLS 1.1 or deprecated RC4/3DES ciphers.",
                 "business_explanation": "Obsolete Network Encryption (TLS 1.0 / SECLEVEL=0): Setting TLS 1.0 or SECLEVEL=0 allows network connections to use legacy algorithms susceptible to eavesdropping. Updating to TLS 1.2+ mandates strong modern encryption across web servers and API endpoints.",
                 "remediation_command": "__TLS_SUBTYPE_DISPATCH__",
-                "rationale": "Enforce TLS 1.2 or TLS 1.3 protocol baseline across web servers and OpenSSL configs."
+                "rationale": "Enforce TLS 1.2 or TLS 1.3 protocol baseline across web servers, registry keys, and OpenSSL configs."
             },
             "INSECURE_PASSWORD_POLICY_MAX_DAYS": {
                 "clause_id": "HIPAA-164-312-A2-I / PCI-DSS-V4-REQ-8-3-6 / NIST-800-53-IA-5",
-                "standard": "HIPAA §164.312(a)(2)(i) & PCI-DSS v4.0.1 Req 8.3.6",
+                "standard": "HIPAA §164.312(a)(2)(i) & PCI-DSS v4.0.1 Req 8.3.6 & NIST SP 800-53 IA-5(1)",
                 "risk_statement": "Password expiration parameter PASS_MAX_DAYS exceeds 90-day compliance baseline.",
                 "business_explanation": "Passwords Set to Never Expire (99999 Days): PASS_MAX_DAYS allows passwords to stay valid for 273 years without changing. Changing to 90 forces users to update credentials regularly, revoking compromised or leaked passwords automatically.",
                 "remediation_command": "sed -i 's/PASS_MAX_DAYS.*/PASS_MAX_DAYS 90/' {filepath}",
-                "rationale": "Mandate maximum 90-day password rotation in /etc/login.defs."
+                "rationale": "Mandate maximum 90-day password rotation in /etc/login.defs per PCI-DSS Requirement 8.3.6 and NIST SP 800-53 IA-5(1)."
             },
             "INSECURE_SYSTEM_ACCOUNT_HARDENING": {
                 "clause_id": "HIPAA-164-312-A1 / PCI-DSS-V4-REQ-8-2-1 / NIST-800-53-AC-2",
-                "standard": "HIPAA §164.312(a)(1) & PCI-DSS v4.0.1 Req 8.2.1",
+                "standard": "HIPAA §164.312(a)(1) & PCI-DSS v4.0.1 Req 8.2.1 & NIST SP 800-53 AC-2",
                 "risk_statement": "Default system accounts (daemon, bin, sys) have active login shells enabled.",
                 "business_explanation": "Interactive Service Account Exposure: Non-human service accounts (daemon, bin, sys) have active command-line shells enabled. Setting shell to /sbin/nologin blocks interactive user logins while allowing background services to function normally.",
                 "remediation_command": "usermod -s /sbin/nologin {username}",
-                "rationale": "Lock non-human system accounts to prevent interactive login abuse."
+                "rationale": "Lock non-human system accounts to /sbin/nologin to prevent interactive login abuse per PCI-DSS Req 8.2.1 and NIST SP 800-53 AC-2."
             },
             "INSECURE_AUDIT_LOG_PERMISSIONS": {
                 "clause_id": "HIPAA-164-312-B / PCI-DSS-V4-REQ-10-2-1 / NIST-800-53-AU-9",
-                "standard": "HIPAA §164.312(b) & PCI-DSS v4.0.1 Req 10.2.1",
+                "standard": "HIPAA §164.312(b) & PCI-DSS v4.0.1 Req 10.2.1 & NIST SP 800-53 AU-9",
                 "risk_statement": "Audit log permissions (0o666) allow unauthorized modification by non-privileged accounts.",
                 "business_explanation": "Unprotected Audit Logs (0o666): Permission 0o666 allows any user on the system to edit or delete security log files, creating a risk where breach evidence can be erased. Changing to 0o600 restricts log access strictly to system administrators.",
                 "remediation_command": "chmod 600 {filepath}",
-                "rationale": "Restrict audit log permissions to prevent log tampering and maintain integrity."
+                "rationale": "Restrict audit log permissions to prevent log tampering and maintain integrity per HIPAA §164.312(b) and PCI-DSS Requirement 10.2.1."
             }
         }
 
@@ -350,6 +375,13 @@ class RelationalRAGOrchestrator:
         raw_cmd = fallback_item["remediation_command"]
         if violation_code == "INSECURE_SYSTEM_TLS_POLICY" or raw_cmd == "__TLS_SUBTYPE_DISPATCH__":
             formatted_cmd = self._tls_remediation_command(filepath, details)
+        elif violation_code == "INSECURE_SYSTEM_ACCOUNT_HARDENING":
+            active_shells = details.get("active_shells", [])
+            if isinstance(active_shells, list) and active_shells:
+                accounts = [s.split(":")[0] for s in active_shells]
+                formatted_cmd = " && ".join([f"usermod -s /sbin/nologin {u}" for u in accounts])
+            else:
+                formatted_cmd = "usermod -s /sbin/nologin daemon && usermod -s /sbin/nologin bin && usermod -s /sbin/nologin sys"
         else:
             formatted_cmd = raw_cmd.format(filepath=filepath, username="system_user")
 

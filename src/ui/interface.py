@@ -113,18 +113,18 @@ DOMAIN_NAMES = {
 REMEDIATION_HINTS = {
     "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE": "chmod 0640 <file>",
     "ERR-OCTAL-WORLD-WRITABLE":                 "chmod 0640 <file>",
-    "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN":        "gpg --symmetric --cipher-algo AES256 <file>",
-    "ERR-ENTROPY-PLAINTEXT-PII":                 "gpg --symmetric --cipher-algo AES256 <file>",
-    "INSECURE_SSH_TRANSMISSION_PROTOCOL":        "Set Protocol 2 in /etc/ssh/sshd_config",
-    "INSECURE_SYSTEM_TLS_POLICY":                "Set MinProtocol=TLSv1.2 in openssl.cnf",
+    "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN":        "gpg --symmetric --cipher-algo AES256 <file> && shred -u <file>",
+    "ERR-ENTROPY-PLAINTEXT-PII":                 "gpg --symmetric --cipher-algo AES256 <file> && shred -u <file>",
+    "INSECURE_SSH_TRANSMISSION_PROTOCOL":        "Enforce Protocol 2, AES-GCM, SHA-2 MACs in sshd_config",
+    "INSECURE_SYSTEM_TLS_POLICY":                "Enforce MinProtocol=TLSv1.2, SECLEVEL=2 in openssl.cnf / TLS 1.2+ in Nginx",
     "INSECURE_PASSWORD_POLICY_MAX_DAYS":         "Set PASS_MAX_DAYS 90 in /etc/login.defs",
     "INSECURE_SYSTEM_ACCOUNT_HARDENING":         "usermod -s /sbin/nologin <daemon>",
     "INSECURE_AUDIT_LOG_PERMISSIONS":            "chmod 0600 /var/log/audit/audit.log",
-    "UNENCRYPTED_RAW_ZLIB_STREAM":               "openssl enc -aes-256-cbc -in <file> -out <file>.enc",
-    "DECOMPRESSION_SAFETY_BOMB_TEST":            "Inspect archive decompression ratio (>100:1)",
-    "INSECURE_AES_ECB_BLOCK_PATTERN_LEAK":       "Re-encrypt with AES-CBC or AES-GCM mode",
-    "ENCRYPTED_COMPLIANT_AES_256_CBC":           "✅ Already encrypted — no action required.",
-    "COMPLIANT_SECURITY_BASELINE":               "✅ Compliant — no action required.",
+    "UNENCRYPTED_RAW_ZLIB_STREAM":               "openssl enc -aes-256-cbc -salt -pbkdf2 -in <file> -out <file>.enc",
+    "DECOMPRESSION_SAFETY_BOMB_TEST":            "Enforce decompression size quota (unzip -l <file>)",
+    "INSECURE_AES_ECB_BLOCK_PATTERN_LEAK":       "openssl enc -aes-256-cbc -salt -pbkdf2 -in <file> -out <file>.cbc",
+    "ENCRYPTED_COMPLIANT_AES_256_CBC":           "✅ Already encrypted (AES-256-CBC) — no action required.",
+    "COMPLIANT_SECURITY_BASELINE":               "✅ Compliant with security baseline — no action required.",
 }
 
 
@@ -193,7 +193,9 @@ class ScanWorker(QThread):
     def run(self):
         try:
             self.progress.emit(5,  "Initializing audit logger...")
-            audit_log = self.target_dir / "kintsugi_scanner_audit.log"
+            # Write audit log one level above the scan target so it always lands
+            # at the predictable synthetic_test_env/ root, not inside a sub-env dir.
+            audit_log = self.target_dir.parent / "kintsugi_scanner_audit.log"
             audit_logger = ScannerAuditLogger(audit_log)
             audit_logger.initialize()
 
@@ -958,6 +960,13 @@ class KintsugiGRCApp(QMainWindow):
         self._btn_pdf.clicked.connect(self._export_pdf)
         hl.addWidget(self._btn_pdf)
 
+        # Audit Log button
+        self._btn_audit_log = QPushButton("📋  View Audit Log")
+        self._btn_audit_log.setEnabled(False)
+        self._btn_audit_log.setToolTip("Open kintsugi_scanner_audit.log in default viewer")
+        self._btn_audit_log.clicked.connect(self._open_audit_log)
+        hl.addWidget(self._btn_audit_log)
+
         return header
 
     # ── Config bar ─────────────────────────────────────────────────────────────
@@ -1491,6 +1500,7 @@ class KintsugiGRCApp(QMainWindow):
     def _on_scan_done(self, summary: Dict):
         self.scan_summary = summary
         self._btn_pdf.setEnabled(True)
+        self._btn_audit_log.setEnabled(True)
         score = summary.get("compliance_score", 0)
         self._score_lbl.setText(f"{score}%")
         files = summary.get("total_files_scanned", 0)
@@ -1978,6 +1988,28 @@ class KintsugiGRCApp(QMainWindow):
     def _open_target_in_explorer(self):
         target = Path(self._target_edit.text().strip()).resolve()
         reveal_in_file_explorer(target)
+
+    def _open_audit_log(self):
+        """Opens kintsugi_scanner_audit.log in the OS default text viewer."""
+        target = Path(self._target_edit.text().strip()).resolve()
+        # Log is written to target.parent (one level above the scanned env dir)
+        log_path = target.parent / "kintsugi_scanner_audit.log"
+        if not log_path.exists():
+            QMessageBox.information(
+                self, "Audit Log Not Found",
+                f"No audit log found at:\n{log_path}\n\nRun a scan first to generate the audit log."
+            )
+            return
+        import subprocess, sys
+        try:
+            if sys.platform == "darwin":
+                subprocess.Popen(["open", str(log_path)])
+            elif sys.platform == "win32":
+                subprocess.Popen(["notepad", str(log_path)])
+            else:
+                subprocess.Popen(["xdg-open", str(log_path)])
+        except Exception as e:
+            QMessageBox.warning(self, "Could Not Open Log", f"Failed to open audit log:\n{e}")
 
     def _upload_policy(self):
         path, _ = QFileDialog.getOpenFileName(

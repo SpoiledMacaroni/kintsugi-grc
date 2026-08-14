@@ -543,6 +543,23 @@ class ScannerEngine:
                     self._add_finding(f, file_path)
                 return
 
+            # Access Control: World-Writable Permission (0o777)
+            if (stat.st_mode & 0o002) != 0 and mode_octal == "0o777":
+                f = {
+                    "file_path": rel_path,
+                    "rule_id": "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE",
+                    "title": "Permissive Access Control (0o777 World-Writable)",
+                    "severity": "CRITICAL",
+                    "description": f"File permissions '{mode_octal}' allow unrestricted public access (anyone on the system can read, edit, or delete this file).",
+                    "details": {
+                        "mode": mode_octal,
+                        "uid": str(stat.st_uid),
+                        "business_explanation": "Full Unrestricted Access: Permission 0o777 means any user or process on the machine has write access to overwrite or delete this file. Changing it to 0o640 restricts modification strictly to the file owner."
+                    }
+                }
+                self._add_finding(f, file_path)
+                return
+
             # Safety check: Zip Bomb
             zip_bomb_info = FileAnalyzer.check_zip_bomb(file_path)
             if zip_bomb_info:

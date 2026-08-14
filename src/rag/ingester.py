@@ -50,6 +50,22 @@ COMPLIANCE_KNOWLEDGE_BASE = [
         "chunk_type": "normative"
     },
     {
+        "clause_id": "HIPAA-164-312-E1",
+        "standard": "HIPAA Security Rule",
+        "section": "Technical Safeguards §164.312(e)(1)",
+        "context": "Transmission Security. Implement technical security measures to guard against unauthorized access to electronic protected health information that is being transmitted over an electronic communications network.",
+        "remediation": "Enforce strong modern transmission encryption protocols (TLS 1.2/1.3, SSHv2 with authenticated ciphers) and disable insecure legacy protocols.",
+        "chunk_type": "normative"
+    },
+    {
+        "clause_id": "HIPAA-164-312-B",
+        "standard": "HIPAA Security Rule",
+        "section": "Technical Safeguards §164.312(b)",
+        "context": "Audit Controls. Implement hardware, software, and/or procedural mechanisms that record and examine activity in information systems that contain or use electronic protected health information.",
+        "remediation": "Protect audit logs from tampering or deletion by restricting file permissions to administrative custodians (0o600).",
+        "chunk_type": "normative"
+    },
+    {
         "clause_id": "PCI-DSS-V4-REQ-3-5-1",
         "standard": "PCI-DSS v4.0.1",
         "section": "Requirement 3.5.1",
@@ -58,11 +74,43 @@ COMPLIANCE_KNOWLEDGE_BASE = [
         "chunk_type": "normative"
     },
     {
+        "clause_id": "PCI-DSS-V4-REQ-4-2-1",
+        "standard": "PCI-DSS v4.0.1",
+        "section": "Requirement 4.2.1",
+        "context": "Strong cryptography and security protocols are implemented to protect cardholder data during transmission over open, public networks and internal boundaries.",
+        "remediation": "Enforce TLS 1.2 or TLS 1.3 across all endpoints and disable insecure ciphers (RC4, 3DES, CBC-mode ciphers).",
+        "chunk_type": "normative"
+    },
+    {
         "clause_id": "PCI-DSS-V4-REQ-7-2-1",
         "standard": "PCI-DSS v4.0.1",
         "section": "Requirement 7.2.1",
         "context": "Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.",
         "remediation": "Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.",
+        "chunk_type": "normative"
+    },
+    {
+        "clause_id": "PCI-DSS-V4-REQ-8-3-6",
+        "standard": "PCI-DSS v4.0.1",
+        "section": "Requirement 8.3.6",
+        "context": "If passwords/passphrases are used as authentication factors, they are changed at least once every 90 days, or the security posture of accounts is dynamically analyzed.",
+        "remediation": "Set PASS_MAX_DAYS to 90 or fewer in /etc/login.defs to mandate periodic credential rotation.",
+        "chunk_type": "normative"
+    },
+    {
+        "clause_id": "NIST-800-53-AU-9",
+        "standard": "NIST SP 800-53 Rev 5",
+        "section": "Control AU-9: Protection of Audit Information",
+        "context": "The information system protects audit information and audit tools from unauthorized access, modification, and deletion.",
+        "remediation": "Enforce strict DAC/MAC permissions (0600) on all audit trails to maintain evidentiary integrity.",
+        "chunk_type": "normative"
+    },
+    {
+        "clause_id": "NIST-800-53-SC-13",
+        "standard": "NIST SP 800-53 Rev 5",
+        "section": "Control SC-13: Cryptographic Protection",
+        "context": "The information system implements cryptographic protections using approved cryptographic modules and secure operating modes in accordance with applicable laws, directives, and policies.",
+        "remediation": "Prohibit insecure Electronic Codebook (ECB) mode and mandate CBC or GCM authenticated cipher modes with randomized initialization vectors.",
         "chunk_type": "normative"
     }
 ]
