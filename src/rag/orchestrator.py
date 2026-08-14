@@ -215,7 +215,7 @@ class RelationalRAGOrchestrator:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT id, clause_id, standard, section, context, remediation
+                SELECT id, clause_id, standard, section, context, remediation, chunk_type
                 FROM compliance_rules
             """)
             all_rows = cursor.fetchall()
@@ -223,7 +223,7 @@ class RelationalRAGOrchestrator:
 
             scored = []
             for r in all_rows:
-                doc_id, cid, std, sec, ctx, rem = r[0], r[1], r[2], r[3], r[4], r[5]
+                doc_id, cid, std, sec, ctx, rem, ctype = r[0], r[1], r[2], r[3], r[4], r[5], r[6] if len(r) > 6 else "normative"
 
                 # Industry Scope Filter
                 if not self._matches_industry(cid, std, industry):
@@ -253,7 +253,7 @@ class RelationalRAGOrchestrator:
                 total_score = sparse_score + dense_score
 
                 if total_score > 0:
-                    scored.append((total_score, dense_sim, (cid, std, sec, ctx, rem)))
+                    scored.append((total_score, dense_sim, (cid, std, sec, ctx, rem, ctype)))
 
             scored.sort(key=lambda x: x[0], reverse=True)
             top_rows = [item for item in scored[:top_k]]
@@ -265,6 +265,7 @@ class RelationalRAGOrchestrator:
                     "section": r[2],
                     "context": r[3],
                     "remediation": r[4],
+                    "chunk_type": r[5],
                     "hybrid_score": round(total_score, 4),
                     "vector_similarity": round(sim, 4) if sim > 0 else None
                 })
@@ -304,9 +305,15 @@ class RelationalRAGOrchestrator:
 
         mapped_clauses, standards_involved, contexts_retrieved = [], [], []
         for c in clauses:
+            ctype = c.get("chunk_type", "normative")
             mapped_clauses.append(c['clause_id'])
-            standards_involved.append(f"{c['standard']} ({c['section']})")
-            contexts_retrieved.append(f"[{c['standard']} {c['section']}]: {c['context']}\nAction: {c['remediation']}")
+
+            if ctype == "normative":
+                # Normative clauses (HIPAA, PCI, NIST): contribute full context + remediation to rationale
+                standards_involved.append(f"{c['standard']} ({c['section']})")
+                contexts_retrieved.append(f"[{c['standard']} {c['section']}]: {c['context']}\nAction: {c['remediation']}")
+            # Informational / custom policy chunks: clause_id already appended above;
+            # their prose is deliberately excluded from rationale to keep it actionable.
 
         for cid in filtered_cid_parts:
             if cid not in mapped_clauses:

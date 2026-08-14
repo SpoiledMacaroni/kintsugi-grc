@@ -1687,11 +1687,12 @@ class KintsugiGRCApp(QMainWindow):
             row_i = self._table.rowCount()
             self._table.insertRow(row_i)
 
-            # Severity cell
+            # Severity cell — also stores the finding dict so row lookups survive column sorting
             sev_item = QTableWidgetItem(sev)
             sev_item.setForeground(QBrush(QColor(SEV_COLOR.get(sev, PALETTE["text_secondary"]))))
             sev_item.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
             sev_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+            sev_item.setData(Qt.ItemDataRole.UserRole, f)
             self._table.setItem(row_i, 0, sev_item)
 
             # Domain
@@ -1735,16 +1736,26 @@ class KintsugiGRCApp(QMainWindow):
         rows = self._table.selectedItems()
         if not rows:
             return
+        # Read the finding stored on the row's column-0 item so the lookup is
+        # immune to Qt column-sort reordering (which invalidates row-index lookups).
         row_i = self._table.currentRow()
-        if 0 <= row_i < len(self.displayed_findings):
-            self._load_file_detail(self.displayed_findings[row_i])
+        col0  = self._table.item(row_i, 0)
+        finding = col0.data(Qt.ItemDataRole.UserRole) if col0 else None
+        if finding is None and 0 <= row_i < len(self.displayed_findings):
+            finding = self.displayed_findings[row_i]   # safe fallback
+        if finding:
+            self._load_file_detail(finding)
 
     def _on_table_double_click(self, item: QTableWidgetItem):
+        # Always resolve via UserRole so sort order doesn't desync the finding.
         row_i = item.row()
-        if 0 <= row_i < len(self.displayed_findings):
-            finding = self.displayed_findings[row_i]
-            target  = Path(self._target_edit.text().strip()).resolve()
-            dlg     = FindingDetailDialog(finding, target, self)
+        col0  = self._table.item(row_i, 0)
+        finding = col0.data(Qt.ItemDataRole.UserRole) if col0 else None
+        if finding is None and 0 <= row_i < len(self.displayed_findings):
+            finding = self.displayed_findings[row_i]   # safe fallback
+        if finding:
+            target = Path(self._target_edit.text().strip()).resolve()
+            dlg    = FindingDetailDialog(finding, target, self)
             dlg.exec()
 
     # -------------------------------------------------------------------------

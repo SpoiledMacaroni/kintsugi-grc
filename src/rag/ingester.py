@@ -38,28 +38,32 @@ COMPLIANCE_KNOWLEDGE_BASE = [
         "standard": "HIPAA Security Rule",
         "section": "Technical Safeguards §164.312(a)(1)",
         "context": "Access Control. Implement technical policies and procedures for electronic information systems that maintain electronic protected health information to allow access only to those persons or software programs that have been granted access rights.",
-        "remediation": "Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands."
+        "remediation": "Restrict directory or file permissions immediately. Change owner-writable or world-writable settings using administrative commands.",
+        "chunk_type": "normative"
     },
     {
         "clause_id": "HIPAA-164-312-A2-IV",
         "standard": "HIPAA Security Rule",
         "section": "Technical Safeguards §164.312(a)(2)(iv)",
         "context": "Encryption and Decryption. Implement a mechanism to encrypt and decrypt electronic protected health information.",
-        "remediation": "Encrypt stored records. Plaintext medical details or patient identifiers must be run through a symmetric GPG encryption pipeline."
+        "remediation": "Encrypt stored records. Plaintext medical details or patient identifiers must be run through a symmetric GPG encryption pipeline.",
+        "chunk_type": "normative"
     },
     {
         "clause_id": "PCI-DSS-V4-REQ-3-5-1",
         "standard": "PCI-DSS v4.0.1",
         "section": "Requirement 3.5.1",
         "context": "Primary Account Numbers (PAN) must be rendered unreadable anywhere they are stored. Disk-level encryption alone does not satisfy this requirement if the operating system transparently decrypts the file system for authenticated processes.",
-        "remediation": "Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption."
+        "remediation": "Execute mathematical byte-level verification. Store data in encrypted database blocks or run GPG symmetric file encryption.",
+        "chunk_type": "normative"
     },
     {
         "clause_id": "PCI-DSS-V4-REQ-7-2-1",
         "standard": "PCI-DSS v4.0.1",
         "section": "Requirement 7.2.1",
         "context": "Define access needs for each role and restrict access to system components and cardholder data based on the Principle of Least Privilege.",
-        "remediation": "Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts."
+        "remediation": "Verify GIDs/UIDs. Audit the active user directory to strip excess access permissions from non-essential service accounts.",
+        "chunk_type": "normative"
     }
 ]
 
@@ -142,11 +146,12 @@ class RelationalPolicyIngester:
 
         for i, chunk in enumerate(chunks):
             COMPLIANCE_KNOWLEDGE_BASE.append({
-                "clause_id": f"CUSTOM-POLICY-CHUNK-{i}",
+                "clause_id": f"CUSTOM-POLICY-CHUNK-{i + 1}",
                 "standard": "Custom Company Policy",
-                "section": f"Section Chunk {i+1}",
+                "section": f"Section Chunk {i + 1}",
                 "context": chunk.strip(),
-                "remediation": "Align local configurations to match security standards outlined in company policy."
+                "remediation": "Align local configurations to match security standards outlined in company policy.",
+                "chunk_type": "informational"
             })
             added_items += 1
 
@@ -177,9 +182,9 @@ class RelationalPolicyIngester:
 
         for idx, rule in enumerate(COMPLIANCE_KNOWLEDGE_BASE):
             cursor.execute("""
-                INSERT OR REPLACE INTO compliance_rules (id, clause_id, standard, section, context, remediation)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (idx, rule['clause_id'], rule['standard'], rule['section'], rule['context'], rule['remediation']))
+                INSERT OR REPLACE INTO compliance_rules (id, clause_id, standard, section, context, remediation, chunk_type)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (idx, rule['clause_id'], rule['standard'], rule['section'], rule['context'], rule['remediation'], rule.get('chunk_type', 'normative')))
 
         conn.commit()
         conn.close()

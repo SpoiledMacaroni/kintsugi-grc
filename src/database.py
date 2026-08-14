@@ -16,9 +16,15 @@ def init_db(db_path=DB_PATH):
         standard TEXT NOT NULL,
         section TEXT NOT NULL,
         context TEXT NOT NULL,
-        remediation TEXT NOT NULL
+        remediation TEXT NOT NULL,
+        chunk_type TEXT DEFAULT 'normative'
     )
     """)
+
+    # Migration guard: add chunk_type to existing databases that predate this column
+    existing_columns = {row[1] for row in cursor.execute("PRAGMA table_info(compliance_rules)")}
+    if "chunk_type" not in existing_columns:
+        cursor.execute("ALTER TABLE compliance_rules ADD COLUMN chunk_type TEXT DEFAULT 'normative'")
     
     # 2. Historical Scan Execution Log
     cursor.execute("""
