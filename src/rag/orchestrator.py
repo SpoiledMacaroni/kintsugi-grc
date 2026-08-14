@@ -176,17 +176,46 @@ class RelationalRAGOrchestrator:
 
         return True
 
+    def _vector_search(self, query: str, top_k: int = 5) -> Dict[int, float]:
+        """Performs dense vector similarity search using FAISS and returns a mapping of doc_id -> cosine similarity."""
+        if not self.ml_ready or self.model is None or self.index is None:
+            return {}
+        try:
+            total_docs = getattr(self.index, "ntotal", 0)
+            if total_docs == 0:
+                return {}
+            query_emb = self.model.encode([query], normalize_embeddings=True, show_progress_bar=False)
+            query_np = np.array(query_emb).astype('float32')
+            k = min(max(top_k, 5), total_docs)
+            distances, indices = self.index.search(query_np, k)
+
+            scores = {}
+            for dist, idx in zip(distances[0], indices[0]):
+                if idx >= 0:
+                    scores[int(idx)] = float(dist)
+            return scores
+        except Exception as e:
+            logger.debug(f"FAISS vector search failed: {e}")
+            return {}
+
     def retrieve_context_from_db(self, violation_code: str, query: str, top_k: int = 3, industry: str = "All Industries") -> List[Dict[str, Any]]:
-        """Topic-filtered similarity search inside FAISS, then relational retrieval inside SQLite database."""
+        """Hybrid retrieval combining FAISS dense vector search and SQLite keyword/relational scoring."""
         retrieved_clauses = []
         topic_kw = self.rule_topic_keywords.get(violation_code, [violation_code.lower()])
 
-        # Keyword-Ranked SQLite Database Search
+        # 1. Semantic Vector Similarity Search (Dense Phase)
+        vector_scores = {}
+        if self.ml_ready:
+            # Enrich query with topic keywords to improve dense vector match quality
+            search_query = f"{query} {' '.join(topic_kw)}" if topic_kw else query
+            vector_scores = self._vector_search(search_query, top_k=top_k * 3)
+
+        # 2. Relational Query & Hybrid Ranking (Sparse + Dense Fusion)
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT clause_id, standard, section, context, remediation
+                SELECT id, clause_id, standard, section, context, remediation
                 FROM compliance_rules
             """)
             all_rows = cursor.fetchall()
@@ -194,7 +223,7 @@ class RelationalRAGOrchestrator:
 
             scored = []
             for r in all_rows:
-                cid, std, sec, ctx, rem = r[0], r[1], r[2], r[3], r[4]
+                doc_id, cid, std, sec, ctx, rem = r[0], r[1], r[2], r[3], r[4], r[5]
 
                 # Industry Scope Filter
                 if not self._matches_industry(cid, std, industry):
@@ -202,35 +231,45 @@ class RelationalRAGOrchestrator:
 
                 text_block = f"{cid} {std} {sec} {ctx} {rem}".lower()
                 topic_matches = sum(1 for kw in topic_kw if kw.lower() in text_block)
-
-                # Custom policy rule MUST match at least one topic keyword
                 is_custom = "custom" in text_block or "acme" in text_block
-                if is_custom and topic_matches == 0:
-                    continue  # Skip irrelevant custom policy chunks!
 
-                score = topic_matches * 3
-                if is_custom and topic_matches > 0:
-                    score += 2  # Boost relevant custom policy chunks
+                # Dense semantic vector score (cosine similarity scaled)
+                dense_sim = max(0.0, vector_scores.get(doc_id, 0.0))
+                dense_score = dense_sim * 4.0 if dense_sim > 0.3 else 0.0
+
+                # Sparse keyword score
+                sparse_score = topic_matches * 3.0
+
+                # Custom policy handling: must match topic keywords or have meaningful semantic similarity
+                if is_custom and topic_matches == 0 and dense_sim < 0.45:
+                    continue
+
+                if is_custom and (topic_matches > 0 or dense_sim >= 0.45):
+                    sparse_score += 2.0  # Boost relevant custom policy chunks
 
                 if "hipaa" in text_block and industry == "Healthcare":
-                    score += 2
+                    sparse_score += 2.0
 
-                if score > 0:
-                    scored.append((score, r))
+                total_score = sparse_score + dense_score
+
+                if total_score > 0:
+                    scored.append((total_score, dense_sim, (cid, std, sec, ctx, rem)))
 
             scored.sort(key=lambda x: x[0], reverse=True)
-            top_rows = [r for score, r in scored[:top_k]]
+            top_rows = [item for item in scored[:top_k]]
 
-            for r in top_rows:
+            for total_score, sim, r in top_rows:
                 retrieved_clauses.append({
                     "clause_id": r[0],
                     "standard": r[1],
                     "section": r[2],
                     "context": r[3],
-                    "remediation": r[4]
+                    "remediation": r[4],
+                    "hybrid_score": round(total_score, 4),
+                    "vector_similarity": round(sim, 4) if sim > 0 else None
                 })
         except Exception as e:
-            logger.debug(f"SQLite search failed: {e}")
+            logger.debug(f"Hybrid retrieval failed: {e}")
 
         return retrieved_clauses
 

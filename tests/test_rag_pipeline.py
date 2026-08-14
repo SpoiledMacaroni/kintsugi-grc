@@ -115,5 +115,50 @@ class TestKintsugiSingleModelPipeline(unittest.TestCase):
         self.assertNotIn("Password Expiration Policy", card.get("rationale"))
         self.assertNotIn("chmod 640", card.get("rationale"))
 
+    def test_hybrid_vector_retrieval(self):
+        """Verify that hybrid retrieval produces hybrid_score and vector_similarity."""
+        clauses = self.orchestrator.retrieve_context_from_db(
+            "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN",
+            "Plaintext medical records and credit cards found in raw CSV",
+            top_k=3,
+            industry="Healthcare"
+        )
+        self.assertGreater(len(clauses), 0)
+        top_clause = clauses[0]
+        self.assertIn("hybrid_score", top_clause)
+        self.assertGreater(top_clause["hybrid_score"], 0)
+        # If ML is ready, vector_similarity should be populated
+        if self.orchestrator.ml_ready:
+            self.assertIsNotNone(top_clause.get("vector_similarity"))
+
+    def test_semantic_vector_search_helper(self):
+        """Verify direct FAISS vector search returns relevant doc scores."""
+        if self.orchestrator.ml_ready:
+            scores = self.orchestrator._vector_search("confidential patient identifiers stored unencrypted", top_k=3)
+            self.assertIsInstance(scores, dict)
+            self.assertGreater(len(scores), 0)
+            # Scores should be positive cosine similarities
+            for doc_id, sim in scores.items():
+                self.assertIsInstance(doc_id, int)
+                self.assertGreater(sim, 0.0)
+
+    def test_hybrid_retrieval_graceful_fallback(self):
+        """Verify orchestrator gracefully falls back when ML is uninitialized."""
+        mock_orchestrator = RAGOrchestrator(index_path="non_existent.faiss")
+        mock_orchestrator.ml_ready = False
+        mock_orchestrator.model = None
+        mock_orchestrator.index = None
+
+        clauses = mock_orchestrator.retrieve_context_from_db(
+            "PERMISSIVE_ACCESS_CONTROL_WORLD_WRITABLE",
+            "World writable permissions 0o777 on confidential file",
+            top_k=3
+        )
+        self.assertGreater(len(clauses), 0)
+        self.assertIn("clause_id", clauses[0])
+        self.assertIn("hybrid_score", clauses[0])
+
+
 if __name__ == "__main__":
     unittest.main()
+
