@@ -876,12 +876,311 @@ def build_healthcare_environment(base_dir: Path, key_mgr: KeyManager, results_re
             details={"findings": ["SSN", "LUHN_PAN", "ICD10"]}
         )
 
-    # Internal policies
+# -----------------------------------------------------------------------------
+# INTERNAL CORPORATE POLICY & COMPLIANCE STANDARD TEMPLATES
+# -----------------------------------------------------------------------------
+ACME_HEALTHCARE_POLICY_TEXT = """================================================================================
+ACME HEALTHCARE SYSTEMS, LLC — INFORMATION SECURITY POLICY
+Document ID: POL-ACME-HC-2026-04
+Standard: ISO 27799:2016 / ISO/IEC 27001:2022 (Health Informatics ISMS)
+Classification: CONFIDENTIAL — INTERNAL COMPLIANCE STANDARD
+Effective Date: January 1, 2026 | Version: 4.2
+================================================================================
+
+1. PURPOSE & GOVERNANCE OBJECTIVE
+ACME Healthcare Systems operates an advanced Health Informatics Information 
+Security Management System (ISMS) in conformance with ISO 27799:2016 (Health 
+Informatics — Information Security Management in Health Using ISO/IEC 27002).
+This policy establishes an Attribute-Based Clinical Tokenization (ABCT) and 
+Cryptographic Container Architecture to safeguard Electronic Protected Health 
+Information (ePHI), Electronic Health Records (EHR), and diagnostic imaging.
+
+Unlike checklist-oriented compliance regimes, ACME Healthcare enforces continuous
+architectural isolation, verifiable entropy boundaries, and dual-custody key 
+orchestration across all clinical production environments.
+
+2. CLINICAL TOKENIZATION & PSEUDONYMIZATION ARCHITECTURE (ISO 27799 §8.2)
+2.1. All direct identifiers—including Social Security Numbers (SSNs), Medicare 
+     Beneficiary Identifiers (MBIs), and Medical Record Numbers (MRNs)—must be 
+     pseudonymized via high-entropy 32-byte non-reversible tokens prior to ingestion 
+     into secondary clinical data stores, research pipelines, or analytics databases.
+2.2. Token vault mappings must reside in isolated cryptographic silos accessible 
+     strictly through authenticated REST microservices using mutual TLS (mTLS 1.3).
+2.3. No cleartext patient records (CSV, TXT, JSON, SQL dumps) may reside on disk 
+     outside volatile in-memory processing buffers.
+
+3. CRYPTOGRAPHIC DATA-AT-REST CONTAINERIZATION (ISO 27799 §10.1)
+3.1. All persistent medical records, patient encounters, and master databases (e.g., 
+     ehr_db_master.gpg) must be encapsulated within authenticated AES-256-CBC 
+     containers bearing valid GPG magic byte packet headers (\\x85\\x01) and Shannon 
+     Entropy H >= 7.8.
+3.2. Hybrid files containing cleartext clinical metadata headers (<= 512 bytes) must 
+     have fully encrypted payload bodies (Shannon Entropy H >= 7.8).
+3.3. Raw, unencrypted zlib compressed streams (.zlib) or plaintext ZIP archives 
+     containing clinical tables are strictly prohibited and classified as Critical 
+     Data Exposure Violations.
+
+4. DIAGNOSTIC IMAGING & RADIOLOGY TELEMETRY (ISO 27799 §12.3)
+4.1. PACS radiology imaging (DICOM, PNG, JPEG diagnostic scans) must be isolated 
+     within target-scoped radiology directories with restricted POSIX permissions 
+     (0o640 or 0o600).
+4.2. Diagnostic images transferred across network segments must utilize TLS 1.3 
+     or ASCII-armored PGP encryption envelopes.
+
+5. SYSTEM HARDENING & AUDIT INTEGRITY (ISO 27799 §14.2)
+5.1. Operating system parameters must enforce maximum password rotation periods 
+     (PASS_MAX_DAYS <= 90 in /etc/login.defs).
+5.2. Audit logs (/var/log/audit/audit.log) must be protected with 0o600 permissions 
+     to ensure tamper resistance and non-repudiation for clinical access tracking.
+5.3. Insecure transmission protocols (SSH Protocol 1, legacy SSL/TLS 1.0/1.1) must 
+     be disabled across all healthcare infrastructure components.
+"""
+
+HIPAA_SAFEGUARDS_POLICY_TEXT = """================================================================================
+ACME HEALTHCARE — HIPAA TECHNICAL SAFEGUARDS (§164.312) OPERATIONAL POLICY
+Document ID: POL-ACME-HIPAA-2026-01
+Classification: INTERNAL REGULATORY MANDATE
+================================================================================
+1. All electronic Protected Health Information (ePHI) stored on server volumes
+   must be encrypted using NIST-approved algorithms (§164.312(a)(2)(iv)).
+2. Emergency access procedures must be documented and tested annually (§164.312(a)(2)(ii)).
+3. Automatic logoff controls must terminate inactive sessions after 15 minutes (§164.312(a)(2)(iii)).
+4. Audit controls (§164.312(b)) must record and examine activity in systems containing ePHI.
+5. Transmission security (§164.312(e)(1)) mandates TLS 1.2+ for all data in motion.
+"""
+
+ACME_BANK_POLICY_TEXT = """================================================================================
+ACME BANK INTERNATIONAL & TRUST, N.A. — INSTITUTIONAL CYBER RESILIENCE POLICY
+Document ID: POL-ACME-BNK-2026-01
+Standard: FFIEC Architecture, Infrastructure & Operations (AIO) / Basel BCBS d509
+Classification: STRICTLY CONFIDENTIAL — TIER 1 CORE BANKING REGULATORY STANDARD
+Effective Date: February 15, 2026 | Version: 5.1
+================================================================================
+
+1. PURPOSE & REGULATORY MANDATE
+ACME Bank International & Trust, N.A. mandates this Institutional Cyber Resilience
+Policy in alignment with Federal Financial Institutions Examination Council (FFIEC)
+Architecture, Infrastructure, and Operations (AIO) principles and Basel Committee on
+Banking Supervision (BCBS) Cyber Resilience Guidelines.
+
+This policy establishes a Zero-Trust Core Banking Architecture, continuous cryptographic
+attestation, and dual-custody authorization ("Four-Eyes Principle") for all financial
+ledgers, automated clearinghouse (ACH) files, and SWIFT wire processing nodes.
+
+2. DUAL-CUSTODY & CORE LEDGER ENCRYPTION STANDARDS (FFIEC AIO §4.1)
+2.1. Core banking transactional records, account balances, and merchant settlement
+     ledgers must be encrypted at the file and block level using authenticated
+     AES-256-CBC with randomized Initialization Vectors (IV).
+2.2. The Electronic Codebook (ECB) mode of encryption is explicitly prohibited across
+     all banking subsystems due to structural ciphertext pattern leakage vulnerabilities.
+2.3. Settlement files containing cardholder PANs or customer Tax IDs/SSNs must never
+     exist in unencrypted comma-separated or plaintext formats within core ledger paths.
+
+3. SWIFT WIRE & TREASURY BATCH INTEGRITY (FFIEC AIO §6.2)
+3.1. High-value wire transfer batches (e.g., swift_wire_batch_*.dat) must be wrapped
+     in hardware security module (HSM) verified cryptographic envelopes with Shannon
+     Entropy H >= 7.95 prior to transmission or archival.
+3.2. Micro-payload authorization tokens (32 bytes) utilized for inter-service API
+     authentication must maintain cryptographic entropy H >= 4.0.
+
+4. TRANSPORT LAYER ZERO-TRUST CONTROLS (FFIEC AIO §8.4)
+4.1. All web management interfaces and inter-bank API connections must enforce
+     minimum TLS version 1.2, with TLS 1.3 enforced for primary wire transfer gateways.
+4.2. Legacy protocols including SSLv3, TLS 1.0, and TLS 1.1 are banned across all
+     operating systems and Schannel registry configurations (Enabled=dword:00000000).
+4.3. SSH remote administration servers must mandate Protocol 2 and enforce modern
+     authenticated ciphers (chacha20-poly1305, aes256-gcm). Weak legacy ciphers
+     (3DES, Blowfish) and weak MACs (HMAC-MD5) must be disabled.
+
+5. AUDIT TRAIL IMMUTABILITY & SYSTEM ACCOUNT SECURITY (FFIEC AIO §11.1)
+5.1. System daemon accounts (daemon, bin, sys) must be locked with non-interactive
+     shells (/sbin/nologin) to prevent unauthorized privilege escalation.
+5.2. Audit logs (/var/log/audit/audit.log) must be maintained in write-once-read-many
+     (WORM) configurations with POSIX 0o600 permissions, ensuring complete forensic
+     reconstruction of security events.
+5.3. Password maximum lifetime policies must be enforced at or below 90 days
+     (PASS_MAX_DAYS <= 90 in /etc/login.defs).
+"""
+
+ACME_FINANCE_POLICY_TEXT = """================================================================================
+ACME FINANCIAL SERVICES & TREASURY CORP — TRUST & CRYPTOGRAPHIC POLICY
+Document ID: POL-ACME-FIN-2026-02
+Standard: SOC 2 Type II (Trust Services Criteria CC6.1/6.6/6.8) & ISO/IEC 27001:2022 A.8.24
+Classification: CONFIDENTIAL — TREASURY OPERATIONAL CONTROL
+Effective Date: March 1, 2026 | Version: 3.8
+================================================================================
+
+1. PURPOSE & CONTROL FRAMEWORK
+ACME Financial Services & Treasury Corporation enforces this Security & Cryptographic
+Control Policy under the SOC 2 Type II Trust Services Criteria (Common Criteria 6.1, 
+6.6, 6.8) and ISO/IEC 27001:2022 Control A.8.24 (Use of Cryptography).
+
+The purpose of this standard is to guarantee data integrity, confidentiality, and
+non-repudiation across corporate treasury management, ACH clearinghouse settlements,
+and financial database backups.
+
+2. TREASURY BATCH INTEGRITY & CIPHER BLOCK GOVERNANCE (ISO 27001 A.8.24)
+2.1. All settlement records and wire transaction batches must be encrypted prior to
+     storage using AES-256-CBC with randomized IVs or authenticated AES-256-GCM.
+2.2. Repeated block ciphertext vulnerabilities (characteristic of Electronic Codebook / 
+     ECB mode) are prohibited in financial ledgers (ach_settlement_log.csv). Files with
+     fewer than 50% unique 16-byte blocks will be quarantined as critical integrity failures.
+2.3. Financial archives compressed with raw zlib (.zlib) without a verified cryptographic
+     wrapper must not contain unencrypted customer PANs or financial identifiers.
+
+3. TRANSPORT CRYPTOGRAPHY & POLICY HARDENING (SOC 2 CC6.6)
+3.1. All Nginx and OpenSSL configuration endpoints must mandate TLS 1.2 or TLS 1.3
+     (MinProtocol = TLSv1.2 in openssl.cnf and ssl_protocols TLSv1.2 TLSv1.3 in nginx).
+3.2. Deprecated cryptographic primitives (RC4, 3DES, MD5, SHA-1, TLS 1.0/1.1) are banned.
+3.3. System-wide Linux crypto-policies (/etc/crypto-policies/state/current) must be 
+     maintained in DEFAULT or FUTURE modes, strictly avoiding LEGACY configuration.
+
+4. CREDENTIAL LIFECYCLE & ACCESS HARDENING (SOC 2 CC6.1)
+4.1. Password expiration intervals must be locked to a maximum of 90 days
+     (PASS_MAX_DAYS <= 90 in /etc/login.defs).
+4.2. Operating system service accounts (daemon, bin, sys) must be locked from interactive
+     shell sessions (/sbin/nologin in /etc/passwd).
+
+5. AUDIT TRAIL LOGGING & RESOURCE SAFETY (SOC 2 CC6.8)
+5.1. System audit logs (/var/log/audit/audit.log) must be maintained with 0o600
+     permissions to protect audit records against unauthorized modification or deletion.
+5.2. Inbound backup archives (.zip) must be inspected against decompression bomb ratios;
+     archives exceeding a 100:1 compression ratio will trigger safety boundary pauses.
+"""
+
+ACME_MERCHANT_POLICY_TEXT = """================================================================================
+ACME MERCHANT SOLUTIONS & RETAIL COMMERCE — DATA PROTECTION POLICY
+Document ID: POL-ACME-MER-2026-03
+Standard: CIS Critical Security Controls v8.1 (Controls 3, 4, 10) & GDPR Article 32
+Classification: CONFIDENTIAL — E-COMMERCE & POS OPERATIONS STANDARD
+Effective Date: April 1, 2026 | Version: 4.0
+================================================================================
+
+1. PURPOSE & PRINCIPLES
+ACME Merchant Solutions & Retail Commerce, Inc. enforces this Data Protection &
+Secure Configuration Policy in conformance with CIS Critical Security Controls v8.1
+(Control 3: Data Protection, Control 4: Secure Configuration, Control 10: Malware Defenses)
+and European General Data Protection Regulation (GDPR) Article 32.
+
+This standard establishes Point-to-Point Encryption (P2PE), ephemeral memory zeroization,
+and strict resource exhaustion boundary guardrails across all Point-of-Sale (POS) terminals,
+merchant portals, and e-commerce database backends.
+
+2. POINT-OF-SALE (POS) & CARDHOLDER DATA DEFENSE-IN-DEPTH (CIS Control 3.1, 3.4)
+2.1. Primary Account Numbers (PANs) adhering to the Luhn-10 algorithm and customer SSNs
+     must never be stored in plaintext in local files, application debug logs
+     (e.g., terminal_buffer_debug.log), or unencrypted database tables.
+2.2. All POS daily settlement databases (e.g., daily_pos_settlement_*.db) must be encrypted
+     with AES-256-CBC and maintain verified Shannon Entropy H >= 7.8.
+2.3. Unencrypted ZIP archives containing customer transaction records or copay tables
+     (e.g., unencrypted_patient_export.zip) are strictly prohibited and subject to immediate
+     security isolation.
+
+3. ARCHIVE SAFETY & DECOMPRESSION GUARDRAILS (CIS Control 10.3)
+3.1. Inbound compressed ZIP archives must undergo automated decompression boundary checks
+     prior to extraction.
+3.2. Archives exhibiting a decompression expansion ratio > 100:1 or expanding into > 10 MB
+     of uncompressed data from micro payloads are classified as potential Decompression
+     Zip Bombs and must be blocked from automatic decompression.
+
+4. WEB SERVER & TRANSMISSION ENCRYPTION BASELINE (CIS Control 4.1)
+4.1. Web server configuration files (/etc/nginx/conf.d/ssl_policy.conf) must mandate
+     TLS 1.2 and TLS 1.3 with forward-secret cipher suites (ECDHE-ECDSA-AES256-GCM-SHA384).
+4.2. Insecure protocols (TLS 1.0, TLS 1.1, SSLv3) and weak ciphers (RC4, 3DES) must be
+     disabled across all frontend web proxies and Windows Schannel registry configurations.
+4.3. SSH remote maintenance servers must disable Protocol 1 and enforce Protocol 2.
+
+5. SYSTEM BASELINE HARDENING & AUDIT LOGGING (CIS Control 3.3, 8.5)
+5.1. Password expiration intervals must be locked to a maximum of 90 days
+     (PASS_MAX_DAYS <= 90 in /etc/login.defs).
+5.2. Non-interactive system service accounts (daemon, bin, sys) must be locked from interactive
+     login shells (/sbin/nologin).
+5.3. Audit logs (/var/log/audit/audit.log) must be secured with 0o600 permissions.
+"""
+
+def generate_industry_internal_policies(env_root: Path, industry: str) -> None:
+    """
+    Generates and regenerates corporate internal security policies and alternative framework standards.
+    """
     policies_dir = env_root / "internal_policies"
     validate_path_in_scope(policies_dir, env_root)
     policies_dir.mkdir(parents=True, exist_ok=True)
-    with open(policies_dir / "hipaa_safeguards_policy_v4.txt", "w", encoding="utf-8") as f:
-        f.write("HIPAA Technical Safeguards (§164.312) Corporate Policy\nAll PHI must be encrypted at rest.\n")
+
+    if industry == "healthcare":
+        policy_file = policies_dir / "acme_healthcare_iso27799_policy.txt"
+        with open(policy_file, "w", encoding="utf-8") as f:
+            f.write(ACME_HEALTHCARE_POLICY_TEXT)
+        hipaa_file = policies_dir / "hipaa_safeguards_policy_v4.txt"
+        with open(hipaa_file, "w", encoding="utf-8") as f:
+            f.write(HIPAA_SAFEGUARDS_POLICY_TEXT)
+        logger.info(f"Regenerated ACME Healthcare corporate policies at {policies_dir.relative_to(env_root).as_posix()}")
+
+    elif industry == "merchant":
+        policy_file = policies_dir / "acme_merchant_cis_p2pe_policy.txt"
+        with open(policy_file, "w", encoding="utf-8") as f:
+            f.write(ACME_MERCHANT_POLICY_TEXT)
+        logger.info(f"Regenerated ACME Merchant corporate policies at {policies_dir.relative_to(env_root).as_posix()}")
+
+    elif industry == "finance":
+        policy_file = policies_dir / "acme_finance_soc2_iso27001_policy.txt"
+        with open(policy_file, "w", encoding="utf-8") as f:
+            f.write(ACME_FINANCE_POLICY_TEXT)
+        logger.info(f"Regenerated ACME Finance corporate policies at {policies_dir.relative_to(env_root).as_posix()}")
+
+    elif industry == "banking":
+        policy_file = policies_dir / "acme_bank_ffiec_zerotrust_policy.txt"
+        with open(policy_file, "w", encoding="utf-8") as f:
+            f.write(ACME_BANK_POLICY_TEXT)
+        logger.info(f"Regenerated ACME Bank corporate policies at {policies_dir.relative_to(env_root).as_posix()}")
+
+# -----------------------------------------------------------------------------
+# PRODUCTION ENVIRONMENT BUILDERS
+# -----------------------------------------------------------------------------
+def build_healthcare_environment(base_dir: Path, key_mgr: KeyManager, results_rec: ExpectedResultsRecorder = None):
+    env_root = base_dir / "healthcare_production_env"
+    env_root.mkdir(parents=True, exist_ok=True)
+
+    logger.info(f"--- Constructing Healthcare Environment: {env_root.resolve().as_posix()} ---")
+
+    # Internal policies
+    generate_industry_internal_policies(env_root, "healthcare")
+
+    # Patient Records
+    records_dir = env_root / "patient_records"
+    records_dir.mkdir(parents=True, exist_ok=True)
+
+    generate_category_a_compliant_encrypted(
+        records_dir / "ehr_db_master.gpg",
+        "HealthcareMasterKey2026!",
+        1500, key_mgr, env_root, results_rec
+    )
+
+    generate_category_c_false_negatives(records_dir, "HealthcareMasterKey2026!", key_mgr, env_root, results_rec)
+
+    # Radiology
+    generate_mock_images(env_root / "radiology_images", env_root)
+
+    # Billing & Permissive Access / PHI violations
+    billing_dir = env_root / "billing_department"
+    billing_dir.mkdir(parents=True, exist_ok=True)
+
+    claims_csv = billing_dir / "claims_export_2026_q2.csv"
+    validate_path_in_scope(claims_csv, env_root)
+    claims_lines = ["claim_id,patient_ssn,pan_card,icd10_code,claim_amount\n"]
+    for i in range(100):
+        claims_lines.append(f"CLM_{i+100},{generate_ssn()},{generate_luhn_pan()},E11.9,{random.uniform(100, 5000):.2f}\n")
+    with open(claims_csv, "w", encoding="utf-8") as f:
+        f.write("".join(claims_lines))
+    if results_rec:
+        results_rec.record_finding(
+            claims_csv.relative_to(env_root).as_posix(),
+            "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN",
+            "Category_D",
+            "FAIL",
+            ["HIPAA_164_312_e_1", "PCI_DSS_v4_4_2_1"],
+            severity="CRITICAL",
+            details={"findings": ["SSN", "LUHN_PAN", "ICD10"]}
+        )
 
     # Insecure configurations & AD exports
     etc_dir = env_root / "etc"
@@ -894,6 +1193,9 @@ def build_merchant_environment(base_dir: Path, key_mgr: KeyManager, results_rec:
     env_root.mkdir(parents=True, exist_ok=True)
 
     logger.info(f"--- Constructing Merchant Environment: {env_root.resolve().as_posix()} ---")
+
+    # Internal policies
+    generate_industry_internal_policies(env_root, "merchant")
 
     # Point of Sale
     pos_dir = env_root / "point_of_sale"
@@ -950,6 +1252,9 @@ def build_finance_environment(base_dir: Path, key_mgr: KeyManager, results_rec: 
 
     logger.info(f"--- Constructing Finance Environment: {env_root.resolve().as_posix()} ---")
 
+    # Internal policies
+    generate_industry_internal_policies(env_root, "finance")
+
     # Wire transfers
     wire_dir = env_root / "wire_transfers"
     wire_dir.mkdir(parents=True, exist_ok=True)
@@ -987,6 +1292,9 @@ def build_banking_environment(base_dir: Path, key_mgr: KeyManager, results_rec: 
     env_root.mkdir(parents=True, exist_ok=True)
 
     logger.info(f"--- Constructing Banking Environment: {env_root.resolve().as_posix()} ---")
+
+    # Internal policies
+    generate_industry_internal_policies(env_root, "banking")
 
     wire_dir = env_root / "wire_transfers"
     wire_dir.mkdir(parents=True, exist_ok=True)
@@ -1085,6 +1393,9 @@ def main():
         safe_chmod(audit_log_bak, 0o600)
 
     logger.info(f"Successfully completed synthetic environment generation. Audit log saved to {audit_log_src.relative_to(output_base).as_posix()}")
+    for h in list(logger.handlers):
+        h.close()
+    logger.handlers.clear()
 
 if __name__ == "__main__":
     main()

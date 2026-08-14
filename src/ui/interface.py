@@ -13,6 +13,10 @@ import sys
 import threading
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+
+# Suppress benign Qt font database script lookup notices
+os.environ.setdefault("QT_LOGGING_RULES", "qt.text.font.db=false;qt.text.font.*=false")
+
 from src.dep_check import ensure_dependencies
 ensure_dependencies(["PyQt6", "PyQt6.QtCharts"])
 

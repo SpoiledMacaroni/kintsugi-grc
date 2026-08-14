@@ -6,9 +6,13 @@ and PDF compliance report generation (app.py export-pdf).
 """
 
 import argparse
+import os
 import sys
 import time
 from pathlib import Path
+
+# Suppress benign Qt font database script lookup notices
+os.environ.setdefault("QT_LOGGING_RULES", "qt.text.font.db=false;qt.text.font.*=false")
 
 from src.dep_check import ensure_dependencies
 ensure_dependencies()
@@ -103,6 +107,31 @@ def main():
         "--report", "-r",
         default="scan_report.json",
         help="Path to scan report JSON file (default: scan_report.json)."
+    )
+
+    # Subcommand: synthesize
+    syn_parser = subparsers.add_parser("synthesize", help="Generate or regenerate synthetic test environments and internal corporate compliance policies.")
+    syn_parser.add_argument(
+        "--industry", "-i",
+        choices=["healthcare", "merchant", "finance", "banking", "all"],
+        default="all",
+        help="Target industry environment to generate (default: all)."
+    )
+    syn_parser.add_argument(
+        "--output-dir", "-o",
+        default="./synthetic_test_env",
+        help="Target root directory where synthetic environments will be created (default: ./synthetic_test_env)."
+    )
+    syn_parser.add_argument(
+        "--seed", "-s",
+        type=int,
+        default=None,
+        help="Optional seed value for reproducible synthetic generation."
+    )
+    syn_parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="Enable verbose DEBUG logging."
     )
 
     args = parser.parse_args()
@@ -243,6 +272,19 @@ def main():
         with open(report_file, "r", encoding="utf-8") as f:
             summary = json.load(f)
         ScanReporter.print_terminal_summary(summary)
+
+    elif args.command == "synthesize":
+        from scripts.generate_synthetic import main as generate_main
+        sys.argv = [
+            "generate_synthetic.py",
+            "--industry", args.industry,
+            "--output-dir", args.output_dir,
+        ]
+        if args.seed is not None:
+            sys.argv.extend(["--seed", str(args.seed)])
+        if args.verbose:
+            sys.argv.append("--verbose")
+        generate_main()
 
 
 if __name__ == "__main__":
