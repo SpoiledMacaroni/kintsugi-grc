@@ -117,7 +117,7 @@ class RelationalRAGOrchestrator:
                 "standard": "HIPAA Technical Safeguards §164.312(e)(1) & PCI-DSS v4.0.1 Req 4.2.1",
                 "risk_statement": "System crypto-policy permits legacy TLS 1.0 / TLS 1.1 or deprecated RC4/3DES ciphers.",
                 "business_explanation": "Obsolete Network Encryption (TLS 1.0 / SECLEVEL=0): Setting TLS 1.0 or SECLEVEL=0 allows network connections to use legacy algorithms susceptible to eavesdropping. Updating to TLS 1.2+ mandates strong modern encryption across web servers and API endpoints.",
-                "remediation_command": "update-crypto-policies --set DEFAULT:FEDORA32",
+                "remediation_command": "__TLS_SUBTYPE_DISPATCH__",
                 "rationale": "Enforce TLS 1.2 or TLS 1.3 protocol baseline across web servers and OpenSSL configs."
             },
             "INSECURE_PASSWORD_POLICY_MAX_DAYS": {
@@ -145,6 +145,58 @@ class RelationalRAGOrchestrator:
                 "rationale": "Restrict audit log permissions to prevent log tampering and maintain integrity."
             }
         }
+
+    # -------------------------------------------------------------------------
+    # TLS SUB-TYPE REMEDIATION DISPATCHER
+    # -------------------------------------------------------------------------
+    def _tls_remediation_command(self, filepath: str, details: Dict[str, Any]) -> str:
+        """
+        Returns the correct remediation command for INSECURE_SYSTEM_TLS_POLICY based on
+        the specific config file type detected by the scanner.
+
+        Sub-types (identified by filepath basename and details keys):
+          openssl.cnf       → sed to raise MinProtocol + SECLEVEL in the file
+          ssl_policy.conf   → sed to replace ssl_protocols directive in nginx
+          hklm_schannel.reg → PowerShell registry disable of TLS 1.0 server key
+          state/current     → update-crypto-policies to switch away from LEGACY
+        """
+        import os
+        fname = os.path.basename(filepath)
+
+        # openssl.cnf: patch MinProtocol and SECLEVEL directly in the file
+        if fname == "openssl.cnf" or "MinProtocol" in details or "SECLEVEL" in details:
+            return (
+                f"sed -i "
+                f"'s/MinProtocol *= *TLSv1\\.[01]/MinProtocol = TLSv1.2/g; "
+                f"s/CipherString *= *DEFAULT:@SECLEVEL=[01]/CipherString = DEFAULT:@SECLEVEL=2/g' "
+                f"{filepath}"
+            )
+
+        # nginx ssl_policy.conf: replace legacy ssl_protocols directive
+        if fname == "ssl_policy.conf" or "protocols" in details:
+            return (
+                f"sed -i "
+                f"'s/ssl_protocols.*/ssl_protocols TLSv1.2 TLSv1.3;/g; "
+                f"s/ssl_ciphers.*/ssl_ciphers HIGH:!aNULL:!MD5:!RC4:!3DES;/g' "
+                f"{filepath}"
+            )
+
+        # Windows Schannel registry: disable TLS 1.0 server via PowerShell
+        if fname.endswith(".reg") or "schannel_protocol" in details:
+            return (
+                "New-Item -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders"
+                "\\SCHANNEL\\Protocols\\TLS 1.0\\Server' -Force | "
+                "New-ItemProperty -Name 'Enabled' -Value 0 -PropertyType DWORD -Force"
+            )
+
+        # Linux crypto-policies state/current: switch away from LEGACY
+        if "policy" in details or fname == "current":
+            return "update-crypto-policies --set DEFAULT"
+
+        # Generic fallback
+        return (
+            f"sed -i 's/MinProtocol *= *TLSv1\\.[01]/MinProtocol = TLSv1.2/g' {filepath}"
+        )
 
     def _matches_industry(self, clause_id: str, standard: str, industry: str) -> bool:
         """Determines if a clause/standard belongs to the specified industry scope."""
@@ -277,6 +329,7 @@ class RelationalRAGOrchestrator:
     def generate_advisory(self, violation_code: str, metadata_payload: Dict[str, Any], industry: str = "All Industries") -> Dict[str, Any]:
         """Generates a structured remediation advisory card for a violation code, strictly scoped by industry."""
         filepath = metadata_payload.get("filepath", metadata_payload.get("file_path", "target_file"))
+        details  = metadata_payload.get("details", {})
         query_string = f"Violation matching {violation_code} for path {filepath}"
 
         clauses = self.retrieve_context_from_db(violation_code, query_string, top_k=3, industry=industry)
@@ -292,7 +345,13 @@ class RelationalRAGOrchestrator:
             }
         )
 
-        formatted_cmd = fallback_item["remediation_command"].format(filepath=filepath, username="system_user")
+        # TLS sub-type dispatch: select the correct command based on the scanned file
+        # and its details dict rather than using a single static command for all TLS findings.
+        raw_cmd = fallback_item["remediation_command"]
+        if violation_code == "INSECURE_SYSTEM_TLS_POLICY" or raw_cmd == "__TLS_SUBTYPE_DISPATCH__":
+            formatted_cmd = self._tls_remediation_command(filepath, details)
+        else:
+            formatted_cmd = raw_cmd.format(filepath=filepath, username="system_user")
 
         # Industry Scope Filter for fallback clause_id
         raw_cid_parts = fallback_item["clause_id"].split(" / ")
