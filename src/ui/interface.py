@@ -42,6 +42,17 @@ from PyQt6.QtCharts import (
     QChart, QChartView, QPieSeries, QPieSlice,
 )
 
+# Optional SVG support for logo rendering (PyQt6-Qt6Svg)
+try:
+    from PyQt6.QtSvg import QSvgRenderer as _QSvgRenderer
+    _HAS_SVG = True
+except ImportError:
+    _HAS_SVG = False
+
+# Asset paths
+_ASSETS_DIR = Path(__file__).parent / "assets"
+_LOGO_SVG   = _ASSETS_DIR / "kintsugi_logo.svg"
+
 from src.mapping.controls import ControlRegistry
 from src.output.pdf_exporter import PDFComplianceExporter
 from src.output.reporter import ScanReporter
@@ -53,32 +64,42 @@ from src.scanner.watcher import DynamicDirectoryWatcher
 logger = logging.getLogger("kintsugi_ui")
 
 # ──────────────────────────────────────────────────────────────────────────────
-# COLOUR PALETTE
+# COLOUR PALETTE  —  Kintsugi Black & Gold Edition
 # ──────────────────────────────────────────────────────────────────────────────
 PALETTE = {
-    "bg_base":        "#0d1117",
-    "bg_surface":     "#161b22",
-    "bg_elevated":    "#1c2128",
-    "bg_card":        "#21262d",
-    "border":         "#30363d",
-    "border_active":  "#58a6ff",
-    "text_primary":   "#e6edf3",
-    "text_secondary": "#8b949e",
-    "text_muted":     "#6e7681",
-    "accent_blue":    "#58a6ff",
-    "accent_cyan":    "#79c0ff",
-    "green":          "#3fb950",
-    "green_bg":       "#0f3a1f",
-    "yellow":         "#d29922",
-    "yellow_bg":      "#3a2a00",
-    "orange":         "#db6d28",
-    "orange_bg":      "#3a1a00",
-    "red":            "#f85149",
-    "red_bg":         "#3a0f0f",
-    "sev_critical":   "#f85149",
-    "sev_high":       "#db6d28",
-    "sev_medium":     "#d29922",
-    "sev_pass":       "#3fb950",
+    # ── Backgrounds (obsidian scale) ────────────────────────────────────
+    "bg_base":        "#09090C",   # pure obsidian
+    "bg_surface":     "#111116",   # elevated surface
+    "bg_elevated":    "#18181F",   # card hover / selection
+    "bg_card":        "#1E1E28",   # panel cards
+    # ── Borders (warm dark) ─────────────────────────────────────────────
+    "border":         "#2A2430",   # default border
+    "border_active":  "#C9A84C",   # active / focused border (gold)
+    # ── Text (warm parchment scale) ─────────────────────────────────────
+    "text_primary":   "#F0E6C8",   # warm parchment
+    "text_secondary": "#8B7A5E",   # warm muted
+    "text_muted":     "#5C4E3A",   # dim warm
+    # ── Gold accents ────────────────────────────────────────────────────
+    "accent_blue":    "#C9A84C",   # repurposed → primary gold (kept name for compat)
+    "accent_cyan":    "#E8C96A",   # repurposed → bright gold
+    "gold":           "#C9A84C",   # primary brand gold
+    "gold_bright":    "#E8C96A",   # hover / highlight gold
+    "gold_dim":       "#7A6030",   # subtle / disabled gold
+    "gold_glow":      "#C9A84C40", # translucent gold for glows
+    # ── Semantic status colors ──────────────────────────────────────────
+    "green":          "#4CAF74",
+    "green_bg":       "#0D2B1A",
+    "yellow":         "#D4A017",
+    "yellow_bg":      "#2A1E00",
+    "orange":         "#E07840",
+    "orange_bg":      "#2A1200",
+    "red":            "#FF5252",
+    "red_bg":         "#2A0A0A",
+    # ── Severity ────────────────────────────────────────────────────────
+    "sev_critical":   "#FF5252",
+    "sev_high":       "#E07840",
+    "sev_medium":     "#D4A017",
+    "sev_pass":       "#4CAF74",
 }
 
 SEV_COLOR = {
@@ -129,6 +150,33 @@ REMEDIATION_HINTS = {
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+# SVG LOGO RENDERER
+# ──────────────────────────────────────────────────────────────────────────────
+
+def _make_logo_pixmap(size: int = 48) -> Optional[QPixmap]:
+    """Renders the Kintsugi SVG shield mark to a QPixmap at the given pixel size.
+
+    Falls back to None if PyQt6-Qt6Svg is not installed or the asset is missing;
+    callers should render a styled text fallback in that case.
+    """
+    if not _HAS_SVG or not _LOGO_SVG.exists():
+        return None
+    try:
+        renderer = _QSvgRenderer(str(_LOGO_SVG))
+        # SVG viewBox is 100×112 — keep that aspect ratio
+        h = int(round(size * 112 / 100))
+        pixmap = QPixmap(size, h)
+        pixmap.fill(QColor(0, 0, 0, 0))   # transparent background
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        renderer.render(painter)
+        painter.end()
+        return pixmap
+    except Exception:
+        return None
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 # UTILITY
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -147,24 +195,24 @@ def reveal_in_file_explorer(file_path: Path):
 
 
 def apply_dark_palette(app: QApplication):
-    """Applies system-wide dark QPalette."""
+    """Applies system-wide dark QPalette with Kintsugi black & gold theme."""
     palette = QPalette()
     bg   = QColor(PALETTE["bg_base"])
     surf = QColor(PALETTE["bg_surface"])
     txt  = QColor(PALETTE["text_primary"])
     dim  = QColor(PALETTE["text_secondary"])
-    acc  = QColor(PALETTE["accent_blue"])
+    gold = QColor(PALETTE["gold"])
     palette.setColor(QPalette.ColorRole.Window,          bg)
     palette.setColor(QPalette.ColorRole.WindowText,      txt)
     palette.setColor(QPalette.ColorRole.Base,            surf)
     palette.setColor(QPalette.ColorRole.AlternateBase,   QColor(PALETTE["bg_elevated"]))
     palette.setColor(QPalette.ColorRole.Text,            txt)
-    palette.setColor(QPalette.ColorRole.BrightText,      QColor("#ffffff"))
+    palette.setColor(QPalette.ColorRole.BrightText,      QColor(PALETTE["gold_bright"]))
     palette.setColor(QPalette.ColorRole.Button,          QColor(PALETTE["bg_card"]))
     palette.setColor(QPalette.ColorRole.ButtonText,      txt)
-    palette.setColor(QPalette.ColorRole.Highlight,       acc)
-    palette.setColor(QPalette.ColorRole.HighlightedText, QColor("#000000"))
-    palette.setColor(QPalette.ColorRole.Link,            acc)
+    palette.setColor(QPalette.ColorRole.Highlight,       gold)
+    palette.setColor(QPalette.ColorRole.HighlightedText, QColor(PALETTE["bg_base"]))
+    palette.setColor(QPalette.ColorRole.Link,            gold)
     palette.setColor(QPalette.ColorRole.PlaceholderText, dim)
     app.setPalette(palette)
 
@@ -192,6 +240,8 @@ class ScanWorker(QThread):
 
     def run(self):
         try:
+            if self._stop_flag:
+                return
             self.progress.emit(5,  "Initializing audit logger...")
             # Write audit log one level above the scan target so it always lands
             # at the predictable synthetic_test_env/ root, not inside a sub-env dir.
@@ -199,29 +249,43 @@ class ScanWorker(QThread):
             audit_logger = ScannerAuditLogger(audit_log)
             audit_logger.initialize()
 
+            if self._stop_flag:
+                return
             self.progress.emit(15, "Loading GRC control mappings...")
             control_reg = ControlRegistry()
             control_reg.load()
 
+            if self._stop_flag:
+                return
             self.progress.emit(25, f"Scanning target directory: {self.target_dir.name}...")
             self.engine = ScannerEngine(self.target_dir, control_reg, audit_logger, industry=self.industry)
             summary = self.engine.run_scan()
 
+            if self._stop_flag:
+                return
             self.progress.emit(60, "Connecting RAG pipeline...")
             self.rag_client = RAGPipelineClient()
             self.rag_client.connect()
 
             if self.custom_policy and Path(self.custom_policy).exists():
+                if self._stop_flag:
+                    return
                 self.progress.emit(65, "Vectorizing custom policy...")
                 self.rag_client.ingest_and_vectorize_policy(Path(self.custom_policy))
 
+            if self._stop_flag:
+                return
             self.progress.emit(70, "Generating AI remediation advisories...")
             for f in summary.get("findings", []):
+                if self._stop_flag:
+                    return
                 if f.get("severity") in ["CRITICAL", "HIGH", "MEDIUM"]:
                     advisory = self.rag_client.generate_advisory(f, industry=self.industry)
                     f["rag_advisory"] = advisory
                     f["rag_ai_remediation"] = advisory.get("remediation_command", "")
 
+            if self._stop_flag:
+                return
             audit_logger.finalize(summary["total_files_scanned"], summary["total_findings"])
 
             self.progress.emit(85, "Starting dynamic directory watcher...")
@@ -232,12 +296,15 @@ class ScanWorker(QThread):
             )
             self.watcher.start()
 
+            if self._stop_flag:
+                return
             self.progress.emit(100, "Scan complete.")
             self.scan_done.emit(summary)
 
         except Exception as e:
-            logger.error(f"ScanWorker error: {e}", exc_info=True)
-            self.scan_error.emit(str(e))
+            if not self._stop_flag:
+                logger.error(f"ScanWorker error: {e}", exc_info=True)
+                self.scan_error.emit(str(e))
 
     def _on_file_changed(self, path: Path, event: str):
         if not self.engine:
@@ -269,6 +336,7 @@ class ScanWorker(QThread):
         self.dynamic_done.emit(updated, f"🗑️ Removed: {path.name} — Score: {score}%")
 
     def stop_watcher(self):
+        self._stop_flag = True
         if self.watcher:
             self.watcher.stop()
             self.watcher = None
@@ -711,12 +779,15 @@ class KintsugiGRCApp(QMainWindow):
         QMainWindow, QWidget {{
             background: {PALETTE['bg_base']};
             color: {PALETTE['text_primary']};
-            font-family: 'Segoe UI', 'Inter', 'SF Pro Display', sans-serif;
+            font-family: 'SF Pro Display', 'Inter', 'Segoe UI', sans-serif;
             font-size: 13px;
         }}
         QSplitter::handle {{
             background: {PALETTE['border']};
             width: 1px;
+        }}
+        QSplitter::handle:hover {{
+            background: {PALETTE['gold_dim']};
         }}
         QLabel {{ color: {PALETTE['text_primary']}; }}
         QLineEdit {{
@@ -727,7 +798,7 @@ class KintsugiGRCApp(QMainWindow):
             padding: 5px 10px;
             font-size: 12px;
         }}
-        QLineEdit:focus {{ border-color: {PALETTE['accent_blue']}; }}
+        QLineEdit:focus {{ border-color: {PALETTE['gold']}; }}
         QComboBox {{
             background: {PALETTE['bg_surface']};
             color: {PALETTE['text_primary']};
@@ -740,7 +811,8 @@ class KintsugiGRCApp(QMainWindow):
         QComboBox QAbstractItemView {{
             background: {PALETTE['bg_card']};
             color: {PALETTE['text_primary']};
-            selection-background-color: {PALETTE['accent_blue']};
+            selection-background-color: {PALETTE['gold_dim']};
+            selection-color: {PALETTE['text_primary']};
         }}
         QPushButton {{
             background: {PALETTE['bg_card']};
@@ -753,15 +825,24 @@ class KintsugiGRCApp(QMainWindow):
         }}
         QPushButton:hover {{
             background: {PALETTE['bg_elevated']};
-            border-color: {PALETTE['accent_blue']};
+            border-color: {PALETTE['gold_dim']};
+            color: {PALETTE['gold_bright']};
         }}
         QPushButton:pressed {{ background: {PALETTE['bg_surface']}; }}
         QPushButton#btnPrimary {{
-            background: {PALETTE['accent_blue']};
-            color: #0d1117;
+            background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
+                stop:0 {PALETTE['gold_dim']}, stop:0.4 {PALETTE['gold']},
+                stop:1 {PALETTE['gold_bright']});
+            color: {PALETTE['bg_base']};
             border: none;
+            font-weight: 700;
+            letter-spacing: 0.3px;
         }}
-        QPushButton#btnPrimary:hover {{ background: {PALETTE['accent_cyan']}; }}
+        QPushButton#btnPrimary:hover {{
+            background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
+                stop:0 {PALETTE['gold']}, stop:0.5 {PALETTE['gold_bright']},
+                stop:1 {PALETTE['gold']});
+        }}
         QPushButton#btnDanger {{
             background: {PALETTE['red']};
             color: #fff;
@@ -783,7 +864,8 @@ class KintsugiGRCApp(QMainWindow):
         }}
         QProgressBar::chunk {{
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
-                stop:0 {PALETTE['accent_blue']}, stop:1 {PALETTE['green']});
+                stop:0 {PALETTE['gold_dim']}, stop:0.5 {PALETTE['gold']},
+                stop:1 {PALETTE['gold_bright']});
             border-radius: 4px;
         }}
         QTableWidget {{
@@ -804,7 +886,7 @@ class KintsugiGRCApp(QMainWindow):
             font-weight: bold;
             font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.6px;
         }}
         QTableWidget::item {{ padding: 4px 8px; }}
         QTableWidget::item:selected {{
@@ -821,7 +903,7 @@ class KintsugiGRCApp(QMainWindow):
         QTreeWidget::item {{ padding: 3px 4px; }}
         QTreeWidget::item:selected {{
             background: {PALETTE['bg_elevated']};
-            color: {PALETTE['accent_blue']};
+            color: {PALETTE['gold']};
         }}
         QTreeWidget::item:hover {{ background: {PALETTE['bg_card']}; }}
         QScrollBar:vertical {{
@@ -834,7 +916,7 @@ class KintsugiGRCApp(QMainWindow):
             border-radius: 4px;
             min-height: 20px;
         }}
-        QScrollBar::handle:vertical:hover {{ background: {PALETTE['text_muted']}; }}
+        QScrollBar::handle:vertical:hover {{ background: {PALETTE['gold_dim']}; }}
         QScrollBar::add-line, QScrollBar::sub-line {{ height: 0; }}
         QTabWidget::pane {{
             border: 1px solid {PALETTE['border']};
@@ -847,16 +929,18 @@ class KintsugiGRCApp(QMainWindow):
             border: 1px solid {PALETTE['border']};
             border-bottom: none;
             border-radius: 6px 6px 0 0;
-            padding: 7px 18px;
+            padding: 7px 20px;
             font-weight: bold;
             font-size: 12px;
+            letter-spacing: 0.3px;
         }}
         QTabBar::tab:selected {{
             background: {PALETTE['bg_surface']};
-            color: {PALETTE['accent_blue']};
-            border-color: {PALETTE['accent_blue']};
+            color: {PALETTE['gold']};
+            border-color: {PALETTE['border']};
+            border-top: 2px solid {PALETTE['gold']};
         }}
-        QTabBar::tab:hover {{ color: {PALETTE['text_primary']}; }}
+        QTabBar::tab:hover {{ color: {PALETTE['gold_bright']}; }}
         QTextEdit {{
             background: {PALETTE['bg_surface']};
             color: {PALETTE['text_primary']};
@@ -872,8 +956,8 @@ class KintsugiGRCApp(QMainWindow):
             background: {PALETTE['bg_surface']};
         }}
         QRadioButton::indicator:checked {{
-            background: {PALETTE['accent_blue']};
-            border-color: {PALETTE['accent_blue']};
+            background: {PALETTE['gold']};
+            border-color: {PALETTE['gold']};
         }}
         """)
 
@@ -904,37 +988,63 @@ class KintsugiGRCApp(QMainWindow):
     # ── Header ─────────────────────────────────────────────────────────────────
     def _build_header(self) -> QWidget:
         header = QFrame()
-        header.setFixedHeight(70)
+        header.setFixedHeight(80)
         header.setStyleSheet(
-            f"QFrame {{ background: {PALETTE['bg_surface']};"
-            f"border-bottom: 1px solid {PALETTE['border']}; }}"
+            f"QFrame {{ "
+            f"background: qlineargradient(x1:0,y1:0,x2:0,y2:1,"
+            f"stop:0 {PALETTE['bg_surface']}, stop:1 {PALETTE['bg_base']});"
+            f"border-bottom: 2px solid {PALETTE['gold_dim']}; }}"
         )
         hl = QHBoxLayout(header)
         hl.setContentsMargins(20, 0, 20, 0)
+        hl.setSpacing(14)
 
-        # Shield + title
-        shield = QLabel("🛡️")
-        shield.setStyleSheet("font-size: 28px;")
+        # ── Kintsugi SVG logo mark (with text fallback) ───────────────────────
+        logo_pixmap = _make_logo_pixmap(52)
+        if logo_pixmap:
+            shield = QLabel()
+            shield.setPixmap(logo_pixmap)
+            shield.setFixedSize(QSize(48, 53))
+        else:
+            shield = QLabel("K")
+            shield.setFixedSize(QSize(44, 44))
+            shield.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            shield.setStyleSheet(
+                f"font-size:22px;font-weight:900;color:{PALETTE['gold']};"
+                f"border:2px solid {PALETTE['gold_dim']};border-radius:8px;"
+            )
         hl.addWidget(shield)
 
+        # ── Title block ───────────────────────────────────────────────────────
         title_col = QVBoxLayout()
-        title_col.setSpacing(1)
+        title_col.setSpacing(2)
         t1 = QLabel("Security & Compliance Protection Center")
-        t1.setStyleSheet(f"font-size:18px;font-weight:bold;color:{PALETTE['text_primary']};")
-        t2 = QLabel("Dynamic File Watcher · Automated GRC Control Audit (HIPAA · PCI DSS · NIST)")
-        t2.setStyleSheet(f"font-size:11px;color:{PALETTE['text_secondary']};")
+        t1.setStyleSheet(
+            f"font-size:18px;font-weight:bold;color:{PALETTE['text_primary']};"
+            f"letter-spacing:0.3px;"
+        )
+        t2 = QLabel(
+            "Dynamic File Watcher  \u00b7  Automated GRC Control Audit"
+            "  \u00b7  HIPAA  \u00b7  PCI DSS  \u00b7  NIST"
+        )
+        t2.setStyleSheet(
+            f"font-size:11px;color:{PALETTE['text_secondary']};letter-spacing:0.2px;"
+        )
         title_col.addWidget(t1)
         title_col.addWidget(t2)
         hl.addLayout(title_col, 1)
 
-        # Health score ring label
-        self._score_lbl = QLabel("—%")
+        # ── Health score ──────────────────────────────────────────────────────
+        self._score_lbl = QLabel("\u2014%")
         self._score_lbl.setStyleSheet(
-            f"font-size:28px;font-weight:bold;color:{PALETTE['accent_blue']};"
+            f"font-size:30px;font-weight:bold;color:{PALETTE['gold']};"
         )
         self._score_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         score_sub = QLabel("Health Score")
-        score_sub.setStyleSheet(f"font-size:10px;color:{PALETTE['text_muted']};")
+        score_sub.setStyleSheet(
+            f"font-size:10px;color:{PALETTE['text_muted']};letter-spacing:0.5px;"
+            f"text-transform:uppercase;"
+        )
         score_sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sc = QVBoxLayout()
         sc.setSpacing(0)
@@ -944,24 +1054,24 @@ class KintsugiGRCApp(QMainWindow):
 
         hl.addSpacing(20)
 
-        # Status badge
-        self._status_badge = QLabel("  🟢  Ready  ")
+        # ── Status badge ──────────────────────────────────────────────────────
+        self._status_badge = QLabel("  \u25cf  Ready  ")
         self._status_badge.setStyleSheet(
             f"background:{PALETTE['green_bg']};color:{PALETTE['green']};"
-            f"font-weight:bold;font-size:12px;border-radius:16px;padding:6px 14px;"
+            f"font-weight:bold;font-size:12px;border-radius:16px;padding:6px 16px;"
+            f"border:1px solid {PALETTE['green']}40;"
         )
         hl.addWidget(self._status_badge)
 
         hl.addSpacing(16)
 
-        # PDF button
-        self._btn_pdf = QPushButton("📄  Export PDF")
+        # ── Action buttons ────────────────────────────────────────────────────
+        self._btn_pdf = QPushButton("Export PDF")
         self._btn_pdf.setEnabled(False)
         self._btn_pdf.clicked.connect(self._export_pdf)
         hl.addWidget(self._btn_pdf)
 
-        # Audit Log button
-        self._btn_audit_log = QPushButton("📋  View Audit Log")
+        self._btn_audit_log = QPushButton("View Audit Log")
         self._btn_audit_log.setEnabled(False)
         self._btn_audit_log.setToolTip("Open kintsugi_scanner_audit.log in default viewer")
         self._btn_audit_log.clicked.connect(self._open_audit_log)
@@ -988,6 +1098,8 @@ class KintsugiGRCApp(QMainWindow):
         self._target_edit = QLineEdit()
         self._target_edit.setText(os.path.abspath("./synthetic_test_env"))
         self._target_edit.setPlaceholderText("/path/to/scan...")
+        self._target_edit.returnPressed.connect(self._on_setting_changed)
+        self._target_edit.editingFinished.connect(self._on_setting_changed)
         hl.addWidget(self._target_edit, 2)
 
         btn_browse = QPushButton("Browse...")
@@ -1012,6 +1124,8 @@ class KintsugiGRCApp(QMainWindow):
         self._policy_edit = QLineEdit()
         self._policy_edit.setPlaceholderText("Custom policy.json (optional)")
         self._policy_edit.setMaximumWidth(220)
+        self._policy_edit.returnPressed.connect(self._on_setting_changed)
+        self._policy_edit.editingFinished.connect(self._on_setting_changed)
         hl.addWidget(self._policy_edit)
 
         btn_policy = QPushButton("Upload Policy")
@@ -1033,6 +1147,7 @@ class KintsugiGRCApp(QMainWindow):
             "Merchant / E-Commerce", "Finance / Treasury", "Banking / SWIFT",
         ])
         self._industry_cb.setMinimumWidth(160)
+        self._industry_cb.currentTextChanged.connect(self._on_setting_changed)
         hl.addWidget(self._industry_cb)
 
         hl.addStretch()
@@ -1448,6 +1563,33 @@ class KintsugiGRCApp(QMainWindow):
         else:
             self._start_monitoring()
 
+    def _on_setting_changed(self, *args):
+        """Automatically refreshes active folder monitoring when any configuration setting changes."""
+        if not self._is_monitoring:
+            return
+        target_str = self._target_edit.text().strip()
+        if not target_str:
+            return
+        target = Path(target_str).resolve()
+        if not target.exists():
+            return
+        logger.info(f"Setting updated (Industry: {self._industry_cb.currentText()}, Target: {target.name}) — refreshing monitoring session...")
+        self._restart_monitoring()
+
+    def _restart_monitoring(self):
+        """Cleanly halts previous worker/watcher and re-launches monitoring with current settings."""
+        if self._worker:
+            try:
+                self._worker.progress.disconnect()
+                self._worker.scan_done.disconnect()
+                self._worker.scan_error.disconnect()
+                self._worker.dynamic_done.disconnect()
+            except Exception:
+                pass
+            self._worker.stop_watcher()
+            self._worker = None
+        self._start_monitoring()
+
     def _start_monitoring(self):
         target = Path(self._target_edit.text().strip()).resolve()
         if not target.exists():
@@ -1480,7 +1622,15 @@ class KintsugiGRCApp(QMainWindow):
 
     def _stop_monitoring(self):
         if self._worker:
+            try:
+                self._worker.progress.disconnect()
+                self._worker.scan_done.disconnect()
+                self._worker.scan_error.disconnect()
+                self._worker.dynamic_done.disconnect()
+            except Exception:
+                pass
             self._worker.stop_watcher()
+            self._worker = None
         self._is_monitoring = False
         self._btn_monitor.setText("▶  Start Monitoring")
         self._btn_monitor.setObjectName("btnPrimary")
@@ -1542,21 +1692,37 @@ class KintsugiGRCApp(QMainWindow):
     # ──────────────────────────────────────────────────────────────────────────
 
     def _set_status_badge(self, state: str, count: int = 0):
+        _dot = "\u25cf"   # ● filled circle — cross-platform, no emoji rendering issues
         styles = {
-            "ok":       (f"background:{PALETTE['green_bg']};color:{PALETTE['green']};",
-                         "  🟢  Protection Active  "),
-            "alert":    (f"background:{PALETTE['red_bg']};color:{PALETTE['red']};",
-                         f"  ⚠️  {count} Active Violations  "),
-            "scanning": (f"background:{PALETTE['yellow_bg']};color:{PALETTE['yellow']};",
-                         "  🔄  Scanning...  "),
-            "paused":   (f"background:{PALETTE['bg_elevated']};color:{PALETTE['text_secondary']};",
-                         "  🟡  Monitoring Paused  "),
-            "error":    (f"background:{PALETTE['red_bg']};color:{PALETTE['red']};",
-                         "  🔴  Protection Error  "),
+            "ok":       (
+                f"background:{PALETTE['green_bg']};color:{PALETTE['green']};"
+                f"border:1px solid {PALETTE['green']}40;",
+                f"  {_dot}  Protection Active  ",
+            ),
+            "alert":    (
+                f"background:{PALETTE['red_bg']};color:{PALETTE['red']};"
+                f"border:1px solid {PALETTE['red']}40;",
+                f"  {_dot}  {count} Active Violations  ",
+            ),
+            "scanning": (
+                f"background:{PALETTE['yellow_bg']};color:{PALETTE['yellow']};"
+                f"border:1px solid {PALETTE['yellow']}40;",
+                f"  {_dot}  Scanning...  ",
+            ),
+            "paused":   (
+                f"background:{PALETTE['bg_elevated']};color:{PALETTE['text_secondary']};"
+                f"border:1px solid {PALETTE['border']};",
+                f"  {_dot}  Monitoring Paused  ",
+            ),
+            "error":    (
+                f"background:{PALETTE['red_bg']};color:{PALETTE['red']};"
+                f"border:1px solid {PALETTE['red']}40;",
+                f"  {_dot}  Protection Error  ",
+            ),
         }
         style, text = styles.get(state, styles["paused"])
         self._status_badge.setStyleSheet(
-            style + "font-weight:bold;font-size:12px;border-radius:16px;padding:6px 14px;"
+            style + "font-weight:bold;font-size:12px;border-radius:16px;padding:6px 16px;"
         )
         self._status_badge.setText(text)
 
@@ -1984,6 +2150,7 @@ class KintsugiGRCApp(QMainWindow):
         )
         if folder:
             self._target_edit.setText(folder)
+            self._on_setting_changed()
 
     def _open_target_in_explorer(self):
         target = Path(self._target_edit.text().strip()).resolve()
@@ -2022,6 +2189,7 @@ class KintsugiGRCApp(QMainWindow):
                                     "Policy file must be under 10 MB.")
                 return
             self._policy_edit.setText(path)
+            self._on_setting_changed()
 
     def _export_pdf(self):
         if not self.scan_summary:

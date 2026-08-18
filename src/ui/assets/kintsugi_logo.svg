@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Kintsugi-GRC — Brand Mark v1.0
+  Obsidian shield with kintsugi gold crack veins.
+  ViewBox: 0 0 100 112  |  Aspect ratio: ~0.893
+  Usage: Scale to any size; designed at 48–512px.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 112" width="100" height="112">
+  <defs>
+
+    <!-- Shield body: deep obsidian with subtle warm gradient -->
+    <linearGradient id="shieldFill" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%"   stop-color="#1E1E28"/>
+      <stop offset="50%"  stop-color="#14141A"/>
+      <stop offset="100%" stop-color="#09090C"/>
+    </linearGradient>
+
+    <!-- Gold vein gradient: dark gold → bright gold → bright → warm dim -->
+    <linearGradient id="goldVein" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#5C3E10"/>
+      <stop offset="25%"  stop-color="#C9A84C"/>
+      <stop offset="55%"  stop-color="#F0D070"/>
+      <stop offset="80%"  stop-color="#C9A84C"/>
+      <stop offset="100%" stop-color="#7A6030"/>
+    </linearGradient>
+
+    <!-- Secondary gold gradient (slightly cooler for branches) -->
+    <linearGradient id="goldBranch" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#7A6030"/>
+      <stop offset="40%"  stop-color="#C9A84C"/>
+      <stop offset="70%"  stop-color="#E8C96A"/>
+      <stop offset="100%" stop-color="#7A6030"/>
+    </linearGradient>
+
+    <!-- Shield outer border gradient -->
+    <linearGradient id="shieldBorder" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#C9A84C" stop-opacity="0.6"/>
+      <stop offset="40%"  stop-color="#C9A84C" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#5C3E10" stop-opacity="0.25"/>
+    </linearGradient>
+
+    <!-- Soft outer glow on the shield edge -->
+    <filter id="shieldGlow" x="-8%" y="-8%" width="116%" height="116%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur"/>
+      <feColorMatrix in="blur" type="matrix"
+        values="0.8 0.65 0 0 0
+                0.5 0.4  0 0 0
+                0   0    0 0 0
+                0   0    0 0.4 0" result="goldBlur"/>
+      <feMerge>
+        <feMergeNode in="goldBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Crack glow: warm amber bloom around veins -->
+    <filter id="crackGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="blur"/>
+      <feColorMatrix in="blur" type="matrix"
+        values="1   0.8 0   0 0.05
+                0.6 0.5 0   0 0.02
+                0   0   0   0 0
+                0   0   0   0.7 0" result="goldBloom"/>
+      <feMerge>
+        <feMergeNode in="goldBloom"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Tight inner glow for the highlight line on cracks -->
+    <filter id="crackHighlight" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.6" result="softBlur"/>
+      <feMerge>
+        <feMergeNode in="softBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Clip to shield shape so cracks don't bleed outside -->
+    <clipPath id="shieldClip">
+      <path d="M50,3 L90,17 L90,56 Q90,87 50,107 Q10,87 10,56 L10,17 Z"/>
+    </clipPath>
+
+  </defs>
+
+  <!-- ═══════════════════════════════════════════
+       LAYER 1: Shield ambient glow (outermost)
+  ════════════════════════════════════════════════ -->
+  <path d="M50,3 L90,17 L90,56 Q90,87 50,107 Q10,87 10,56 L10,17 Z"
+        fill="none"
+        stroke="#C9A84C"
+        stroke-width="6"
+        stroke-opacity="0.08"
+        filter="url(#shieldGlow)"/>
+
+  <!-- ═══════════════════════════════════════════
+       LAYER 2: Shield body
+  ════════════════════════════════════════════════ -->
+  <path d="M50,3 L90,17 L90,56 Q90,87 50,107 Q10,87 10,56 L10,17 Z"
+        fill="url(#shieldFill)"
+        stroke="url(#shieldBorder)"
+        stroke-width="1.4"/>
+
+  <!-- Inner bevel line (subtle structural detail) -->
+  <path d="M50,9 L84,21 L84,55 Q84,82 50,100 Q16,82 16,55 L16,21 Z"
+        fill="none"
+        stroke="#C9A84C"
+        stroke-width="0.35"
+        stroke-opacity="0.18"/>
+
+  <!-- ═══════════════════════════════════════════
+       LAYER 3: Kintsugi crack veins (clipped to shield)
+       Crack anatomy:
+         - Main vein: upper-left → convergence point (48,54) → lower tip
+         - Branch A:  convergence → upper-right edge
+         - Branch B:  convergence → right-mid edge
+         - Branch C:  along upper shoulder (right side)
+         - Sub-branch D: off Branch A toward top
+         - Sub-branch E: off main vein, lower-left micro crack
+  ════════════════════════════════════════════════ -->
+  <g clip-path="url(#shieldClip)">
+
+    <!-- GLOW PASS: soft bloom beneath all cracks -->
+    <g filter="url(#crackGlow)" opacity="0.9">
+      <!-- Main vein (upper-left to convergence, then to tip) -->
+      <path d="M28,20 L36,33 L42,42 L48,54 L52,68 L54,85 L52,107"
+            fill="none" stroke="#C9A84C" stroke-width="4.5"
+            stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Branch A: convergence → upper-right -->
+      <path d="M48,54 L62,44 L74,36 L84,31"
+            fill="none" stroke="#C9A84C" stroke-width="3.5"
+            stroke-linecap="round"/>
+      <!-- Branch B: convergence → right-mid edge -->
+      <path d="M48,54 L66,58 L80,62 L88,64"
+            fill="none" stroke="#C9A84C" stroke-width="2.8"
+            stroke-linecap="round"/>
+      <!-- Branch C: upper shoulder crack -->
+      <path d="M36,33 L50,27 L62,22 L72,18"
+            fill="none" stroke="#C9A84C" stroke-width="2.2"
+            stroke-linecap="round"/>
+      <!-- Sub-branch D: off Branch A -->
+      <path d="M62,44 L70,32 L76,22"
+            fill="none" stroke="#C9A84C" stroke-width="1.8"
+            stroke-linecap="round"/>
+      <!-- Sub-branch E: lower left micro crack -->
+      <path d="M52,68 L40,72 L32,78"
+            fill="none" stroke="#C9A84C" stroke-width="1.5"
+            stroke-linecap="round"/>
+    </g>
+
+    <!-- MAIN PASS: crisp gold vein lines -->
+    <!-- Main vein -->
+    <path d="M28,20 L36,33 L42,42 L48,54 L52,68 L54,85 L52,107"
+          fill="none" stroke="url(#goldVein)" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Branch A -->
+    <path d="M48,54 L62,44 L74,36 L84,31"
+          fill="none" stroke="url(#goldBranch)" stroke-width="1.7"
+          stroke-linecap="round"/>
+    <!-- Branch B -->
+    <path d="M48,54 L66,58 L80,62 L88,64"
+          fill="none" stroke="url(#goldBranch)" stroke-width="1.4"
+          stroke-linecap="round"/>
+    <!-- Branch C -->
+    <path d="M36,33 L50,27 L62,22 L72,18"
+          fill="none" stroke="url(#goldVein)" stroke-width="1.1"
+          stroke-linecap="round"/>
+    <!-- Sub-branch D -->
+    <path d="M62,44 L70,32 L76,22"
+          fill="none" stroke="url(#goldBranch)" stroke-width="0.9"
+          stroke-linecap="round"/>
+    <!-- Sub-branch E -->
+    <path d="M52,68 L40,72 L32,78"
+          fill="none" stroke="url(#goldVein)" stroke-width="0.8"
+          stroke-linecap="round"/>
+
+    <!-- HIGHLIGHT PASS: bright central spine on main vein (3D depth) -->
+    <g filter="url(#crackHighlight)">
+      <path d="M28,20 L36,33 L42,42 L48,54 L52,68 L54,85 L52,107"
+            fill="none" stroke="#FAE89A" stroke-width="0.55"
+            stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>
+      <path d="M48,54 L62,44 L74,36 L84,31"
+            fill="none" stroke="#FAE89A" stroke-width="0.4"
+            stroke-linecap="round" opacity="0.65"/>
+    </g>
+
+    <!-- Convergence point: small bright gold dot at crack nexus -->
+    <circle cx="48" cy="54" r="2.2" fill="#F5E08A" opacity="0.9"
+            filter="url(#crackGlow)"/>
+    <circle cx="48" cy="54" r="1.1" fill="#FDFAEE"/>
+
+  </g>
+
+</svg>
