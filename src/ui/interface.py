@@ -52,6 +52,7 @@ except ImportError:
 # Asset paths
 _ASSETS_DIR = Path(__file__).parent / "assets"
 _LOGO_SVG   = _ASSETS_DIR / "kintsugi_logo.svg"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 from src.mapping.controls import ControlRegistry
 from src.output.pdf_exporter import PDFComplianceExporter
@@ -307,15 +308,21 @@ class ScanWorker(QThread):
                 self.scan_error.emit(str(e))
 
     def _on_file_changed(self, path: Path, event: str):
-        if not self.engine:
+        if self._stop_flag or not self.engine:
             return
         updated = self.engine.update_single_file(path, event)
+        if self._stop_flag:
+            return
         if self.rag_client:
             for f in updated.get("findings", []):
+                if self._stop_flag:
+                    return
                 if f.get("severity") in ["CRITICAL", "HIGH", "MEDIUM"] and "rag_advisory" not in f:
                     advisory = self.rag_client.generate_advisory(f, industry=self.industry)
                     f["rag_advisory"] = advisory
                     f["rag_ai_remediation"] = advisory.get("remediation_command", "")
+        if self._stop_flag:
+            return
         score = updated.get("compliance_score", 0)
         remaining = [
             f for f in updated.get("findings", [])
@@ -329,17 +336,33 @@ class ScanWorker(QThread):
         self.dynamic_done.emit(updated, msg)
 
     def _on_file_deleted(self, path: Path, event: str):
-        if not self.engine:
+        if self._stop_flag or not self.engine:
             return
         updated = self.engine.update_single_file(path, event)
+        if self._stop_flag:
+            return
         score = updated.get("compliance_score", 0)
         self.dynamic_done.emit(updated, f"🗑️ Removed: {path.name} — Score: {score}%")
 
-    def stop_watcher(self):
+    def stop(self, timeout_ms: int = 3000):
+        """Cleanly stops the watcher and waits for the worker QThread to complete execution."""
         self._stop_flag = True
         if self.watcher:
-            self.watcher.stop()
+            try:
+                self.watcher.stop()
+            except Exception as e:
+                logger.warning(f"Error stopping dynamic watcher: {e}")
             self.watcher = None
+        if self.isRunning():
+            self.quit()
+            if not self.wait(timeout_ms):
+                logger.warning("ScanWorker QThread did not exit cleanly within timeout, terminating...")
+                self.terminate()
+                self.wait(1000)
+
+    def stop_watcher(self):
+        """Backward compatibility alias for stop()."""
+        self.stop()
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -769,6 +792,7 @@ class KintsugiGRCApp(QMainWindow):
         self._is_monitoring: bool                      = False
         self._worker: Optional[ScanWorker]             = None
         self._selected_finding: Optional[Dict]         = None
+        self._last_target_dir: str                     = os.path.abspath("./synthetic_test_env")
 
         self._apply_stylesheet()
         self._build_ui()
@@ -1098,8 +1122,8 @@ class KintsugiGRCApp(QMainWindow):
         self._target_edit = QLineEdit()
         self._target_edit.setText(os.path.abspath("./synthetic_test_env"))
         self._target_edit.setPlaceholderText("/path/to/scan...")
-        self._target_edit.returnPressed.connect(self._on_setting_changed)
-        self._target_edit.editingFinished.connect(self._on_setting_changed)
+        self._target_edit.returnPressed.connect(self._on_target_text_changed)
+        self._target_edit.editingFinished.connect(self._on_target_text_changed)
         hl.addWidget(self._target_edit, 2)
 
         btn_browse = QPushButton("Browse...")
@@ -1563,6 +1587,95 @@ class KintsugiGRCApp(QMainWindow):
         else:
             self._start_monitoring()
 
+    def _on_target_text_changed(self):
+        """Triggered when target directory text is edited manually."""
+        target_str = self._target_edit.text().strip()
+        if not target_str:
+            return
+        target = Path(target_str).resolve()
+        if not target.exists():
+            return
+        if str(target) != getattr(self, "_last_target_dir", ""):
+            self._last_target_dir = str(target)
+            self._check_and_prompt_environment_switch(target)
+        self._on_setting_changed()
+
+    def _check_and_prompt_environment_switch(self, new_target: Path) -> bool:
+        """
+        Inspects the newly chosen directory and prompts the user to auto-align
+        the Industry and Company Policy to match the environment.
+        Returns True if settings were updated.
+        """
+        target_name = new_target.name.lower()
+        target_str = str(new_target).lower()
+
+        suggested_industry = None
+        policy_filename = None
+
+        if "health" in target_name or "health" in target_str:
+            suggested_industry = "Healthcare"
+            policy_filename = "sample_company_policy.json"
+        elif any(k in target_name or k in target_str for k in ["merch", "retail", "ecom", "pci", "pos"]):
+            suggested_industry = "Merchant / E-Commerce"
+            policy_filename = "sample_merchant_policy.json"
+        elif any(k in target_name or k in target_str for k in ["finan", "treas", "sox"]):
+            suggested_industry = "Finance / Treasury"
+            policy_filename = "sample_financial_policy.json"
+        elif any(k in target_name or k in target_str for k in ["bank", "swift"]):
+            suggested_industry = "Banking / SWIFT"
+            policy_filename = "sample_banking_policy.json"
+
+        if not suggested_industry:
+            return False
+
+        # Locate policy path
+        candidate_paths = [
+            PROJECT_ROOT / "policies" / policy_filename,
+            new_target / policy_filename,
+            new_target.parent / policy_filename,
+            Path("./policies") / policy_filename,
+        ]
+        resolved_policy = None
+        for cp in candidate_paths:
+            if cp.exists():
+                resolved_policy = cp.resolve()
+                break
+
+        current_industry = self._industry_cb.currentText()
+        current_policy = self._policy_edit.text().strip()
+
+        # If already matching, no prompt needed
+        if current_industry == suggested_industry and (
+            not resolved_policy or (current_policy and Path(current_policy).name == policy_filename)
+        ):
+            return False
+
+        policy_display = resolved_policy.as_posix() if resolved_policy else policy_filename
+        msg = (
+            f"Environment Directory Selected:\n"
+            f"  📁 {new_target.name}\n\n"
+            f"Would you like to automatically update the Industry and Company Policy to match this environment?\n\n"
+            f"  • Suggested Industry: {suggested_industry}\n"
+            f"  • Suggested Policy:   {policy_display}\n"
+        )
+        reply = QMessageBox.question(
+            self,
+            "Update Industry & Company Policy?",
+            msg,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.Yes,
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            self._industry_cb.blockSignals(True)
+            self._industry_cb.setCurrentText(suggested_industry)
+            self._industry_cb.blockSignals(False)
+            if resolved_policy:
+                self._policy_edit.setText(resolved_policy.as_posix())
+            return True
+
+        return False
+
     def _on_setting_changed(self, *args):
         """Automatically refreshes active folder monitoring when any configuration setting changes."""
         if not self._is_monitoring:
@@ -1576,18 +1689,32 @@ class KintsugiGRCApp(QMainWindow):
         logger.info(f"Setting updated (Industry: {self._industry_cb.currentText()}, Target: {target.name}) — refreshing monitoring session...")
         self._restart_monitoring()
 
-    def _restart_monitoring(self):
-        """Cleanly halts previous worker/watcher and re-launches monitoring with current settings."""
-        if self._worker:
+    def _cleanup_worker(self):
+        """Safely disconnects signals and joins any active ScanWorker thread before dereferencing."""
+        if self._worker is not None:
+            worker = self._worker
+            self._worker = None
             try:
-                self._worker.progress.disconnect()
-                self._worker.scan_done.disconnect()
-                self._worker.scan_error.disconnect()
-                self._worker.dynamic_done.disconnect()
+                worker.progress.disconnect()
             except Exception:
                 pass
-            self._worker.stop_watcher()
-            self._worker = None
+            try:
+                worker.scan_done.disconnect()
+            except Exception:
+                pass
+            try:
+                worker.scan_error.disconnect()
+            except Exception:
+                pass
+            try:
+                worker.dynamic_done.disconnect()
+            except Exception:
+                pass
+            worker.stop()
+
+    def _restart_monitoring(self):
+        """Cleanly halts previous worker/watcher and re-launches monitoring with current settings."""
+        self._cleanup_worker()
         self._start_monitoring()
 
     def _start_monitoring(self):
@@ -1621,16 +1748,7 @@ class KintsugiGRCApp(QMainWindow):
         self._worker.start()
 
     def _stop_monitoring(self):
-        if self._worker:
-            try:
-                self._worker.progress.disconnect()
-                self._worker.scan_done.disconnect()
-                self._worker.scan_error.disconnect()
-                self._worker.dynamic_done.disconnect()
-            except Exception:
-                pass
-            self._worker.stop_watcher()
-            self._worker = None
+        self._cleanup_worker()
         self._is_monitoring = False
         self._btn_monitor.setText("▶  Start Monitoring")
         self._btn_monitor.setObjectName("btnPrimary")
@@ -2144,13 +2262,26 @@ class KintsugiGRCApp(QMainWindow):
         reveal_in_file_explorer(full if full.exists() else root)
 
     def _browse_target(self):
+        was_monitoring = self._is_monitoring
+        if was_monitoring:
+            self._stop_monitoring()
+
         folder = QFileDialog.getExistingDirectory(
             self, "Select Target Directory to Monitor",
             self._target_edit.text()
         )
         if folder:
-            self._target_edit.setText(folder)
-            self._on_setting_changed()
+            target_path = Path(folder).resolve()
+            self._target_edit.setText(str(target_path))
+            self._last_target_dir = str(target_path)
+            self._check_and_prompt_environment_switch(target_path)
+            if was_monitoring:
+                self._start_monitoring()
+            else:
+                self._on_setting_changed()
+        else:
+            if was_monitoring:
+                self._start_monitoring()
 
     def _open_target_in_explorer(self):
         target = Path(self._target_edit.text().strip()).resolve()
@@ -2179,6 +2310,10 @@ class KintsugiGRCApp(QMainWindow):
             QMessageBox.warning(self, "Could Not Open Log", f"Failed to open audit log:\n{e}")
 
     def _upload_policy(self):
+        was_monitoring = self._is_monitoring
+        if was_monitoring:
+            self._stop_monitoring()
+
         path, _ = QFileDialog.getOpenFileName(
             self, "Upload Custom Policy Document", "",
             "Policy Files (*.json *.txt *.md);;All Files (*.*)"
@@ -2187,9 +2322,17 @@ class KintsugiGRCApp(QMainWindow):
             if Path(path).stat().st_size > 10 * 1024 * 1024:
                 QMessageBox.warning(self, "File Too Large",
                                     "Policy file must be under 10 MB.")
+                if was_monitoring:
+                    self._start_monitoring()
                 return
             self._policy_edit.setText(path)
-            self._on_setting_changed()
+            if was_monitoring:
+                self._start_monitoring()
+            else:
+                self._on_setting_changed()
+        else:
+            if was_monitoring:
+                self._start_monitoring()
 
     def _export_pdf(self):
         if not self.scan_summary:
@@ -2210,8 +2353,7 @@ class KintsugiGRCApp(QMainWindow):
     # CLOSE EVENT
     # ──────────────────────────────────────────────────────────────────────────
     def closeEvent(self, event):
-        if self._worker:
-            self._worker.stop_watcher()
+        self._cleanup_worker()
         event.accept()
 
 

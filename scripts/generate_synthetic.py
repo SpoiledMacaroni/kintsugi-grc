@@ -288,22 +288,56 @@ class ExpectedResultsRecorder:
 # -----------------------------------------------------------------------------
 # ACTIVE DIRECTORY & POSIX IDENTITY EXPORT BUILDER
 # -----------------------------------------------------------------------------
-def generate_active_directory_exports(etc_dir: Path, key_mgr: KeyManager, root_dir: Path):
+def generate_active_directory_exports(etc_dir: Path, key_mgr: KeyManager, root_dir: Path, industry: str = "healthcare"):
     """Generates synthetic Active Directory user/group exports for UID/GID/SID access checking."""
     ad_dir = etc_dir / "ad"
     validate_path_in_scope(ad_dir, root_dir)
     ad_dir.mkdir(parents=True, exist_ok=True)
 
-    users = [
-        {"username": "jsmith", "role": "Doctor", "uid": 1001, "gid": 1001, "sid": "S-1-5-21-3623811015-3361044348-30300820-1001"},
-        {"username": "mchen", "role": "BillingClerk", "uid": 1002, "gid": 1002, "sid": "S-1-5-21-3623811015-3361044348-30300820-1002"},
-        {"username": "compliance_auditor", "role": "Auditor", "uid": 1003, "gid": 1000, "sid": "S-1-5-21-3623811015-3361044348-30300820-1003"},
-        {"username": "svc_pos_terminal", "role": "POS_Service", "uid": 1004, "gid": 1002, "sid": "S-1-5-21-3623811015-3361044348-30300820-1004"},
-        {"username": "bank_trader_01", "role": "Trader", "uid": 1005, "gid": 1003, "sid": "S-1-5-21-3623811015-3361044348-30300820-1005"},
-        {"username": "root_admin", "role": "DomainAdmin", "uid": 0, "gid": 0, "sid": "S-1-5-21-3623811015-3361044348-30300820-500"},
-        {"username": "daemon", "role": "SystemDaemon", "uid": 1, "gid": 1, "sid": "S-1-5-18"},
-        {"username": "bin", "role": "SystemBin", "uid": 2, "gid": 2, "sid": "S-1-5-19"},
-    ]
+    if industry == "healthcare":
+        users = [
+            {"username": "dr_jsmith", "role": "Physician", "uid": 1001, "gid": 1001, "sid": "S-1-5-21-3623811015-3361044348-30300820-1001"},
+            {"username": "mchen", "role": "BillingClerk", "uid": 1002, "gid": 1002, "sid": "S-1-5-21-3623811015-3361044348-30300820-1002"},
+            {"username": "compliance_auditor", "role": "HIPAA_Auditor", "uid": 1003, "gid": 1000, "sid": "S-1-5-21-3623811015-3361044348-30300820-1003"},
+            {"username": "nurse_patel", "role": "ClinicalStaff", "uid": 1004, "gid": 1002, "sid": "S-1-5-21-3623811015-3361044348-30300820-1004"},
+            {"username": "rad_tech_01", "role": "Radiologist", "uid": 1005, "gid": 1003, "sid": "S-1-5-21-3623811015-3361044348-30300820-1005"},
+            {"username": "root_admin", "role": "DomainAdmin", "uid": 0, "gid": 0, "sid": "S-1-5-21-3623811015-3361044348-30300820-500"},
+            {"username": "daemon", "role": "SystemDaemon", "uid": 1, "gid": 1, "sid": "S-1-5-18"},
+            {"username": "bin", "role": "SystemBin", "uid": 2, "gid": 2, "sid": "S-1-5-19"},
+        ]
+    elif industry == "merchant":
+        users = [
+            {"username": "pos_admin", "role": "StoreManager", "uid": 1001, "gid": 1001, "sid": "S-1-5-21-3623811015-3361044348-30300820-1001"},
+            {"username": "cashier_mchen", "role": "POS_Cashier", "uid": 1002, "gid": 1002, "sid": "S-1-5-21-3623811015-3361044348-30300820-1002"},
+            {"username": "pci_qsa_auditor", "role": "PCI_Auditor", "uid": 1003, "gid": 1000, "sid": "S-1-5-21-3623811015-3361044348-30300820-1003"},
+            {"username": "svc_pos_terminal", "role": "POS_Service", "uid": 1004, "gid": 1002, "sid": "S-1-5-21-3623811015-3361044348-30300820-1004"},
+            {"username": "inventory_lead", "role": "InventoryManager", "uid": 1005, "gid": 1003, "sid": "S-1-5-21-3623811015-3361044348-30300820-1005"},
+            {"username": "root_admin", "role": "DomainAdmin", "uid": 0, "gid": 0, "sid": "S-1-5-21-3623811015-3361044348-30300820-500"},
+            {"username": "daemon", "role": "SystemDaemon", "uid": 1, "gid": 1, "sid": "S-1-5-18"},
+            {"username": "bin", "role": "SystemBin", "uid": 2, "gid": 2, "sid": "S-1-5-19"},
+        ]
+    elif industry == "finance":
+        users = [
+            {"username": "treasury_director", "role": "TreasuryOfficer", "uid": 1001, "gid": 1001, "sid": "S-1-5-21-3623811015-3361044348-30300820-1001"},
+            {"username": "payroll_lead", "role": "DisbursementLead", "uid": 1002, "gid": 1002, "sid": "S-1-5-21-3623811015-3361044348-30300820-1002"},
+            {"username": "sox_compliance_auditor", "role": "SOX_Auditor", "uid": 1003, "gid": 1000, "sid": "S-1-5-21-3623811015-3361044348-30300820-1003"},
+            {"username": "financial_controller", "role": "Controller", "uid": 1004, "gid": 1002, "sid": "S-1-5-21-3623811015-3361044348-30300820-1004"},
+            {"username": "market_trader_01", "role": "SecuritiesTrader", "uid": 1005, "gid": 1003, "sid": "S-1-5-21-3623811015-3361044348-30300820-1005"},
+            {"username": "root_admin", "role": "DomainAdmin", "uid": 0, "gid": 0, "sid": "S-1-5-21-3623811015-3361044348-30300820-500"},
+            {"username": "daemon", "role": "SystemDaemon", "uid": 1, "gid": 1, "sid": "S-1-5-18"},
+            {"username": "bin", "role": "SystemBin", "uid": 2, "gid": 2, "sid": "S-1-5-19"},
+        ]
+    else:  # banking
+        users = [
+            {"username": "swift_ops_officer", "role": "SWIFT_Operator", "uid": 1001, "gid": 1001, "sid": "S-1-5-21-3623811015-3361044348-30300820-1001"},
+            {"username": "clearing_analyst", "role": "ACH_ClearingLead", "uid": 1002, "gid": 1002, "sid": "S-1-5-21-3623811015-3361044348-30300820-1002"},
+            {"username": "bank_compliance_auditor", "role": "FFIEC_Auditor", "uid": 1003, "gid": 1000, "sid": "S-1-5-21-3623811015-3361044348-30300820-1003"},
+            {"username": "branch_operations", "role": "BranchManager", "uid": 1004, "gid": 1002, "sid": "S-1-5-21-3623811015-3361044348-30300820-1004"},
+            {"username": "swift_hsm_custodian", "role": "CryptographicOfficer", "uid": 1005, "gid": 1003, "sid": "S-1-5-21-3623811015-3361044348-30300820-1005"},
+            {"username": "root_admin", "role": "DomainAdmin", "uid": 0, "gid": 0, "sid": "S-1-5-21-3623811015-3361044348-30300820-500"},
+            {"username": "daemon", "role": "SystemDaemon", "uid": 1, "gid": 1, "sid": "S-1-5-18"},
+            {"username": "bin", "role": "SystemBin", "uid": 2, "gid": 2, "sid": "S-1-5-19"},
+        ]
 
     csv_path = ad_dir / "ad_users_export.csv"
     json_path = ad_dir / "ad_sid_uid_map.json"
@@ -337,13 +371,21 @@ def generate_active_directory_exports(etc_dir: Path, key_mgr: KeyManager, root_d
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump({"ad_domain": "kintsugi.internal", "identity_mappings": sid_map}, f, indent=2)
 
-    logger.info(f"Generated Active Directory exports at {csv_path.relative_to(root_dir).as_posix()}")
+    logger.info(f"Generated Active Directory exports ({industry}) at {csv_path.relative_to(root_dir).as_posix()}")
 
 # -----------------------------------------------------------------------------
 # PAYLOAD GENERATOR HELPERS (CATEGORIES A, B, C, D)
 # -----------------------------------------------------------------------------
 
-def generate_category_a_compliant_encrypted(file_path: Path, password: str, record_count: int, key_mgr: KeyManager, root_dir: Path, results_rec: ExpectedResultsRecorder = None):
+def generate_category_a_compliant_encrypted(
+    file_path: Path,
+    password: str,
+    record_count: int,
+    key_mgr: KeyManager,
+    root_dir: Path,
+    results_rec: ExpectedResultsRecorder = None,
+    industry: str = "healthcare"
+):
     """
     Category A: Baseline Compliant File (True AES-256-CBC Encryption).
     Prepend magic bytes \x85\x01. Produces H >= 7.92, 125 <= M <= 130, x^2 < 300.
@@ -351,13 +393,36 @@ def generate_category_a_compliant_encrypted(file_path: Path, password: str, reco
     validate_path_in_scope(file_path, root_dir)
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Build realistic enterprise tabular payload (64KB - 256KB)
-    lines = ["id,patient_name,ssn,diagnosis_icd10,credit_card,billing_amount,notes\n"]
-    for i in range(record_count):
-        lines.append(
-            f"{i+1000},Patient_{i:04d},{generate_ssn()},E11.9,{generate_luhn_pan()},"
-            f"{random.uniform(50.0, 4500.0):.2f},Confidential clinical encounter ledger entry for HIPAA audit.\n"
-        )
+    # Build realistic enterprise tabular payload per industry
+    if industry == "healthcare":
+        lines = ["patient_id,full_name,ssn,icd10_diagnosis,pan_card,billing_amount,clinical_notes\n"]
+        for i in range(record_count):
+            lines.append(
+                f"P_{i+1000},Patient_{i:04d},{generate_ssn()},E11.9,{generate_luhn_pan()},"
+                f"{random.uniform(50.0, 4500.0):.2f},Confidential clinical encounter ledger entry for HIPAA §164.312 audit.\n"
+            )
+    elif industry == "merchant":
+        lines = ["transaction_id,cardholder_name,pan_card,auth_code,settlement_amount,terminal_id,pos_notes\n"]
+        for i in range(record_count):
+            lines.append(
+                f"TXN_{i+50000},Cardholder_{i:04d},{generate_luhn_pan()},{secrets.token_hex(4).upper()},"
+                f"{random.uniform(5.0, 1200.0):.2f},TERM_0{i%8+1},Point of sale merchant daily card settlement record for PCI-DSS Requirement 3.4.\n"
+            )
+    elif industry == "finance":
+        lines = ["ledger_id,corporate_entity,ein_tax_id,ach_routing,account_number,disbursement_amount,treasury_notes\n"]
+        for i in range(record_count):
+            lines.append(
+                f"FIN_{i+10000},Enterprise_Partner_{i:03d},{generate_ssn()},{secrets.randbelow(899999999)+100000000},"
+                f"{secrets.randbelow(8999999999)+1000000000},{random.uniform(5000.0, 750000.0):.2f},Corporate treasury disbursement ledger record for SOX Section 404 audit.\n"
+            )
+    else:  # banking
+        lines = ["wire_id,sender_bic,receiver_bic,iban,amount_usd,sender_pan,swift_memo\n"]
+        for i in range(record_count):
+            lines.append(
+                f"SWIFT_{secrets.token_hex(6).upper()},ACMEUS33XXX,VNGDGB22XXX,GB29NWBK60161331926819,"
+                f"{random.uniform(25000.0, 2500000.0):.2f},{generate_luhn_pan()},Institutional interbank wire settlement cleared via SWIFT CSP network.\n"
+            )
+
     plaintext = "".join(lines).encode("utf-8")
 
     key = derive_key(password)
@@ -387,7 +452,12 @@ def generate_category_a_compliant_encrypted(file_path: Path, password: str, reco
         )
     logger.info(f"[Category A] Created AES-256-CBC compliant file ({len(payload)} bytes): {file_path.relative_to(root_dir).as_posix()}")
 
-def generate_category_b_false_positives(target_dir: Path, root_dir: Path, results_rec: ExpectedResultsRecorder = None):
+def generate_category_b_false_positives(
+    target_dir: Path,
+    root_dir: Path,
+    results_rec: ExpectedResultsRecorder = None,
+    industry: str = "healthcare"
+):
     """
     Category B: False Positive Fakes (High-Entropy Non-Encrypted Streams).
     - Raw zlib compressed streams
@@ -400,7 +470,15 @@ def generate_category_b_false_positives(target_dir: Path, root_dir: Path, result
     # 1. Raw zlib compressed file
     zlib_file = target_dir / "audit_log_archive.csv.zlib"
     validate_path_in_scope(zlib_file, root_dir)
-    repetitive_text = ("COMPLIANCE_AUDIT_LOG_ENTRY_HIPAA_PCI_HITRUST_RULE_VERIFICATION_PASS\n" * 2000).encode("utf-8")
+    if industry == "healthcare":
+        repetitive_text = ("COMPLIANCE_AUDIT_LOG_ENTRY_HIPAA_ISO27799_RULE_VERIFICATION_PASS\n" * 2000).encode("utf-8")
+    elif industry == "merchant":
+        repetitive_text = ("COMPLIANCE_AUDIT_LOG_ENTRY_PCI_DSS_P2PE_RULE_VERIFICATION_PASS\n" * 2000).encode("utf-8")
+    elif industry == "finance":
+        repetitive_text = ("COMPLIANCE_AUDIT_LOG_ENTRY_SOX_SOC2_TREASURY_RULE_VERIFICATION_PASS\n" * 2000).encode("utf-8")
+    else:
+        repetitive_text = ("COMPLIANCE_AUDIT_LOG_ENTRY_SWIFT_CSP_FFIEC_RULE_VERIFICATION_PASS\n" * 2000).encode("utf-8")
+
     compressed = zlib.compress(repetitive_text, level=9)
     with open(zlib_file, "wb") as f:
         f.write(compressed)
@@ -417,17 +495,38 @@ def generate_category_b_false_positives(target_dir: Path, root_dir: Path, result
         )
     logger.info(f"[Category B] Created raw zlib compressed file ({len(compressed)} bytes): {zlib_file.relative_to(root_dir).as_posix()}")
 
-    # 2. ZIP Archive with cleartext CSV containing SSNs and PANs
-    zip_file = target_dir / "unencrypted_patient_export.zip"
+    # 2. ZIP Archive with cleartext CSV containing SSNs and PANs per industry
+    if industry == "healthcare":
+        zip_filename = "unencrypted_patient_export.zip"
+        contained_filename = "cleartext_patient_records.csv"
+        lines = ["patient_id,full_name,ssn,pan_card,dob\n"]
+        for i in range(150):
+            lines.append(f"{i+1},Patient_{i},{generate_ssn()},{generate_luhn_pan()},1985-04-12\n")
+    elif industry == "merchant":
+        zip_filename = "unencrypted_customer_loyalty_export.zip"
+        contained_filename = "cleartext_customer_loyalty_records.csv"
+        lines = ["customer_id,cardholder_name,ssn,pan_card,member_since\n"]
+        for i in range(150):
+            lines.append(f"{i+1},Customer_{i},{generate_ssn()},{generate_luhn_pan()},2021-06-15\n")
+    elif industry == "finance":
+        zip_filename = "unencrypted_corporate_accounts_export.zip"
+        contained_filename = "cleartext_corporate_accounts.csv"
+        lines = ["account_id,entity_name,tax_id,pan_card,authorized_signatory\n"]
+        for i in range(150):
+            lines.append(f"{i+1},Entity_Partner_{i},{generate_ssn()},{generate_luhn_pan()},Signer_{i}\n")
+    else:  # banking
+        zip_filename = "unencrypted_wire_clients_export.zip"
+        contained_filename = "cleartext_wire_clients.csv"
+        lines = ["client_id,account_holder,ssn,pan_card,account_balance\n"]
+        for i in range(150):
+            lines.append(f"{i+1},Client_Holder_{i},{generate_ssn()},{generate_luhn_pan()},{random.uniform(1000, 50000):.2f}\n")
+
+    zip_file = target_dir / zip_filename
     validate_path_in_scope(zip_file, root_dir)
-    
-    lines = ["patient_id,full_name,ssn,pan_card,dob\n"]
-    for i in range(150):
-        lines.append(f"{i+1},Unencrypted_User_{i},{generate_ssn()},{generate_luhn_pan()},1985-04-12\n")
     csv_bytes = "".join(lines).encode("utf-8")
 
     with zipfile.ZipFile(zip_file, "w", zipfile.ZIP_DEFLATED) as zf:
-        zf.writestr("cleartext_patient_records.csv", csv_bytes)
+        zf.writestr(contained_filename, csv_bytes)
     safe_chmod(zip_file, 0o644)  # Owner R/W, Group/Other R
     if results_rec:
         results_rec.record_finding(
@@ -437,11 +536,18 @@ def generate_category_b_false_positives(target_dir: Path, root_dir: Path, result
             "FAIL",
             ["HIPAA_164_312_e_1", "PCI_DSS_v4_4_2_1"],
             severity="CRITICAL",
-            details={"contained_files": ["cleartext_patient_records.csv"]}
+            details={"contained_files": [contained_filename]}
         )
     logger.info(f"[Category B] Created unencrypted ZIP archive ({zip_file.stat().st_size} bytes): {zip_file.relative_to(root_dir).as_posix()}")
 
-def generate_category_c_false_negatives(target_dir: Path, password: str, key_mgr: KeyManager, root_dir: Path, results_rec: ExpectedResultsRecorder = None):
+def generate_category_c_false_negatives(
+    target_dir: Path,
+    password: str,
+    key_mgr: KeyManager,
+    root_dir: Path,
+    results_rec: ExpectedResultsRecorder = None,
+    industry: str = "healthcare"
+):
     """
     Category C: False Negative Fakes (Low Raw Entropy, Hybrid, & Micro Payloads).
     - Heuristic 1: ASCII Armored Block (Base64 wrapper over ciphertext)
@@ -455,9 +561,21 @@ def generate_category_c_false_negatives(target_dir: Path, password: str, key_mgr
     key = derive_key(password)
 
     # Heuristic 1: ASCII Armored Payload
-    asc_file = target_dir / "patient_consent_forms.asc"
+    if industry == "healthcare":
+        asc_filename = "patient_consent_forms.asc"
+        raw_plaintext = ("HIPAA Consent Form Records; Patient Consent Signed ID=" + secrets.token_hex(16) + "\n") * 500
+    elif industry == "merchant":
+        asc_filename = "pci_merchant_settlement_tokens.asc"
+        raw_plaintext = ("PCI DSS Requirement 3.4 Merchant POS Batch Settlement Token Record; Gateway Auth ID=" + secrets.token_hex(16) + "\n") * 500
+    elif industry == "finance":
+        asc_filename = "treasury_custody_authorization.asc"
+        raw_plaintext = ("SOX Section 404 Corporate Treasury Custody Authorization Record; Officer Mandate ID=" + secrets.token_hex(16) + "\n") * 500
+    else:  # banking
+        asc_filename = "swift_wire_authorization_mandates.asc"
+        raw_plaintext = ("SWIFT CSP Control 2.1 Interbank Settlement Mandate Record; Counterparty BIC ID=" + secrets.token_hex(16) + "\n") * 500
+
+    asc_file = target_dir / asc_filename
     validate_path_in_scope(asc_file, root_dir)
-    raw_plaintext = ("HIPAA Consent Form Records; Patient Consent Signed ID=" + secrets.token_hex(16) + "\n") * 500
     iv, payload = encrypt_aes_256_cbc(raw_plaintext.encode("utf-8"), key)
     b64_payload = base64.b64encode(payload).decode("utf-8")
     formatted_b64 = "\n".join(b64_payload[i:i+64] for i in range(0, len(b64_payload), 64))
@@ -484,13 +602,41 @@ def generate_category_c_false_negatives(target_dir: Path, password: str, key_mgr
     logger.info(f"[Category C - Heuristic 1] Created ASCII Armored block: {asc_file.relative_to(root_dir).as_posix()}")
 
     # Heuristic 2: Hybrid Plaintext Header + AES Ciphertext Payload
-    hybrid_file = target_dir / "patient_encounters_2026.csv"
+    if industry == "healthcare":
+        hybrid_filename = "patient_encounters_2026.csv"
+        header_str = (
+            "FileType=PatientRecord; Owner=uid_1001; CARD_CLEAR=4111111111111111; "
+            "Description=Confidential patient chart audit log for HIPAA §164.312 verification; "
+            "Classification=CONFIDENTIAL; Status=PENDING_ENCRYPTION_REVIEW; "
+        )
+        body_lines = ["encounter_id,patient_id,notes\n"] + [f"{i},P_{i:04d},Clinical chart notes detail...\n" for i in range(1200)]
+    elif industry == "merchant":
+        hybrid_filename = "merchant_pos_transactions_2026.csv"
+        header_str = (
+            "FileType=POSTransactionLog; Owner=uid_1001; CARD_CLEAR=4111111111111111; "
+            "Description=Confidential merchant terminal transaction log for PCI DSS Requirement 3.4 verification; "
+            "Classification=CONFIDENTIAL; Status=PENDING_ENCRYPTION_REVIEW; "
+        )
+        body_lines = ["terminal_id,transaction_id,pos_journal_notes\n"] + [f"{i},TXN_{i:04d},POS daily journal record...\n" for i in range(1200)]
+    elif industry == "finance":
+        hybrid_filename = "treasury_general_ledger_2026.csv"
+        header_str = (
+            "FileType=TreasuryLedger; Owner=uid_1001; CARD_CLEAR=4111111111111111; "
+            "Description=Confidential treasury general ledger for SOX Section 404 verification; "
+            "Classification=CONFIDENTIAL; Status=PENDING_ENCRYPTION_REVIEW; "
+        )
+        body_lines = ["journal_id,account_id,ledger_entry_notes\n"] + [f"{i},ACC_{i:04d},General ledger audit entry...\n" for i in range(1200)]
+    else:  # banking
+        hybrid_filename = "interbank_settlement_ledger_2026.csv"
+        header_str = (
+            "FileType=SWIFTSettlementLedger; Owner=uid_1001; CARD_CLEAR=4111111111111111; "
+            "Description=Confidential interbank SWIFT clearing log for SWIFT CSP Control 2.6 verification; "
+            "Classification=CONFIDENTIAL; Status=PENDING_ENCRYPTION_REVIEW; "
+        )
+        body_lines = ["swift_seq,clearing_node_id,settlement_memo\n"] + [f"{i},NODE_{i:04d},Interbank clearing settlement audit entry...\n" for i in range(1200)]
+
+    hybrid_file = target_dir / hybrid_filename
     validate_path_in_scope(hybrid_file, root_dir)
-    header_str = (
-        "FileType=PatientRecord; Owner=uid_1001; CARD_CLEAR=4111111111111111; "
-        "Description=Confidential patient chart audit log for HIPAA §164.312 verification; "
-        "Classification=CONFIDENTIAL; Status=PENDING_ENCRYPTION_REVIEW; "
-    )
     # Pad header to exactly 512 bytes with spaces
     header_bytes = header_str.encode("utf-8")
     if len(header_bytes) < 512:
@@ -498,8 +644,6 @@ def generate_category_c_false_negatives(target_dir: Path, password: str, key_mgr
     else:
         header_bytes = header_bytes[:512]
 
-    # Encrypted body (64KB)
-    body_lines = ["encounter_id,patient_id,notes\n"] + [f"{i},P_{i:04d},Clinical chart notes detail...\n" for i in range(1200)]
     iv_hy, body_cipher = encrypt_aes_256_cbc("".join(body_lines).encode("utf-8"), key)
 
     hybrid_bytes = header_bytes + body_cipher
@@ -520,9 +664,22 @@ def generate_category_c_false_negatives(target_dir: Path, password: str, key_mgr
     logger.info(f"[Category C - Heuristic 2] Created Hybrid file (512B header + {len(body_cipher)}B AES): {hybrid_file.relative_to(root_dir).as_posix()}")
 
     # Heuristic 3: Micro Payload (32 bytes)
-    micro_file = target_dir / "patient_access_token.bin"
+    if industry == "healthcare":
+        micro_filename = "patient_access_token.bin"
+        token_data = b"SECRET_32B_PATIENT_ACCESS_TOKEN"
+    elif industry == "merchant":
+        micro_filename = "gateway_auth_token.bin"
+        token_data = b"SECRET_32B_PAYMENT_GATEWAY_TOKEN"
+    elif industry == "finance":
+        micro_filename = "treasury_session_token.bin"
+        token_data = b"SECRET_32B_TREASURY_CORP_SESSION"
+    else:  # banking
+        micro_filename = "swift_hsm_access_token.bin"
+        token_data = b"SECRET_32B_SWIFT_HSM_KEY_TOKEN__"
+
+    micro_file = target_dir / micro_filename
     validate_path_in_scope(micro_file, root_dir)
-    iv_m, micro_payload = encrypt_aes_256_cbc(b"SECRET_32B_TOKEN", key)
+    iv_m, micro_payload = encrypt_aes_256_cbc(token_data, key)
     # Truncate/slice payload to 32 bytes exact
     micro_32b = micro_payload[:32]
     with open(micro_file, "wb") as f:
@@ -540,7 +697,14 @@ def generate_category_c_false_negatives(target_dir: Path, password: str, key_mgr
         )
     logger.info(f"[Category C - Heuristic 3] Created Micro Payload (32 bytes): {micro_file.relative_to(root_dir).as_posix()}")
 
-def generate_category_d_compliance_violations(etc_dir: Path, audit_dir: Path, billing_dir: Path, root_dir: Path, results_rec: ExpectedResultsRecorder = None):
+def generate_category_d_compliance_violations(
+    etc_dir: Path,
+    audit_dir: Path,
+    billing_dir: Path,
+    root_dir: Path,
+    results_rec: ExpectedResultsRecorder = None,
+    industry: str = "healthcare"
+):
     """
     Category D: Deliberate Insecure Configurations (Compliance Violations).
     - Permissive file permissions (0o777 on cleartext CSVs)
@@ -556,12 +720,30 @@ def generate_category_d_compliance_violations(etc_dir: Path, audit_dir: Path, bi
     audit_dir.mkdir(parents=True, exist_ok=True)
     billing_dir.mkdir(parents=True, exist_ok=True)
 
-    # 1. Access Control Violation (0o777 permissions on cleartext CSV with PANs)
-    copay_file = billing_dir / "merchant_copay_ledger.csv"
+    # 1. Access Control Violation (0o777 permissions on cleartext CSV with PANs) per industry
+    if industry == "healthcare":
+        copay_filename = "merchant_copay_ledger.csv"
+        lines = ["copay_id,patient_name,pan_credit_card,amount,ssn\n"]
+        for i in range(50):
+            lines.append(f"{i+1},Patient_Copay_{i},{generate_luhn_pan()},{random.uniform(10, 200):.2f},{generate_ssn()}\n")
+    elif industry == "merchant":
+        copay_filename = "pos_cashier_copay_ledger.csv"
+        lines = ["receipt_id,customer_name,pan_credit_card,amount,ssn\n"]
+        for i in range(50):
+            lines.append(f"{i+1},Customer_POS_{i},{generate_luhn_pan()},{random.uniform(10, 200):.2f},{generate_ssn()}\n")
+    elif industry == "finance":
+        copay_filename = "treasury_disbursement_ledger.csv"
+        lines = ["disbursement_id,employee_name,pan_credit_card,amount,ssn\n"]
+        for i in range(50):
+            lines.append(f"{i+1},Employee_Pay_{i},{generate_luhn_pan()},{random.uniform(100, 3500):.2f},{generate_ssn()}\n")
+    else:  # banking
+        copay_filename = "interbank_wire_disbursement_ledger.csv"
+        lines = ["wire_id,account_holder,pan_credit_card,amount,ssn\n"]
+        for i in range(50):
+            lines.append(f"{i+1},Account_Holder_{i},{generate_luhn_pan()},{random.uniform(500, 15000):.2f},{generate_ssn()}\n")
+
+    copay_file = billing_dir / copay_filename
     validate_path_in_scope(copay_file, root_dir)
-    lines = ["copay_id,patient_name,pan_credit_card,amount,ssn\n"]
-    for i in range(50):
-        lines.append(f"{i+1},Copay_Patient_{i},{generate_luhn_pan()},{random.uniform(10, 200):.2f},{generate_ssn()}\n")
     with open(copay_file, "w", encoding="utf-8") as f:
         f.write("".join(lines))
     safe_chmod(copay_file, 0o777)
@@ -768,13 +950,23 @@ def generate_category_d_compliance_violations(etc_dir: Path, audit_dir: Path, bi
 # -----------------------------------------------------------------------------
 # ADDITIONAL SPECIALIZED PAYLOADS (IMAGES, AES-ECB, ZIP BOMB)
 # -----------------------------------------------------------------------------
-def generate_mock_images(target_dir: Path, root_dir: Path):
-    """Generates mock radiology/promo binary images (PNG/JPEG headers + random high entropy stream)."""
+def generate_mock_images(target_dir: Path, root_dir: Path, industry: str = "healthcare"):
+    """Generates mock image binaries per industry (PNG/JPEG headers + random high entropy stream)."""
     validate_path_in_scope(target_dir, root_dir)
     target_dir.mkdir(parents=True, exist_ok=True)
 
-    png_path = target_dir / "chest_xray_20260810_001.png"
-    jpg_path = target_dir / "brain_mri_patient_9021.jpg"
+    if industry == "healthcare":
+        png_path = target_dir / "chest_xray_20260810_001.png"
+        jpg_path = target_dir / "brain_mri_patient_9021.jpg"
+    elif industry == "merchant":
+        png_path = target_dir / "storefront_banner_hero.png"
+        jpg_path = target_dir / "product_catalog_cover.jpg"
+    elif industry == "finance":
+        png_path = target_dir / "treasury_dashboard_chart.png"
+        jpg_path = target_dir / "quarterly_earnings_graph.jpg"
+    else:  # banking
+        png_path = target_dir / "swift_network_topology.png"
+        jpg_path = target_dir / "core_banking_datacenter.jpg"
 
     png_header = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x01\x00\x00\x00\x01\x00\x08\x06\x00\x00\x00"
     png_payload = png_header + secrets.token_bytes(128 * 1024)
@@ -787,15 +979,23 @@ def generate_mock_images(target_dir: Path, root_dir: Path):
     with open(jpg_path, "wb") as f:
         f.write(jpg_payload)
 
-    logger.info(f"Generated mock radiology image binaries: {png_path.relative_to(root_dir).as_posix()}, {jpg_path.relative_to(root_dir).as_posix()}")
+    logger.info(f"Generated mock image binaries ({industry}): {png_path.relative_to(root_dir).as_posix()}, {jpg_path.relative_to(root_dir).as_posix()}")
 
-def generate_insecure_aes_ecb_ledger(file_path: Path, password: str, key_mgr: KeyManager, root_dir: Path, results_rec: ExpectedResultsRecorder = None):
+def generate_insecure_aes_ecb_ledger(file_path: Path, password: str, key_mgr: KeyManager, root_dir: Path, results_rec: ExpectedResultsRecorder = None, industry: str = "finance"):
     """Generates an insecure AES-256-ECB encrypted file (block pattern leakage test)."""
     validate_path_in_scope(file_path, root_dir)
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Repeating 16-byte blocks result in identical 16-byte ciphertext blocks in ECB mode!
-    repeated_block = b"BALANCE_00000000" * 200  # Exact 16-byte block repeated
+    if industry == "finance":
+        repeated_block = b"TREASURY_0000000" * 200  # Exact 16-byte block repeated
+    elif industry == "banking":
+        repeated_block = b"SWIFT_ACH_000000" * 200
+    elif industry == "merchant":
+        repeated_block = b"POS_MERCH_000000" * 200
+    else:
+        repeated_block = b"PATIENT_BAL_0000" * 200
+
     key = derive_key(password)
     ciphertext = encrypt_aes_256_ecb(repeated_block, key)
 
@@ -835,46 +1035,6 @@ def generate_zip_bomb(file_path: Path, root_dir: Path, results_rec: ExpectedResu
             details={"uncompressed_bytes": 10485760}
         )
     logger.warning(f"[Safety Test] Generated Zip Bomb test file ({file_path.stat().st_size} bytes -> 10MB): {file_path.relative_to(root_dir).as_posix()}")
-
-# -----------------------------------------------------------------------------
-# INDUSTRY ENVIRONMENT BUILDERS
-# -----------------------------------------------------------------------------
-def build_healthcare_environment(base_dir: Path, key_mgr: KeyManager, results_rec: ExpectedResultsRecorder = None):
-    env_root = base_dir / "healthcare_production_env"
-    env_root.mkdir(parents=True, exist_ok=True)
-
-    logger.info(f"--- Constructing Healthcare Environment: {env_root.resolve().as_posix()} ---")
-
-    # Patient records
-    generate_category_a_compliant_encrypted(
-        env_root / "patient_records" / "ehr_db_master.gpg",
-        "HealthCareSecurePass2026!",
-        1500, key_mgr, env_root, results_rec
-    )
-    generate_category_c_false_negatives(env_root / "patient_records", "HealthCareSecurePass2026!", key_mgr, env_root, results_rec)
-    generate_mock_images(env_root / "radiology_images", env_root)
-
-    # Billing & Copay
-    billing_dir = env_root / "billing_department"
-    billing_dir.mkdir(parents=True, exist_ok=True)
-
-    claims_csv = billing_dir / "claims_export_2026_q2.csv"
-    validate_path_in_scope(claims_csv, env_root)
-    claims_lines = ["claim_id,patient_ssn,pan_card,icd10_code,claim_amount\n"]
-    for i in range(100):
-        claims_lines.append(f"CLM_{i+100},{generate_ssn()},{generate_luhn_pan()},E11.9,{random.uniform(100, 5000):.2f}\n")
-    with open(claims_csv, "w", encoding="utf-8") as f:
-        f.write("".join(claims_lines))
-    if results_rec:
-        results_rec.record_finding(
-            claims_csv.relative_to(env_root).as_posix(),
-            "UNENCRYPTED_SENSITIVE_DATA_PHI_PAN",
-            "Category_D",
-            "FAIL",
-            ["HIPAA_164_312_e_1", "PCI_DSS_v4_4_2_1"],
-            severity="CRITICAL",
-            details={"findings": ["SSN", "LUHN_PAN", "ICD10"]}
-        )
 
 # -----------------------------------------------------------------------------
 # INTERNAL CORPORATE POLICY & COMPLIANCE STANDARD TEMPLATES
@@ -1152,13 +1312,13 @@ def build_healthcare_environment(base_dir: Path, key_mgr: KeyManager, results_re
     generate_category_a_compliant_encrypted(
         records_dir / "ehr_db_master.gpg",
         "HealthcareMasterKey2026!",
-        1500, key_mgr, env_root, results_rec
+        1500, key_mgr, env_root, results_rec, industry="healthcare"
     )
 
-    generate_category_c_false_negatives(records_dir, "HealthcareMasterKey2026!", key_mgr, env_root, results_rec)
+    generate_category_c_false_negatives(records_dir, "HealthcareMasterKey2026!", key_mgr, env_root, results_rec, industry="healthcare")
 
     # Radiology
-    generate_mock_images(env_root / "radiology_images", env_root)
+    generate_mock_images(env_root / "radiology_images", env_root, industry="healthcare")
 
     # Billing & Permissive Access / PHI violations
     billing_dir = env_root / "billing_department"
@@ -1185,8 +1345,8 @@ def build_healthcare_environment(base_dir: Path, key_mgr: KeyManager, results_re
     # Insecure configurations & AD exports
     etc_dir = env_root / "etc"
     audit_dir = env_root / "var" / "log" / "audit"
-    generate_category_d_compliance_violations(etc_dir, audit_dir, billing_dir, env_root, results_rec)
-    generate_active_directory_exports(etc_dir, key_mgr, env_root)
+    generate_category_d_compliance_violations(etc_dir, audit_dir, billing_dir, env_root, results_rec, industry="healthcare")
+    generate_active_directory_exports(etc_dir, key_mgr, env_root, industry="healthcare")
 
 def build_merchant_environment(base_dir: Path, key_mgr: KeyManager, results_rec: ExpectedResultsRecorder = None):
     env_root = base_dir / "merchant_production_env"
@@ -1204,7 +1364,7 @@ def build_merchant_environment(base_dir: Path, key_mgr: KeyManager, results_rec:
     generate_category_a_compliant_encrypted(
         pos_dir / "daily_pos_settlement_20260810.db",
         "MerchantPOSSecretKey2026!",
-        1000, key_mgr, env_root, results_rec
+        1000, key_mgr, env_root, results_rec, industry="merchant"
     )
 
     # Insecure POS terminal debug log with cleartext PANs
@@ -1234,17 +1394,20 @@ def build_merchant_environment(base_dir: Path, key_mgr: KeyManager, results_rec:
         f.write(json.dumps({"merchant_id": "M_88201", "api_ssh_private_key": priv_ssh}, indent=2))
     key_mgr.record_key(gw_config.relative_to(env_root).as_posix(), "RSA-MOCK-SSH", key_hex="N/A", extra={"ssh_pub": pub_ssh})
 
+    generate_category_c_false_negatives(ecom_dir, "MerchantPOSSecretKey2026!", key_mgr, env_root, results_rec, industry="merchant")
+
     # Inventory & False Positive ZIP
-    generate_category_b_false_positives(env_root / "inventory_control", env_root, results_rec)
+    generate_category_b_false_positives(env_root / "inventory_control", env_root, results_rec, industry="merchant")
+    generate_zip_bomb(env_root / "inventory_control" / "decompression_safety_check.zip", env_root, results_rec)
 
     # Marketing assets
-    generate_mock_images(env_root / "marketing_assets", env_root)
+    generate_mock_images(env_root / "marketing_assets", env_root, industry="merchant")
 
     # Insecure configurations & AD exports
     etc_dir = env_root / "etc"
     audit_dir = env_root / "var" / "log" / "audit"
-    generate_category_d_compliance_violations(etc_dir, audit_dir, pos_dir, env_root, results_rec)
-    generate_active_directory_exports(etc_dir, key_mgr, env_root)
+    generate_category_d_compliance_violations(etc_dir, audit_dir, pos_dir, env_root, results_rec, industry="merchant")
+    generate_active_directory_exports(etc_dir, key_mgr, env_root, industry="merchant")
 
 def build_finance_environment(base_dir: Path, key_mgr: KeyManager, results_rec: ExpectedResultsRecorder = None):
     env_root = base_dir / "finance_production_env"
@@ -1261,22 +1424,22 @@ def build_finance_environment(base_dir: Path, key_mgr: KeyManager, results_rec: 
     generate_category_a_compliant_encrypted(
         wire_dir / "swift_wire_batch_20260810.dat",
         "FinanceWireTransferSecret!",
-        800, key_mgr, env_root, results_rec
+        800, key_mgr, env_root, results_rec, industry="finance"
     )
 
     # AES-ECB block pattern leak
     generate_insecure_aes_ecb_ledger(
         wire_dir / "ach_settlement_log.csv",
         "FinanceWireTransferSecret!",
-        key_mgr, env_root, results_rec
+        key_mgr, env_root, results_rec, industry="finance"
     )
 
     # Core ledger & Treasury ops
-    generate_category_c_false_negatives(env_root / "treasury_ops", "FinanceWireTransferSecret!", key_mgr, env_root, results_rec)
+    generate_category_c_false_negatives(env_root / "treasury_ops", "FinanceWireTransferSecret!", key_mgr, env_root, results_rec, industry="finance")
 
     # Backups & Zip Bomb safety test
     backups_dir = env_root / "system_backups"
-    generate_category_b_false_positives(backups_dir, env_root, results_rec)
+    generate_category_b_false_positives(backups_dir, env_root, results_rec, industry="finance")
     generate_zip_bomb(backups_dir / "decompression_safety_check.zip", env_root, results_rec)
 
     # Insecure configurations & AD exports
@@ -1284,8 +1447,8 @@ def build_finance_environment(base_dir: Path, key_mgr: KeyManager, results_rec: 
     audit_dir = env_root / "var" / "log" / "audit"
     core_ledger_dir = env_root / "core_ledger"
     core_ledger_dir.mkdir(parents=True, exist_ok=True)
-    generate_category_d_compliance_violations(etc_dir, audit_dir, core_ledger_dir, env_root, results_rec)
-    generate_active_directory_exports(etc_dir, key_mgr, env_root)
+    generate_category_d_compliance_violations(etc_dir, audit_dir, core_ledger_dir, env_root, results_rec, industry="finance")
+    generate_active_directory_exports(etc_dir, key_mgr, env_root, industry="finance")
 
 def build_banking_environment(base_dir: Path, key_mgr: KeyManager, results_rec: ExpectedResultsRecorder = None):
     env_root = base_dir / "banking_production_env"
@@ -1301,26 +1464,26 @@ def build_banking_environment(base_dir: Path, key_mgr: KeyManager, results_rec: 
     generate_category_a_compliant_encrypted(
         wire_dir / "swift_wire_batch_20260810.dat",
         "BankingSecretPass2026!",
-        1200, key_mgr, env_root, results_rec
+        1200, key_mgr, env_root, results_rec, industry="banking"
     )
     generate_insecure_aes_ecb_ledger(
         wire_dir / "ach_settlement_log.csv",
         "BankingSecretPass2026!",
-        key_mgr, env_root, results_rec
+        key_mgr, env_root, results_rec, industry="banking"
     )
 
-    generate_category_c_false_negatives(env_root / "treasury_ops", "BankingSecretPass2026!", key_mgr, env_root, results_rec)
+    generate_category_c_false_negatives(env_root / "treasury_ops", "BankingSecretPass2026!", key_mgr, env_root, results_rec, industry="banking")
 
     backups_dir = env_root / "system_backups"
-    generate_category_b_false_positives(backups_dir, env_root, results_rec)
+    generate_category_b_false_positives(backups_dir, env_root, results_rec, industry="banking")
     generate_zip_bomb(backups_dir / "decompression_safety_check.zip", env_root, results_rec)
 
     etc_dir = env_root / "etc"
     audit_dir = env_root / "var" / "log" / "audit"
     core_ledger_dir = env_root / "core_ledger"
     core_ledger_dir.mkdir(parents=True, exist_ok=True)
-    generate_category_d_compliance_violations(etc_dir, audit_dir, core_ledger_dir, env_root, results_rec)
-    generate_active_directory_exports(etc_dir, key_mgr, env_root)
+    generate_category_d_compliance_violations(etc_dir, audit_dir, core_ledger_dir, env_root, results_rec, industry="banking")
+    generate_active_directory_exports(etc_dir, key_mgr, env_root, industry="banking")
 
 # -----------------------------------------------------------------------------
 # MAIN CLI ENTRYPOINT
