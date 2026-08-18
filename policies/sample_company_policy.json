@@ -1,0 +1,40 @@
+{
+  "company": "Acme Health Systems Inc.",
+  "industry": "Healthcare",
+  "version": "2026.4",
+  "frameworks": [
+    "HIPAA \u00a7164.312",
+    "HITRUST CSF v11.8.0",
+    "NIST SP 800-53"
+  ],
+  "policies": [
+    {
+      "clause_id": "ACME-POLICY-SEC-01",
+      "standard": "Acme Internal Security Baseline",
+      "section": "Cryptographic Safeguards \u00a74.1",
+      "context": "All financial records, copay ledgers, and billing data exports must be encrypted at rest using AES-256-CBC symmetric algorithms. Plaintext files containing credit card PAN numbers or SSNs are strictly prohibited.",
+      "remediation": "Encrypt file using GPG symmetric encryption with AES256 cipher algo."
+    },
+    {
+      "clause_id": "ACME-POLICY-SEC-02",
+      "standard": "Acme Internal Security Baseline",
+      "section": "Access Control & Permissions \u00a75.3",
+      "context": "World-writable directory or file permissions (0o777) on sensitive infrastructure servers are strictly forbidden by corporate policy. All files must enforce owner/group isolation (0o640).",
+      "remediation": "Execute chmod 640 on file to strip world-writable permissions."
+    },
+    {
+      "clause_id": "ACME-POLICY-SEC-03",
+      "standard": "Acme Internal Security Baseline",
+      "section": "Password Expiration Policy \u00a78.1",
+      "context": "User passwords in login.defs must be set to expire within 90 days (PASS_MAX_DAYS <= 90). Unlimited password validity (99999 days) violates corporate password policy.",
+      "remediation": "Update PASS_MAX_DAYS to 90 or 89 in /etc/login.defs."
+    },
+    {
+      "clause_id": "ACME-POLICY-SEC-04",
+      "standard": "Acme Internal Security Baseline",
+      "section": "Audit Trail Protection \u00a79.2",
+      "context": "Security audit log files (/var/log/audit/audit.log) must be protected with strict 0o600 permissions to prevent unauthorized log tampering or erasure.",
+      "remediation": "Execute chmod 600 /var/log/audit/audit.log"
+    }
+  ]
+}

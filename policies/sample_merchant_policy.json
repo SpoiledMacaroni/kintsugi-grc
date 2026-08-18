@@ -1,0 +1,32 @@
+{
+  "company": "Nexus Retail & E-Commerce Global",
+  "industry": "Merchant / E-Commerce",
+  "version": "2026.2",
+  "frameworks": [
+    "PCI DSS v4.0.1",
+    "NIST SP 800-53 Rev 5"
+  ],
+  "policies": [
+    {
+      "clause_id": "NEXUS-PCI-CARD-01",
+      "standard": "PCI DSS v4.0.1 Requirement 3.4",
+      "section": "Cardholder Data Protection \u00a73.4.1",
+      "context": "Primary Account Numbers (PANs) and transaction logs in billing_department must be rendered unreadable anywhere they are stored using strong AES-256-CBC cryptography.",
+      "remediation": "gpg --symmetric --cipher-algo AES256 <file> && shred -u <file>"
+    },
+    {
+      "clause_id": "NEXUS-PCI-ACCESS-02",
+      "standard": "PCI DSS v4.0.1 Requirement 7.2",
+      "section": "Least Privilege & File Permissions \u00a77.2.2",
+      "context": "Merchant ledger files and copay summaries must strictly restrict write access to the finance service account. World-writable permissions (0o777) are a critical compliance violation.",
+      "remediation": "chmod 0640 <file>"
+    },
+    {
+      "clause_id": "NEXUS-PCI-TLS-03",
+      "standard": "PCI DSS v4.0.1 Requirement 4.2",
+      "section": "Transmission Cryptography \u00a74.2.1",
+      "context": "Legacy TLS protocols (TLSv1.0, TLSv1.1, SSLv3) and insecure crypto-policies (LEGACY) are forbidden for cardholder environments. System crypto policy must be set to DEFAULT or FUTURE.",
+      "remediation": "update-crypto-policies --set DEFAULT"
+    }
+  ]
+}

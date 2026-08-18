@@ -1,0 +1,33 @@
+{
+  "company": "Apex Capital & Treasury Management",
+  "industry": "Finance / Treasury",
+  "version": "2026.1",
+  "frameworks": [
+    "SOX Section 404",
+    "HITRUST CSF v11.8.0",
+    "NIST SP 800-53"
+  ],
+  "policies": [
+    {
+      "clause_id": "APEX-TREASURY-01",
+      "standard": "Apex Enterprise Risk Baseline",
+      "section": "Shadow Access & Group Isolation \u00a72.4",
+      "context": "Cross-department access to core treasury ledgers and wire batches by unauthorized UID/GID groups is prohibited. File permissions must strictly enforce 0o600 or 0o640.",
+      "remediation": "chown treasury:treasury <file> && chmod 0600 <file>"
+    },
+    {
+      "clause_id": "APEX-TREASURY-02",
+      "standard": "Apex Enterprise Risk Baseline",
+      "section": "Electronic Record Encryption \u00a75.1",
+      "context": "Settlement logs and ACH streams must not be stored with raw deflate/zlib compression without an encryption envelope (AES-256-CBC).",
+      "remediation": "openssl enc -aes-256-cbc -salt -pbkdf2 -in <file> -out <file>.enc"
+    },
+    {
+      "clause_id": "APEX-TREASURY-03",
+      "standard": "Apex Enterprise Risk Baseline",
+      "section": "ECB Mode Deprecation \u00a76.3",
+      "context": "Electronic Codebook (ECB) cipher mode leaks block repetition patterns and is prohibited across all transactional ledgers.",
+      "remediation": "openssl enc -aes-256-cbc -salt -pbkdf2 -in <file> -out <file>.cbc"
+    }
+  ]
+}

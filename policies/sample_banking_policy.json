@@ -1,0 +1,33 @@
+{
+  "company": "Vanguard Global Banking & SWIFT Operations",
+  "industry": "Banking / SWIFT",
+  "version": "2026.3",
+  "frameworks": [
+    "SWIFT Customer Security Programme (CSP)",
+    "NIST SP 800-53",
+    "PCI DSS v4.0.1"
+  ],
+  "policies": [
+    {
+      "clause_id": "VANGUARD-SWIFT-01",
+      "standard": "SWIFT CSP Control 2.1",
+      "section": "Operating System Hardening & Daemon Accounts \u00a72.1",
+      "context": "Non-interactive system accounts (nobody, daemon, ftp) must not have interactive login shells (/bin/bash, /bin/sh). Must be set to /sbin/nologin or /bin/false.",
+      "remediation": "usermod -s /sbin/nologin <daemon_account>"
+    },
+    {
+      "clause_id": "VANGUARD-SWIFT-02",
+      "standard": "SWIFT CSP Control 2.6",
+      "section": "Secure Protocols & SSH Ciphers \u00a72.6",
+      "context": "SSH server configurations must disallow Protocol 1, legacy Arcfour/DES ciphers, and weak MD5/96-bit MACs.",
+      "remediation": "Enforce Protocol 2, AES-GCM, and SHA-2 MACs in /etc/ssh/sshd_config"
+    },
+    {
+      "clause_id": "VANGUARD-SWIFT-03",
+      "standard": "SWIFT CSP Control 5.1",
+      "section": "Audit Trail Logging & Non-Repudiation \u00a75.1",
+      "context": "Audit log files must have world-writable and world-readable permissions removed (chmod 0600) with centralized syslog forwarding.",
+      "remediation": "chmod 0600 /var/log/audit/audit.log"
+    }
+  ]
+}

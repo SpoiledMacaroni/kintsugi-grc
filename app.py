@@ -134,6 +134,59 @@ def main():
         help="Enable verbose DEBUG logging."
     )
 
+    # Subcommand: purge
+    purge_parser = subparsers.add_parser("purge", help="Purge synthetically generated test environments, logs, and reports.")
+    purge_parser.add_argument(
+        "--target-dir", "-t",
+        default="./synthetic_test_env",
+        help="Path to synthetic test environment directory (default: ./synthetic_test_env)."
+    )
+    purge_parser.add_argument(
+        "--env-only",
+        action="store_true",
+        help="Only purge synthetic_test_env directory without deleting root scan reports or root audit logs."
+    )
+    purge_parser.add_argument(
+        "--force", "-f",
+        action="store_true",
+        help="Skip confirmation prompt."
+    )
+    purge_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Simulate the purge without deleting any files."
+    )
+
+    # Subcommand: setup-demo
+    setup_parser = subparsers.add_parser("setup-demo", help="Generate all synthetic environments and company policies primed for demo.")
+    setup_parser.add_argument(
+        "--output-dir", "-o",
+        default="./synthetic_test_env",
+        help="Target root directory for synthetic environments (default: ./synthetic_test_env)."
+    )
+    setup_parser.add_argument(
+        "--industry", "-i",
+        choices=["healthcare", "merchant", "finance", "banking", "all"],
+        default="all",
+        help="Target industry environment to generate (default: all)."
+    )
+    setup_parser.add_argument(
+        "--seed", "-s",
+        type=int,
+        default=42,
+        help="Random seed for reproducible generation (default: 42)."
+    )
+    setup_parser.add_argument(
+        "--no-clean",
+        action="store_true",
+        help="Skip cleaning prior data before generating."
+    )
+    setup_parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="Enable verbose DEBUG logging."
+    )
+
     args = parser.parse_args()
 
     # Default action if no subcommand passed: launch GUI mode if display available, else run scan CLI
@@ -285,6 +338,31 @@ def main():
         if args.verbose:
             sys.argv.append("--verbose")
         generate_main()
+
+    elif args.command == "purge":
+        from scripts.purge_synthetic import purge_synthetic_data
+        target_dir = Path(args.target_dir).resolve()
+        if not args.force and not args.dry_run:
+            print(f"\033[93mWarning:\033[0m This will permanently delete all synthetic data in: {target_dir}")
+            confirm = input("Proceed with purge? [y/N]: ").strip().lower()
+            if confirm not in ("y", "yes"):
+                print("Purge cancelled.")
+                sys.exit(0)
+        purge_synthetic_data(
+            target_dir=target_dir,
+            purge_root_artifacts=not args.env_only,
+            dry_run=args.dry_run,
+        )
+
+    elif args.command == "setup-demo":
+        from scripts.setup_demo import setup_demo_environment
+        setup_demo_environment(
+            output_dir=Path(args.output_dir),
+            industry=args.industry,
+            seed=args.seed,
+            clean_first=not args.no_clean,
+            verbose=args.verbose,
+        )
 
 
 if __name__ == "__main__":
