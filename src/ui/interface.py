@@ -466,6 +466,18 @@ class FindingDetailDialog(QDialog):
         self._reveal_btn.setObjectName("primary")
         self._reveal_btn.clicked.connect(lambda: reveal_in_file_explorer(self.full_path))
         hl.addWidget(self._reveal_btn)
+
+        # Context-sensitive Encrypt Ledger button (only displayed for unencrypted ledger files)
+        self._btn_encrypt_ledger = QPushButton("🔐  Encrypt & Remediate Ledger")
+        self._btn_encrypt_ledger.setStyleSheet(
+            f"QPushButton {{ background:{PALETTE['gold']}; color:#000; font-weight:bold; "
+            f"padding:6px 14px; border-radius:6px; border:none; }}"
+            f"QPushButton:hover {{ background:{PALETTE['gold_bright']}; }}"
+        )
+        self._btn_encrypt_ledger.setToolTip("Encrypt this exposed ledger file with compliant AES-256-CBC (Mode: 0o600)")
+        self._btn_encrypt_ledger.clicked.connect(self._remediate_current_ledger)
+        self._btn_encrypt_ledger.setVisible(False)
+        hl.addWidget(self._btn_encrypt_ledger)
         layout.addWidget(header)
 
         # ── File path card ───────────────────────────────────────────
@@ -523,6 +535,43 @@ class FindingDetailDialog(QDialog):
         self._path_lbl.setText(f"📁 <a style='color:{PALETTE['accent_blue']};' href='#'>{self.full_path}</a>")
         html = self._build_html(desc, details, mappings, advisory)
         self._txt.setHtml(html)
+
+        # Only show the Encrypt Ledger button if inspecting an exposed/unencrypted ledger violation
+        fname = Path(rel_path).name.lower()
+        is_ledger = (
+            fname in {
+                "merchant_copay_ledger.csv", "pos_cashier_copay_ledger.csv",
+                "treasury_disbursement_ledger.csv", "interbank_wire_disbursement_ledger.csv",
+                "ach_settlement_log.csv", "treasury_general_ledger_2026.csv",
+                "interbank_settlement_ledger_2026.csv"
+            }
+            or "ledger" in fname or "copay" in fname or fname.endswith(".csv")
+        )
+        is_violation = severity in ["CRITICAL", "HIGH", "MEDIUM"]
+        self._btn_encrypt_ledger.setVisible(is_ledger and is_violation)
+
+    def _remediate_current_ledger(self):
+        """Encrypts this specific ledger file with AES-256-CBC and 0o600 permissions."""
+        try:
+            from scripts.encrypt_ledger import remediate_ledger_file
+            if self.full_path.exists():
+                ok = remediate_ledger_file(self.full_path, self.target_root)
+                if ok:
+                    QMessageBox.information(
+                        self, "Ledger Encrypted & Remediated",
+                        f"Successfully encrypted:\n{self.full_path.name}\n\n"
+                        f"Applied AES-256-CBC cipher with PKCS#7 padding and 0o600 permissions.\n"
+                        f"The file watcher will now rescan and resolve this finding."
+                    )
+                else:
+                    QMessageBox.information(
+                        self, "Already Encrypted",
+                        f"'{self.full_path.name}' is already encrypted."
+                    )
+            else:
+                QMessageBox.warning(self, "File Not Found", f"File does not exist on disk:\n{self.full_path}")
+        except Exception as e:
+            QMessageBox.critical(self, "Remediation Error", f"Failed to encrypt ledger:\n{e}")
 
     def _build_html(self, desc, details, mappings, advisory) -> str:
         bg   = PALETTE["bg_surface"]
@@ -1533,6 +1582,18 @@ class KintsugiGRCApp(QMainWindow):
             f"font-family:monospace;font-size:11px;color:{PALETTE['text_secondary']};"
         )
         fhhl.addWidget(self._file_path_lbl, 1)
+
+        self._btn_encrypt_tab_ledger = QPushButton("🔐  Encrypt & Remediate Ledger")
+        self._btn_encrypt_tab_ledger.setVisible(False)
+        self._btn_encrypt_tab_ledger.setStyleSheet(
+            f"QPushButton {{ background:{PALETTE['gold']}; color:#000; font-weight:bold; "
+            f"padding:4px 12px; border-radius:4px; border:none; }}"
+            f"QPushButton:hover {{ background:{PALETTE['gold_bright']}; }}"
+        )
+        self._btn_encrypt_tab_ledger.setToolTip("Encrypt this exposed ledger file with compliant AES-256-CBC (Mode: 0o600)")
+        self._btn_encrypt_tab_ledger.clicked.connect(self._remediate_tab_ledger)
+        fhhl.addWidget(self._btn_encrypt_tab_ledger)
+
         self._btn_reveal_file = QPushButton("📂  Reveal in Explorer")
         self._btn_reveal_file.setEnabled(False)
         self._btn_reveal_file.clicked.connect(self._reveal_selected_file)
@@ -2253,6 +2314,21 @@ class KintsugiGRCApp(QMainWindow):
         self._file_path_lbl.setText(str(full_path))
         self._btn_reveal_file.setEnabled(True)
 
+        # Context-sensitive Encrypt Ledger button for File Detail tab
+        if hasattr(self, "_btn_encrypt_tab_ledger"):
+            fname = Path(rel_path).name.lower()
+            is_ledger = (
+                fname in {
+                    "merchant_copay_ledger.csv", "pos_cashier_copay_ledger.csv",
+                    "treasury_disbursement_ledger.csv", "interbank_wire_disbursement_ledger.csv",
+                    "ach_settlement_log.csv", "treasury_general_ledger_2026.csv",
+                    "interbank_settlement_ledger_2026.csv"
+                }
+                or "ledger" in fname or "copay" in fname or fname.endswith(".csv")
+            )
+            is_violation = finding.get("severity", "") in ["CRITICAL", "HIGH", "MEDIUM"]
+            self._btn_encrypt_tab_ledger.setVisible(is_ledger and is_violation)
+
         # Load file content (first 1000 lines or 100KB)
         self._file_content_viewer.clear()
         if full_path.exists() and full_path.is_file():
@@ -2503,6 +2579,34 @@ class KintsugiGRCApp(QMainWindow):
                 self, "No PDF Found",
                 "No exported PDF report found. Click 'Export PDF' to generate one first."
             )
+
+    def _remediate_tab_ledger(self):
+        """Encrypts the currently selected file in File Detail tab."""
+        if not self._selected_finding:
+            return
+        rel_path = self._selected_finding.get("file_path", "")
+        target_dir = Path(self._target_edit.text().strip()).resolve()
+        full_path = (target_dir / rel_path).resolve()
+        try:
+            from scripts.encrypt_ledger import remediate_ledger_file
+            if full_path.exists():
+                ok = remediate_ledger_file(full_path, target_dir)
+                if ok:
+                    QMessageBox.information(
+                        self, "Ledger Encrypted & Remediated",
+                        f"Successfully encrypted:\n{full_path.name}\n\n"
+                        f"Applied AES-256-CBC cipher with PKCS#7 padding and 0o600 permissions.\n"
+                        f"The file watcher will now rescan and update compliance metrics in real-time."
+                    )
+                else:
+                    QMessageBox.information(
+                        self, "Already Encrypted",
+                        f"'{full_path.name}' is already encrypted."
+                    )
+            else:
+                QMessageBox.warning(self, "File Not Found", f"File does not exist on disk:\n{full_path}")
+        except Exception as e:
+            QMessageBox.critical(self, "Remediation Error", f"Failed to encrypt ledger:\n{e}")
 
     # ──────────────────────────────────────────────────────────────────────────
     # CLOSE EVENT
