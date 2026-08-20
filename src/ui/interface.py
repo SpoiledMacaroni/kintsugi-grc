@@ -195,6 +195,20 @@ def reveal_in_file_explorer(file_path: Path):
         logger.error(f"Failed to open file in system explorer: {e}")
 
 
+def open_file_externally(file_path: Path):
+    """Opens a file directly using the system default application (e.g. PDF viewer)."""
+    abs_path = file_path.resolve()
+    try:
+        if sys.platform == "win32":
+            os.startfile(str(abs_path))
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", str(abs_path)])
+        else:
+            subprocess.Popen(["xdg-open", str(abs_path)])
+    except Exception as e:
+        logger.error(f"Failed to open file externally: {e}")
+
+
 def apply_dark_palette(app: QApplication):
     """Applies system-wide dark QPalette with Kintsugi black & gold theme."""
     palette = QPalette()
@@ -370,12 +384,13 @@ class ScanWorker(QThread):
 # ──────────────────────────────────────────────────────────────────────────────
 
 class FindingDetailDialog(QDialog):
-    """Rich modal showing full finding details with file hyperlink."""
+    """Rich modal showing full finding details with live update capability and file hyperlink."""
 
     def __init__(self, finding: Dict[str, Any], target_root: Path, parent=None):
         super().__init__(parent)
         self.finding     = finding
         self.target_root = target_root
+        self.full_path   = (self.target_root / self.finding.get("file_path", "")).resolve()
         self.setWindowTitle("Finding Inspection — Kintsugi-GRC")
         self.setMinimumSize(860, 620)
         self.setStyleSheet(self._dialog_css())
@@ -426,17 +441,6 @@ class FindingDetailDialog(QDialog):
         """
 
     def _build(self):
-        f          = self.finding
-        severity   = f.get("severity", "INFO")
-        title      = f.get("title", "Security Finding")
-        rule_id    = f.get("rule_id", "N/A")
-        rel_path   = f.get("file_path", "N/A")
-        desc       = f.get("description", "No description.")
-        details    = f.get("details", {})
-        mappings   = f.get("framework_mappings", [])
-        advisory   = f.get("rag_advisory", {})
-        full_path  = (self.target_root / rel_path).resolve()
-
         layout = QVBoxLayout(self)
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(12)
@@ -446,47 +450,40 @@ class FindingDetailDialog(QDialog):
         hl = QHBoxLayout(header)
         hl.setContentsMargins(14, 12, 14, 12)
 
-        sev_lbl = QLabel(f" {severity} ")
-        sev_lbl.setStyleSheet(
-            f"background:{SEV_COLOR.get(severity,'#8b949e')};"
-            f"color:#000;font-weight:bold;font-size:11px;"
-            f"border-radius:4px;padding:3px 8px;"
-        )
-        hl.addWidget(sev_lbl)
+        self._sev_lbl = QLabel()
+        hl.addWidget(self._sev_lbl)
 
         txt_col = QVBoxLayout()
-        t = QLabel(title)
-        t.setStyleSheet(f"font-size:16px;font-weight:bold;color:{PALETTE['text_primary']};")
-        r = QLabel(f"Rule ID: {rule_id}")
-        r.setStyleSheet(f"font-size:11px;color:{PALETTE['text_muted']};font-family:monospace;")
-        txt_col.addWidget(t)
-        txt_col.addWidget(r)
+        self._title_lbl = QLabel()
+        self._title_lbl.setStyleSheet(f"font-size:16px;font-weight:bold;color:{PALETTE['text_primary']};")
+        self._rule_lbl = QLabel()
+        self._rule_lbl.setStyleSheet(f"font-size:11px;color:{PALETTE['text_muted']};font-family:monospace;")
+        txt_col.addWidget(self._title_lbl)
+        txt_col.addWidget(self._rule_lbl)
         hl.addLayout(txt_col, 1)
 
-        reveal_btn = QPushButton("📂  Reveal in Explorer")
-        reveal_btn.setObjectName("primary")
-        reveal_btn.clicked.connect(lambda: reveal_in_file_explorer(full_path))
-        hl.addWidget(reveal_btn)
+        self._reveal_btn = QPushButton("📂  Reveal in Explorer")
+        self._reveal_btn.setObjectName("primary")
+        self._reveal_btn.clicked.connect(lambda: reveal_in_file_explorer(self.full_path))
+        hl.addWidget(self._reveal_btn)
         layout.addWidget(header)
 
         # ── File path card ───────────────────────────────────────────
         link_card = QFrame(objectName="linkCard")
         ll = QHBoxLayout(link_card)
         ll.setContentsMargins(12, 8, 12, 8)
-        path_lbl = QLabel(f"📁 <a style='color:{PALETTE['accent_blue']};' href='#'>{full_path}</a>")
-        path_lbl.setStyleSheet("font-family:monospace;font-size:11px;")
-        path_lbl.setWordWrap(True)
-        path_lbl.linkActivated.connect(lambda: reveal_in_file_explorer(full_path))
-        ll.addWidget(path_lbl)
+        self._path_lbl = QLabel()
+        self._path_lbl.setStyleSheet("font-family:monospace;font-size:11px;")
+        self._path_lbl.setWordWrap(True)
+        self._path_lbl.linkActivated.connect(lambda: reveal_in_file_explorer(self.full_path))
+        ll.addWidget(self._path_lbl)
         layout.addWidget(link_card)
 
         # ── Detail text ───────────────────────────────────────────────
-        txt = QTextEdit()
-        txt.setReadOnly(True)
-        txt.setAcceptRichText(True)
-        html = self._build_html(desc, details, mappings, advisory)
-        txt.setHtml(html)
-        layout.addWidget(txt, 1)
+        self._txt = QTextEdit()
+        self._txt.setReadOnly(True)
+        self._txt.setAcceptRichText(True)
+        layout.addWidget(self._txt, 1)
 
         # ── Bottom bar ────────────────────────────────────────────────
         close_btn = QPushButton("✕  Close Inspection")
@@ -495,6 +492,37 @@ class FindingDetailDialog(QDialog):
         bb.addStretch()
         bb.addWidget(close_btn)
         layout.addLayout(bb)
+
+        # Render initial content
+        self.update_content(self.finding, self.target_root)
+
+    def update_content(self, finding: Dict[str, Any], target_root: Optional[Path] = None):
+        """Regenerates the dialog contents with updated finding details."""
+        self.finding = finding
+        if target_root is not None:
+            self.target_root = target_root
+        f          = self.finding
+        severity   = f.get("severity", "INFO")
+        title      = f.get("title", "Security Finding")
+        rule_id    = f.get("rule_id", "N/A")
+        rel_path   = f.get("file_path", "N/A")
+        desc       = f.get("description", "No description.")
+        details    = f.get("details", {})
+        mappings   = f.get("framework_mappings", [])
+        advisory   = f.get("rag_advisory", {})
+        self.full_path = (self.target_root / rel_path).resolve()
+
+        self._sev_lbl.setText(f" {severity} ")
+        self._sev_lbl.setStyleSheet(
+            f"background:{SEV_COLOR.get(severity,'#8b949e')};"
+            f"color:#000;font-weight:bold;font-size:11px;"
+            f"border-radius:4px;padding:3px 8px;"
+        )
+        self._title_lbl.setText(title)
+        self._rule_lbl.setText(f"Rule ID: {rule_id}")
+        self._path_lbl.setText(f"📁 <a style='color:{PALETTE['accent_blue']};' href='#'>{self.full_path}</a>")
+        html = self._build_html(desc, details, mappings, advisory)
+        self._txt.setHtml(html)
 
     def _build_html(self, desc, details, mappings, advisory) -> str:
         bg   = PALETTE["bg_surface"]
@@ -793,6 +821,8 @@ class KintsugiGRCApp(QMainWindow):
         self._worker: Optional[ScanWorker]             = None
         self._selected_finding: Optional[Dict]         = None
         self._last_target_dir: str                     = os.path.abspath("./synthetic_test_env")
+        self._active_dialogs: List[FindingDetailDialog] = []
+        self._last_exported_pdf: Optional[Path]        = Path("scan_report.pdf") if Path("scan_report.pdf").exists() else None
 
         self._apply_stylesheet()
         self._build_ui()
@@ -1094,6 +1124,12 @@ class KintsugiGRCApp(QMainWindow):
         self._btn_pdf.setEnabled(False)
         self._btn_pdf.clicked.connect(self._export_pdf)
         hl.addWidget(self._btn_pdf)
+
+        self._btn_open_pdf = QPushButton("Open PDF")
+        self._btn_open_pdf.setEnabled(Path("scan_report.pdf").exists())
+        self._btn_open_pdf.setToolTip("Open the exported compliance PDF report in default viewer")
+        self._btn_open_pdf.clicked.connect(self._open_exported_pdf)
+        hl.addWidget(self._btn_open_pdf)
 
         self._btn_audit_log = QPushButton("View Audit Log")
         self._btn_audit_log.setEnabled(False)
@@ -1768,6 +1804,8 @@ class KintsugiGRCApp(QMainWindow):
     def _on_scan_done(self, summary: Dict):
         self.scan_summary = summary
         self._btn_pdf.setEnabled(True)
+        if hasattr(self, "_btn_open_pdf"):
+            self._btn_open_pdf.setEnabled(True)
         self._btn_audit_log.setEnabled(True)
         score = summary.get("compliance_score", 0)
         self._score_lbl.setText(f"{score}%")
@@ -1783,6 +1821,8 @@ class KintsugiGRCApp(QMainWindow):
         else:
             self._set_status_badge("alert", crits + highs)
 
+        self._sync_active_dialogs_with_summary(summary)
+        self._sync_file_detail_with_summary(summary)
         self._refresh_all(summary)
 
     def _on_scan_error(self, err: str):
@@ -1803,7 +1843,86 @@ class KintsugiGRCApp(QMainWindow):
             self._set_status_badge("ok")
         else:
             self._set_status_badge("alert", crits + highs)
+
+        # Synchronize active dialogs and the File Detail viewer on live file modifications
+        self._sync_active_dialogs_with_summary(summary)
+        self._sync_file_detail_with_summary(summary)
         self._refresh_all(summary)
+
+    def _sync_active_dialogs_with_summary(self, summary: Dict):
+        """Regenerates contents or closes open finding inspection dialogs if files changed/remediated."""
+        target = Path(self._target_edit.text().strip()).resolve()
+        findings = summary.get("findings", [])
+        for dlg in list(self._active_dialogs):
+            rel_path = dlg.finding.get("file_path", "")
+            rule_id  = dlg.finding.get("rule_id", "")
+            file_name = Path(rel_path).name.lower()
+
+            # Find matching finding in the latest scan summary
+            matching = [
+                f for f in findings
+                if (f.get("file_path") == rel_path or Path(f.get("file_path", "")).name.lower() == file_name)
+                and f.get("rule_id") == rule_id
+            ]
+            if not matching:
+                matching = [
+                    f for f in findings
+                    if (f.get("file_path") == rel_path or Path(f.get("file_path", "")).name.lower() == file_name)
+                    and f.get("severity") != "PASS"
+                ]
+
+            if matching and matching[0].get("severity") != "PASS":
+                # Regenerate dialog content dynamically
+                dlg.update_content(matching[0], target)
+            else:
+                # File is now compliant or no longer violating: close outdated details window
+                try:
+                    dlg.accept()
+                except Exception:
+                    pass
+                if dlg in self._active_dialogs:
+                    self._active_dialogs.remove(dlg)
+
+    def _sync_file_detail_with_summary(self, summary: Dict):
+        """Refreshes the File Detail tab if the currently viewed file was modified/remediated."""
+        if not self._selected_finding:
+            return
+        target = Path(self._target_edit.text().strip()).resolve()
+        findings = summary.get("findings", [])
+        sel_rel = self._selected_finding.get("file_path", "")
+        sel_rule = self._selected_finding.get("rule_id", "")
+        file_name = Path(sel_rel).name.lower()
+
+        matching = [
+            f for f in findings
+            if (f.get("file_path") == sel_rel or Path(f.get("file_path", "")).name.lower() == file_name)
+            and f.get("rule_id") == sel_rule
+        ]
+        if not matching:
+            matching = [
+                f for f in findings
+                if (f.get("file_path") == sel_rel or Path(f.get("file_path", "")).name.lower() == file_name)
+                and f.get("severity") != "PASS"
+            ]
+
+        if matching:
+            self._load_file_detail(matching[0])
+        else:
+            # File is now compliant on disk; reload file content and display Remediated banner
+            full_path = (target / sel_rel).resolve()
+            if full_path.exists() and full_path.is_file():
+                try:
+                    content = full_path.read_text(encoding="utf-8", errors="replace")
+                    lines   = content.splitlines()[:1000]
+                    self._file_content_viewer.setPlainText("\n".join(lines))
+                except Exception as e:
+                    self._file_content_viewer.setPlainText(f"[Unable to read file: {e}]")
+            self._detail_viewer.setHtml(
+                f"<div style='font-family:\"Segoe UI\",sans-serif;font-size:12px;color:{PALETTE['text_primary']};padding:12px;'>"
+                f"<p style='color:{PALETTE['green']};font-weight:bold;font-size:15px;'>✅ Remediated & Compliant</p>"
+                f"<p style='color:{PALETTE['text_secondary']};font-size:12px;'>No active policy violations detected in <code>{sel_rel}</code>.</p>"
+                f"</div>"
+            )
 
     # ──────────────────────────────────────────────────────────────────────────
     # STATUS BADGE
@@ -2050,6 +2169,8 @@ class KintsugiGRCApp(QMainWindow):
         if finding:
             target = Path(self._target_edit.text().strip()).resolve()
             dlg    = FindingDetailDialog(finding, target, self)
+            self._active_dialogs.append(dlg)
+            dlg.finished.connect(lambda: self._active_dialogs.remove(dlg) if dlg in self._active_dialogs else None)
             dlg.exec()
 
     # -------------------------------------------------------------------------
@@ -2344,10 +2465,44 @@ class KintsugiGRCApp(QMainWindow):
             "PDF Documents (*.pdf)"
         )
         if path:
-            out = Path(path)
+            out = Path(path).resolve()
             PDFComplianceExporter.generate_pdf_report(self.scan_summary, out)
-            QMessageBox.information(self, "PDF Exported",
-                                    f"Compliance report saved:\n{out}")
+            self._last_exported_pdf = out
+            if hasattr(self, "_btn_open_pdf"):
+                self._btn_open_pdf.setEnabled(True)
+
+            msg_box = QMessageBox(self)
+            msg_box.setWindowTitle("PDF Exported — Kintsugi-GRC")
+            msg_box.setText("Compliance report exported successfully!")
+            msg_box.setInformativeText(f"Saved to:\n{out}")
+            msg_box.setIcon(QMessageBox.Icon.Information)
+
+            btn_open = msg_box.addButton("📄  Open PDF", QMessageBox.ButtonRole.ActionRole)
+            btn_reveal = msg_box.addButton("📂  Reveal in Explorer", QMessageBox.ButtonRole.ActionRole)
+            btn_ok = msg_box.addButton(QMessageBox.StandardButton.Ok)
+            msg_box.setDefaultButton(btn_open)
+
+            msg_box.exec()
+            clicked = msg_box.clickedButton()
+            if clicked == btn_open:
+                open_file_externally(out)
+            elif clicked == btn_reveal:
+                reveal_in_file_explorer(out)
+
+    def _open_exported_pdf(self):
+        """Opens the last exported PDF or default scan_report.pdf in default viewer."""
+        target_pdf = getattr(self, "_last_exported_pdf", None)
+        if not target_pdf or not target_pdf.exists():
+            default_pdf = Path("scan_report.pdf").resolve()
+            if default_pdf.exists():
+                target_pdf = default_pdf
+        if target_pdf and target_pdf.exists():
+            open_file_externally(target_pdf)
+        else:
+            QMessageBox.information(
+                self, "No PDF Found",
+                "No exported PDF report found. Click 'Export PDF' to generate one first."
+            )
 
     # ──────────────────────────────────────────────────────────────────────────
     # CLOSE EVENT
