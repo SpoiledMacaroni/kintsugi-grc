@@ -71,7 +71,6 @@ PyQt6-Charts>=6.6.0
 * **Commit Suffixes**: Format all messages cleanly matching structural ownership scope:
   * `feat(ui): migrate desktop GUI from Tkinter to PyQt6 with dark-mode interface`
   * `fix(scanner): enforce absolute read-only boundary flags on local traversals`
-* **Merge Criteria**: Pushing code directly to the main branch is strictly prohibited. Development requires a Pull Request (PR) linked to an active Jira tracking issue, an automated test pass, and a review signoff.
 
 ## 8. License
 This project is open-source software licensed under the [MIT License](LICENSE).
